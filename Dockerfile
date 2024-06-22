@@ -11,10 +11,10 @@ COPY package*.json ./
 RUN npm install
 
 # Copie o restante do código da aplicação
-COPY . .
+# COPY . .
 
 # Exponha a porta que o Next.js usará
 EXPOSE 3000
 
 # Comando para iniciar a aplicação Next.js
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "dev-db"]

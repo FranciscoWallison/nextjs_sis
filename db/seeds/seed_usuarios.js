@@ -1,7 +1,6 @@
-const { faker } = require('@faker-js/faker');
+const { faker } = require("@faker-js/faker");
 
-
-exports.seed = function(knex) {
+exports.seed = function (knex) {
   const fakeUsers = [];
   const desiredFakeUsers = 100;
 
@@ -10,12 +9,13 @@ exports.seed = function(knex) {
       nome: faker.internet.userName(),
       email: faker.internet.email(),
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     });
   }
 
-  return knex('usuarios').del()
+  return knex("usuarios")
+    .del()
     .then(() => {
-      return knex('usuarios').insert(fakeUsers);
+      return knex("usuarios").insert(fakeUsers);
     });
 };

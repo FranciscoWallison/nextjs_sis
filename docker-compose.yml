@@ -24,7 +24,7 @@ services:
       - db
     volumes:
       - .:/app
-    command: npm run dev
+    command: npm run dev-db
 
 volumes:
   postgres_data:
