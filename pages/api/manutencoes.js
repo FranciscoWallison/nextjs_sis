@@ -1,4 +1,4 @@
-import db from '../../db';
+// pages/api/manutencoes.js
 
 /*
 Para obter dados de todos os anos e meses: http://localhost:3000/api/manutencoes
@@ -10,40 +10,39 @@ Para obter dados de uma área específica: http://localhost:3000/api/manutencoes
 Para obter dados de um responsável específico: http://localhost:3000/api/manutencoes?responsavel=Responsável 1
 */
 
+import db from "../../db/db";
+
 export default async function handler(req, res) {
   try {
-    const { ano, mes, tipo_equipamento, equipamento, area, responsavel } = req.query;
-    
-    let query = db('manutencoes')
-      .select('tipo_equipamento', 'equipamento', 'area', 'responsavel', 'mes', 'ano')
-      .sum('quantidade as quantidade')
-      .groupBy('tipo_equipamento', 'equipamento', 'area', 'responsavel', 'mes', 'ano')
-      .orderBy(['ano', 'mes']);
+    const { ano, mes, tipoEquipamento, equipamento, area, responsavel } =
+      req.body;
+
+    let query = db("manutencoes").select("*");
 
     if (ano) {
-      query = query.where('ano', ano);
+      query = query.where("ano", ano);
     }
     if (mes) {
-      query = query.where('mes', mes);
+      query = query.where("mes", mes);
     }
-    if (tipo_equipamento) {
-      query = query.where('tipo_equipamento', tipo_equipamento);
+    if (tipoEquipamento) {
+      query = query.where("tipo_equipamento", tipoEquipamento);
     }
     if (equipamento) {
-      query = query.where('equipamento', equipamento);
+      query = query.where("equipamento", equipamento);
     }
     if (area) {
-      query = query.where('area', area);
+      query = query.where("area", area);
     }
     if (responsavel) {
-      query = query.where('responsavel', responsavel);
+      query = query.where("responsavel", responsavel);
     }
 
     const manutencoes = await query;
 
     res.status(200).json(manutencoes);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erro ao buscar dados de manutenções' });
+    console.error("Erro ao buscar manutenções:", error);
+    res.status(500).json({ message: "Erro ao buscar manutenções" });
   }
 }

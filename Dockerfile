@@ -4,17 +4,17 @@ FROM node:20-alpine
 # Defina o diretório de trabalho no contêiner
 WORKDIR /app
 
+# Copie o restante do código da aplicação
+ADD . .
+
 # Copie package.json e package-lock.json
-COPY package*.json ./
+ADD package*.json ./
 
 # Instale as dependências
 RUN npm install
-
-# Copie o restante do código da aplicação
-# COPY . .
 
 # Exponha a porta que o Next.js usará
 EXPOSE 3000
 
 # Comando para iniciar a aplicação Next.js
-CMD ["npm", "run", "dev-db"]
+ENTRYPOINT ["npm", "run", "dev"]

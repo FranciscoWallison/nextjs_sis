@@ -16,6 +16,8 @@ services:
   web:
     build: .
     container_name: nextjs
+    restart: always
+    tty: true
     environment:
       DATABASE_URL: postgres://root:123456789@db:5432/db_mmi
     ports:
@@ -24,7 +26,7 @@ services:
       - db
     volumes:
       - .:/app
-    command: npm run dev-db
+    # command: npm run dev-db
 
 volumes:
   postgres_data:
