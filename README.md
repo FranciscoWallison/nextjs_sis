@@ -1,3 +1,34 @@
+## Começando
+
+## Variáveis  de ambiente
+
+Na maquina que irar rodar o projeto conforme as 'Project settings' do firebase:
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+```
+
+## Iniciando o projeto
+
+Primeiro, execute o servidor de desenvolvimento:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+## Comandos de knex de migrate
 
 
 ````
