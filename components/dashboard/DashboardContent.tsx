@@ -1,9 +1,10 @@
 import React from "react";
 import { Grid, Paper, Container, Toolbar, Box } from "@mui/material";
 import Chart from "./Chart";
+import PizzaChart from "./PizzaChart";
+import BarraChart from "./BarraChart";
 import Deposits from "./Deposits";
 import Orders from "./Orders";
-import Copyright from "@/components/layout/Copyright";
 
 const DashboardContent: React.FC = () => (
   <Box
@@ -22,7 +23,19 @@ const DashboardContent: React.FC = () => (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={3}>
         {/* Chart */}
-        <Grid item xs={12} md={8} lg={9}>
+        <Grid item xs={12} md={12} lg={5}>
+          <Paper
+            sx={{
+              p: 2,
+              display: "flex",
+              flexDirection: "column",
+              height: 280,
+            }}
+          >
+            <PizzaChart />
+          </Paper>
+        </Grid>
+        {/* <Grid item xs={12} md={8} lg={9}>
           <Paper
             sx={{
               p: 2,
@@ -33,28 +46,28 @@ const DashboardContent: React.FC = () => (
           >
             <Chart />
           </Paper>
-        </Grid>
+        </Grid> */}
         {/* Recent Deposits */}
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid item xs={12} md={12} lg={12}>
           <Paper
             sx={{
               p: 2,
               display: "flex",
               flexDirection: "column",
-              height: 240,
+              height: 350,
             }}
           >
-            <Deposits />
+            <BarraChart />
+            {/* <Deposits /> */}
           </Paper>
         </Grid>
         {/* Recent Orders */}
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
             <Orders />
           </Paper>
-        </Grid>
+        </Grid> */}
       </Grid>
-      <Copyright sx={{ pt: 4 }} />
     </Container>
   </Box>
 );
