@@ -25,7 +25,6 @@ export const MainListItems: React.FC<DynamicListItemsProps> = ({ pages }) => {
       {pages.map((page, index) => (
         <ListItemButton
           key={index}
-          value={page.title}
           onClick={() => router.push(page.url)}
         >
           <ListItemIcon>
@@ -47,19 +46,19 @@ export const secondaryListItems = (
       <ListItemIcon>
         <AssignmentIcon />
       </ListItemIcon>
-      <ListItemText primary="Current month" />
+      <ListItemText primary="Teste 1" />
     </ListItemButton>
     <ListItemButton>
       <ListItemIcon>
         <AssignmentIcon />
       </ListItemIcon>
-      <ListItemText primary="Last quarter" />
+      <ListItemText primary="Teste 2" />
     </ListItemButton>
     <ListItemButton>
       <ListItemIcon>
         <AssignmentIcon />
       </ListItemIcon>
-      <ListItemText primary="Year-end sale" />
+      <ListItemText primary="Teste 3" />
     </ListItemButton>
   </React.Fragment>
 );
