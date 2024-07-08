@@ -3,20 +3,24 @@ import { AppProps } from "next/app";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PageProvider } from "@/contexts/PageContext";
 import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProviderWrapper } from '@/contexts/ThemeContext';
 
-const theme = createTheme();
+import { theme } from "@/utils/Theme";
+
 
 function MyApp({ Component, pageProps }: AppProps) {
+  // console.log('============MyApp=============');
+  // console.log( JSON.stringify(theme) );
+  // console.log('====================================');
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProviderWrapper>
       <CssBaseline />
       <AuthProvider>
         <PageProvider>
           <Component {...pageProps} />
         </PageProvider>
       </AuthProvider>
-    </ThemeProvider>
+    </ThemeProviderWrapper>
   );
 }
 

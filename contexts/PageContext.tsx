@@ -2,10 +2,11 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 import { SvgIconComponent } from "@mui/icons-material";
 import HomeIcon from "@mui/icons-material/Home";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import NotificationImportantIcon from '@mui/icons-material/NotificationImportant';
 import PeopleIcon from "@mui/icons-material/People";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/Layers";
+import EngineeringIcon from '@mui/icons-material/Engineering';
 
 interface Page {
   title: string;
@@ -27,8 +28,8 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
   const [pages, setPages] = useState<Page[]>([
     { title: "Home", url: "/", icon: HomeIcon },
     { title: "Dashboard", url: "/dashboard", icon: DashboardIcon },
-    { title: "Orders", url: "/orders", icon: ShoppingCartIcon },
-    { title: "Customers", url: "/customers", icon: PeopleIcon },
+    { title: "Manutenções", url: "/manutencoes", icon: EngineeringIcon },
+    { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
     { title: "Reports", url: "/reports", icon: BarChartIcon },
     { title: "Integrations", url: "/integrations", icon: LayersIcon },
   ]);
