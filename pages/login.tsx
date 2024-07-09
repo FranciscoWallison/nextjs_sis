@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Box, Typography } from '@mui/material';
-import LoginForm from '../components/LoginForm';
-import withAuthRedirect from '../hoc/withAuthRedirect';
+import LoginForm from '@/components/LoginForm';
+import withAuthRedirect from '@/hoc/withAuthRedirect';
 
 const LoginPage: React.FC = () => {
   return (
