@@ -10,7 +10,7 @@ import {
   TextField,
   Paper,
 } from "@mui/material";
-import { FormContext } from "../contexts/FormContext";
+import { FormContext } from "@/contexts/FormContext";
 
 const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   handleNext,
@@ -54,8 +54,6 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   const filteredQuestions = maintenanceQuestions.filter((question) =>
     trueAttributes.includes(question.name)
   );
-
-  console.log(filteredQuestions);
 
   return (
     <Box>
