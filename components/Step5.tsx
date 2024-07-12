@@ -4,17 +4,20 @@ import { Box, Button, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { FormContext } from "@/contexts/FormContext";
 import AuthStorage from "@/utils/AuthStorage";
-import { pegarTodos, salvarNovo } from "@/services/firebaseService";
+import { salvarNovo } from "@/services/firebaseService";
 
 const Step5: React.FC = () => {
   const { formData, setFormData } = useContext(FormContext);
   const router = useRouter();
 
   const handleRedirect = async () => {
-    // TODO:: salvar as informações
-    // router.push("/");
+    await salvarNovo(formData);
 
-
+    if (await salvarNovo(formData)) {
+      router.push("/");
+    } else {
+      // modal de aviso de erro
+    }
   };
 
   return (

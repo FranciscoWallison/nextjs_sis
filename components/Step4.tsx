@@ -24,6 +24,9 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('=======handleFormChange============');
+    console.log(e.target.name, e.target.value);
+    console.log('====================================');
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -80,16 +83,15 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         />
       </RadioGroup>
 
-      <Paper
-        sx={{
-          p: 3,
-          display: "flex",
-          flexDirection: "column",
-          // height: 100,
-        }}
-      >
-        {fillNow === "yes" &&
-          filteredQuestions.map((question, index) => (
+      {fillNow === "yes" && (
+        <Paper
+          sx={{
+            p: 3,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {filteredQuestions.map((question, index) => (
             <Box key={index}>
               <Typography sx={{ mt: 3, mb: 2 }} component="h5" variant="h6">
                 {question.label}
@@ -130,7 +132,8 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               />
             </Box>
           ))}
-      </Paper>
+          </Paper>
+        )}
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
         <Button variant="contained" onClick={handleBack}>
           Voltar

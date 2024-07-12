@@ -25,9 +25,6 @@ export default async function handler(
     grupo_gerador: true,
   };
 
-  console.log("==========pegarTodos===========");
   await salvarNovo(new_perfil);
-  console.log("====================================");
-
   res.status(200).json({ name: "John Doe" });
 }

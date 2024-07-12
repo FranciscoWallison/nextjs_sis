@@ -6,9 +6,8 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
 } from "firebase/auth";
-
-import { LoginData } from "../interface/Login";
 import AuthStorage from "../utils/AuthStorage";
+import { LoginData } from "../interface/Login";
 import {
   collection,
   addDoc,
@@ -19,8 +18,8 @@ import {
   deleteDoc,
   setDoc,
   getFirestore,
-} from "@firebase/firestore";
-// import { getFirestore } from "firebase/firestore";
+  // "@firebase/firestore";
+} from "firebase/firestore";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -34,14 +33,16 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 // export const analytics = getAnalytics(app);
-const auth = getAuth(app);
 
 // TODO:: ADD informações na api com rotas rest-full
 
 export const CriarUsuario = async (data: LoginData): Promise<boolean> => {
+  const auth = getAuth(app);
+
   return await createUserWithEmailAndPassword(auth, data.email, data.password)
     .then((userCredential) => true)
     .catch((error) => {
@@ -53,6 +54,8 @@ export const CriarUsuario = async (data: LoginData): Promise<boolean> => {
 };
 
 export const Login = async (data: LoginData): Promise<boolean> => {
+  const auth = getAuth(app);
+
   return await signInWithEmailAndPassword(auth, data.email, data.password)
     .then((userCredential) => {
       // Signed in
@@ -81,40 +84,40 @@ export const ObservadorEstado = async (): Promise<boolean> => {
 
 // TODO:: Logica de repositório e usar na api
 
-export const pegarTodos = async (): Promise<object> => {
-  const database = getFirestore(app);
+export const validaUsuarioForm = async (): Promise<boolean> => {
+  try {
+    const user = AuthStorage.getUser();
+    const db = getFirestore(app);
 
-  const dbInstance = collection(database, "cliente");
+    const return_infor = doc(db, "cliente", user.uid);
+    const infor = await getDoc(return_infor);
 
-  const querySnapshot = await getDocs(collection(database, "cliente"));
-  querySnapshot.forEach((doc) => {
-    // doc.data() is never undefined for query doc snapshots
-    console.log(doc.id, " => ", doc.data());
-  });
+    if (infor.data() === undefined) {
+      return false;
+    }
+    return true;
+    // const cliente = { ...infor.data(), id: user.uid };
+  } catch (error) {
+    console.log("====================================");
+    console.log("validaUsuarioForm", error);
+    console.log("====================================");
+    return false;
+  }
+  return false;
 };
 
-export const salvarNovo = async (data: object): Promise<void> => {
-  const database = getFirestore(app);
+export const salvarNovo = async (data: object): Promise<boolean> => {
+  try {
+    const user = AuthStorage.getUser();
+    const db = getFirestore(app);
 
-  const dbInstance = collection(database, "cliente");
-  debugger;
-  console.log(data);
+    const new_form = await setDoc(doc(db, "cliente", user.uid), data);
 
-  // await setDoc(collection(database, "cliente", data.uid), data);
-  await setDoc(doc(database, "cliente", data.uid), data);
-  await setDoc(doc(db, "cliente", "LA"), {
-    name: "Los Angeles",
-    state: "CA",
-    country: "USA",
-  });
-  // dbInstance.doc(data.uid).set(data)
-
-  // return await addDoc(dbInstance, data)
-  //   .then(() => console.log("gravamos"))
-  //   .catch((error) => {
-  //     const errorCode = error.code;
-  //     const errorMessage = error.message;
-
-  //     return false;
-  //   });
+    return await validaUsuarioForm();
+  } catch (error) {
+    console.log("============salvarNovo================");
+    console.log(error);
+    console.log("====================================");
+  }
+  return false;
 };
