@@ -1,10 +1,16 @@
 // src/components/Step1.tsx
-import React, { useContext } from 'react';
-import { Box, Button, TextField, Typography } from '@mui/material';
-import { FormContext } from '../contexts/FormContext';
+import React, { useContext } from "react";
+import { Box, Button, TextField, Typography } from "@mui/material";
+import { FormContext } from "@/contexts/FormContext";
 
 const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
-  const { formData, setFormData } = useContext(FormContext);
+  const context = useContext(FormContext);
+
+  if (!context) {
+    throw new Error("FormContext must be used within a FormProvider");
+  }
+
+  const { formData, setFormData } = context;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, sindicoName: e.target.value });
@@ -12,10 +18,12 @@ const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
 
   return (
     <Box>
-      <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">Olá, Síndico! Seja bem-vindo ao GMP+.</Typography>
+      <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
+        Olá, Síndico! Seja bem-vindo ao GMP+.
+      </Typography>
       <TextField
         label="Nome do Síndico"
-        value={formData.sindicoName || ''}
+        value={formData.sindicoName || ""}
         onChange={handleChange}
         fullWidth
       />

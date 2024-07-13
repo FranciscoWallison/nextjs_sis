@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { pegarTodos, salvarNovo } from "@/services/firebaseService";
+import { salvarNovo } from "@/services/firebaseService";
 
 type Data = {
   name: string;

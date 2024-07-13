@@ -13,7 +13,13 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   handleNext,
   handleBack,
 }) => {
-  const { formData, setFormData } = useContext(FormContext);
+  const context = useContext(FormContext);
+
+  if (!context) {
+    throw new Error("FormContext must be used within a FormProvider");
+  }
+
+  const { formData, setFormData } = context;
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.checked });

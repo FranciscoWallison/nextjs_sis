@@ -6,8 +6,8 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
 } from "firebase/auth";
-import AuthStorage from "../utils/AuthStorage";
-import { LoginData } from "../interface/Login";
+import AuthStorage from "@/utils/AuthStorage";
+import { LoginData } from "@/interface/Login";
 import {
   collection,
   addDoc,
@@ -21,18 +21,20 @@ import {
   // "@firebase/firestore";
 } from "firebase/firestore";
 
+import { FirebaseUser } from "@/interface/FirebaseUser";
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
-
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
@@ -86,7 +88,10 @@ export const ObservadorEstado = async (): Promise<boolean> => {
 
 export const validaUsuarioForm = async (): Promise<boolean> => {
   try {
-    const user = AuthStorage.getUser();
+    const user: FirebaseUser | null = AuthStorage.getUser(); // Ensure the user is of type User or null
+    if (!user || !user.uid) {
+      return false;
+    }
     const db = getFirestore(app);
 
     const return_infor = doc(db, "cliente", user.uid);
@@ -108,7 +113,10 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
 
 export const salvarNovo = async (data: object): Promise<boolean> => {
   try {
-    const user = AuthStorage.getUser();
+    const user: FirebaseUser | null = AuthStorage.getUser(); // Ensure the user is of type User or null
+    if (!user || !user.uid) {
+      return false;
+    }
     const db = getFirestore(app);
 
     const new_form = await setDoc(doc(db, "cliente", user.uid), data);

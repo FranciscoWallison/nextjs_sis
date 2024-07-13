@@ -1,3 +1,5 @@
+import { FirebaseUser } from "@/interface/FirebaseUser";
+
 class AuthStorage {
   private static readonly TOKEN_KEY = "auth_token";
   private static readonly REFRESH_TOKEN_KEY = "refresh_token";
@@ -27,11 +29,12 @@ class AuthStorage {
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
   }
 
+  // TODO:: MONTAR INTERFACE
   static setUser(user: object): void {
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
-  static getUser(): object | null {
+  static getUser(): FirebaseUser | null {
     const user = localStorage.getItem(this.USER_KEY);
     return user ? JSON.parse(user) : null;
   }

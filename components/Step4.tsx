@@ -16,7 +16,13 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   handleNext,
   handleBack,
 }) => {
-  const { formData, setFormData } = useContext(FormContext);
+  const context = useContext(FormContext);
+
+  if (!context) {
+    throw new Error("FormContext must be used within a FormProvider");
+  }
+
+  const { formData, setFormData } = context;
   const [fillNow, setFillNow] = useState<"yes" | "no">("no");
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,9 +30,9 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('=======handleFormChange============');
+    console.log("=======handleFormChange============");
     console.log(e.target.name, e.target.value);
-    console.log('====================================');
+    console.log("====================================");
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -82,7 +88,6 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
           label="Não, irei cadastrar no futuro"
         />
       </RadioGroup>
-
       {fillNow === "yes" && (
         <Paper
           sx={{
@@ -132,8 +137,8 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               />
             </Box>
           ))}
-          </Paper>
-        )}
+        </Paper>
+      )}
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
         <Button variant="contained" onClick={handleBack}>
           Voltar

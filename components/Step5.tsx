@@ -3,11 +3,16 @@ import React, { useContext, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { FormContext } from "@/contexts/FormContext";
-import AuthStorage from "@/utils/AuthStorage";
 import { salvarNovo } from "@/services/firebaseService";
 
 const Step5: React.FC = () => {
-  const { formData, setFormData } = useContext(FormContext);
+  const context = useContext(FormContext);
+
+  if (!context) {
+    throw new Error("FormContext must be used within a FormProvider");
+  }
+
+  const { formData, setFormData } = context;
   const router = useRouter();
 
   const handleRedirect = async () => {

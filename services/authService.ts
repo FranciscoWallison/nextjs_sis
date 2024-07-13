@@ -1,11 +1,11 @@
-import { LoginData } from "../interface/Login";
-import AuthStorage from "../utils/AuthStorage";
+import { LoginData } from "@/interface/Login";
+import AuthStorage from "@/utils/AuthStorage";
 
 import {
   CriarUsuario,
   Login,
   ObservadorEstado,
-} from "../services/firebaseService";
+} from "@/services/firebaseService";
 
 export const login = async (data: LoginData): Promise<boolean> => {
   try {
