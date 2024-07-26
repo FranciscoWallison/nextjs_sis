@@ -3,7 +3,8 @@
       "title": "Equipamentos Industrializados",
       "data": [
         {
-          "titulo": "Sauna Úmida",
+          "name": "sauna_umida",
+          "titulo": "Saúna úmida",
           "atividade": "Fazer a drenagem de água no equipamento",
           "responsavel": "Equipe de manutenção local",
           "Periodicidade": "A cada semana",
@@ -15,6 +16,7 @@
           }
         },
         {
+          "name": "grupo_gerador_1",
           "titulo": "Grupo Gerador",
           "atividade": "Verificar após o uso do equipamento o nível de óleo combustível e se há obstrução nas entradas e saídas de ventilação",
           "responsavel": "Equipe de manutenção local",
@@ -27,6 +29,7 @@
           }
         },
         {
+          "name": "grupo_gerador_1",
           "titulo": "Grupo Gerador",
           "atividade": "Efetuar teste de funcionamento dos sistemas conforme instruções do fornecedor",
           "responsavel": "Equipe de manutenção local",
@@ -87,6 +90,7 @@
           }
         },
         {
+          "name": "banheira_hidromassagem_1",
           "titulo": "Banheira de hidromassagem/spa",
           "atividade": "Fazer teste de funcionamento conforme instruções do fornecedor",
           "responsavel": "Equipe de manutenção local",
@@ -111,6 +115,7 @@
           }
         },
         {
+          "name": "gerador_agua_quente_2",
           "titulo": "Gerador de água quente",
           "atividade": "Limpar e regular os sistemas de queimadores e filtros de água conforme instruções do fabricante",
           "responsavel": "Empresa capacitada",
@@ -135,6 +140,7 @@
           }
         },
         {
+          "name": "porta_corta_fogo_1",
           "titulo": "Porta corta-fogo",
           "atividade": "Aplicar óleo lubrificante nas dobradiças e maçanetas",
           "responsavel": "Equipe de manutenção local",
@@ -147,6 +153,7 @@
           }
         },
         {
+          "name": "porta_corta_fogo_2",
           "titulo": "Porta corta-fogo",
           "atividade": "Verificar a abertura e o fechamento a 45º. Se for necessário fazer regulagem, chamar empresa especializada",
           "responsavel": "Equipe de manutenção local",
@@ -159,6 +166,7 @@
           }
         },
         {
+          "name": "banheira_hidromassagem_2",
           "titulo": "Banheira de hidromassagem/spa",
           "atividade": "Limpar a tubulação",
           "responsavel": "Equipe de manutenção local",
@@ -171,6 +179,7 @@
           }
         },
         {
+          "name": "sistema_seguranca",
           "titulo": "Sistema de segurança",
           "atividade": "Manutenção recomendada pelo fornecedor",
           "responsavel": "Empresa capacitada/empresa especializada",
@@ -183,6 +192,7 @@
           }
         },
         {
+          "name": "gerador_agua_quente_1",
           "titulo": "Gerador de água quente",
           "atividade": "Verificar sua integridade e reconstituir o funcionamento do sistema de levagem interna dos depósitos de água quente e limpeza das chaminés conforme instrução do fabricante",
           "responsavel": "Empresa capacitada",
@@ -207,6 +217,7 @@
           }
         },
         {
+          "name": "banheira_hidromassagem_3",
           "titulo": "Banheira de hidromassagem/spa",
           "atividade": "Limpar e manter o sistema conforme instruções do fornecedor",
           "responsavel": "Empresa capacitada",
@@ -219,6 +230,7 @@
           }
         },
         {
+          "name": "spda_1",
           "titulo": "Sistema de proteção contra descargas atmosféricas",
           "atividade": "Inspecionar sua integridade e reconstituir o sistema de medição de resistência conforme legislação vigente",
           "responsavel": "Empresa especializada",
@@ -231,6 +243,7 @@
           }
         },
         {
+          "name": "spda_2",
           "titulo": "Sistema de proteção contra descargas atmosféricas",
           "atividade": "Inspecionar periodicamente de acordo com a legislação vigente. Em locais expostos a corrosão severa, reduzir os intervalos entre verificações",
           "responsavel": "Empresa especializada",
@@ -243,6 +256,7 @@
           }
         },
         {
+          "name": "spda_3",
           "titulo": "Sistema de proteção contra descargas atmosféricas",
           "atividade": "Laudo de para raios com atestado de resistividade do solo",
           "responsavel": "Empresa especializada",
@@ -284,6 +298,7 @@
           }
         },
         {
+          "name": "sistema_irrigacao",
           "titulo": "Sistema de irrigação",
           "atividade": "Verificar o funcionamento dos dispositivos",
           "responsavel": "Equipe de manutenção local",
@@ -296,6 +311,7 @@
           }
         },
         {
+          "name": "bomba_agua_potavel",
           "titulo": "Bombas de água potável, água servida e piscinas",
           "atividade": "Verificar o funcionamento e alternar a chave no painel elétrico para utilizá-las em sistema de rodízio, quando aplicável",
           "responsavel": "Equipe de manutenção local",
@@ -308,6 +324,7 @@
           }
         },
         {
+          "name": "bomba_incendio",
           "titulo": "Bombas de incêndio",
           "atividade": "Testar seu funcionamento, observada a legislação vigente",
           "responsavel": "Equipe de manutenção local",
@@ -385,6 +402,7 @@
       "title": "Sistema de automação",
       "data": [
         {
+          "name": "portao_automatico",
           "titulo": "Automação de portões",
           "atividade": "Fazer a manutenção geral dos sistemas conforme instruções do fornecedor",
           "responsavel": "Empresa especializada",
