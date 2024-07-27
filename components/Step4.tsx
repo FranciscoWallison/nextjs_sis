@@ -33,10 +33,11 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const updatedQuestions = { ...questions, [name]: value };
+    const questionName = name.replace(/_(date)\d*$/, "");
 
     // Se o usuário selecionar uma data, limpar as opções de checkbox correspondentes
     if (name.includes("_date")) {
-      const questionName = name.replace(/_date\d+$/, "");
+  
       updatedQuestions[`${questionName}_nao_feito`] = false;
       updatedQuestions[`${questionName}_nao_lembro`] = false;
     }
@@ -49,9 +50,10 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     const { name, checked } = e.target;
     const updatedQuestions = { ...questions, [name]: checked };
 
+    const questionName = name.replace(/_(nao_feito|nao_lembro)\d*$/, "");
+
     // Se o usuário selecionar uma opção de checkbox, limpar o valor da data correspondente
     if (name.includes("_nao_feito") || name.includes("_nao_lembro")) {
-      const questionName = name.replace(/_(nao_feito|nao_lembro)\d*$/, "");
       updatedQuestions[`${questionName}_date`] = "";
 
       // Garantir que apenas uma checkbox possa ser selecionada por campo
@@ -65,12 +67,14 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setQuestions(updatedQuestions);
     setFormData({ ...formData, ...updatedQuestions });
   };
-  const addNext = () => {
 
-    console.log('====================================');
+  const addNext = () => {
+    console.log("====================================");
     console.log(questions);
-    console.log('====================================');
-    // handleNext
+    formData.questions = questions;
+    console.log("====================================");
+    setFormData(formData)
+    handleNext(); // Chamando a função handleNext ao avançar
   };
 
   return (
@@ -111,12 +115,12 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               </Typography>
               <TextField
                 label="Data"
-                name={`${question.name}_date${index}`}
+                name={`${question.name}_date`}
                 type="date"
                 InputLabelProps={{
                   shrink: true,
                 }}
-                value={questions[`${question.name}_date${index}`] || ""}
+                value={questions[`${question.name}_date`] || ""}
                 onChange={handleFormChange}
                 fullWidth
                 sx={{ mb: 1 }}
@@ -124,10 +128,8 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    name={`${question.name}_nao_feito${index}`}
-                    checked={
-                      questions[`${question.name}_nao_feito${index}`] || false
-                    }
+                    name={`${question.name}_nao_feito`}
+                    checked={questions[`${question.name}_nao_feito`] || false}
                     onChange={handleCheckboxChange}
                   />
                 }
@@ -136,10 +138,8 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               <FormControlLabel
                 control={
                   <Checkbox
-                    name={`${question.name}_nao_lembro${index}`}
-                    checked={
-                      questions[`${question.name}_nao_lembro${index}`] || false
-                    }
+                    name={`${question.name}_nao_lembro`}
+                    checked={questions[`${question.name}_nao_lembro`] || false}
                     onChange={handleCheckboxChange}
                   />
                 }
