@@ -25,6 +25,43 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, [e.target.name]: e.target.checked });
   };
 
+  const addNext = () => {
+    const maintenanceQuestions = [
+      { name: "sauna_umida", label: "Saúna úmida - data da última drenagem?" },
+      {
+        name: "grupo_gerador",
+        label: "Grupo gerador - data da última checagem do nível do óleo?",
+      },
+      {
+        name: "grupo_gerador",
+        label: "Grupo gerador - último teste de funcionamento?",
+      },
+      {
+        name: "sistema_seguranca",
+        label: "Iluminação de emergência - último teste de funcionamento?",
+      },
+      {
+        name: "banheira_hidromassagem",
+        label: "Banheira de hidromassagem - último teste de funcionamento?",
+      },
+    ];
+
+    const trueAttributes = Object.keys(formData).filter(
+      (key) => formData[key] === true
+    );
+
+    const filteredQuestions = maintenanceQuestions.filter((question) =>
+      trueAttributes.includes(question.name)
+    );
+    formData.filteredQuestions = filteredQuestions;
+
+    console.log("========handleCheckboxChange==========");
+    console.log(filteredQuestions);
+    console.log("====================================");
+    setFormData(formData);
+    handleNext();
+  };
+
   const items = [
     { name: "sauna_umida", label: "Saúna úmida" },
     { name: "grupo_gerador", label: "Grupo gerador" },
@@ -71,7 +108,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         <Button variant="contained" onClick={handleBack}>
           Voltar
         </Button>
-        <Button variant="contained" onClick={handleNext}>
+        <Button variant="contained" onClick={addNext}>
           Continuar
         </Button>
       </Box>

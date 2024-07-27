@@ -1,14 +1,14 @@
-// src/components/Step4.tsx
 import React, { useContext, useState } from "react";
 import {
   Box,
   Button,
   Typography,
   FormControlLabel,
-  Radio,
-  RadioGroup,
+  Checkbox,
   TextField,
   Paper,
+  Radio,
+  RadioGroup,
 } from "@mui/material";
 import { FormContext } from "@/contexts/FormContext";
 
@@ -24,55 +24,63 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const { formData, setFormData } = context;
   const [fillNow, setFillNow] = useState<"yes" | "no">("no");
+  const [questions, setQuestions] = useState({});
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFillNow((e.target as HTMLInputElement).value as "yes" | "no");
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("=======handleFormChange============");
-    console.log(e.target.name, e.target.value);
-    console.log("====================================");
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const updatedQuestions = { ...questions, [name]: value };
+
+    // Se o usuário selecionar uma data, limpar as opções de checkbox correspondentes
+    if (name.includes("_date")) {
+      const questionName = name.replace(/_date\d+$/, "");
+      updatedQuestions[`${questionName}_nao_feito`] = false;
+      updatedQuestions[`${questionName}_nao_lembro`] = false;
+    }
+
+    setQuestions(updatedQuestions);
+    setFormData({ ...formData, ...updatedQuestions });
   };
 
-  const maintenanceQuestions = [
-    { name: "sauna_umida", label: "Saúna úmida - data da última drenagem?" },
-    {
-      name: "grupo_gerador",
-      label: "Grupo gerador - data da última checagem do nível do óleo?",
-    },
-    {
-      name: "grupo_gerador",
-      label: "Grupo gerador - último teste de funcionamento?",
-    },
-    {
-      name: "sistema_seguranca",
-      label: "Iluminação de emergência - último teste de funcionamento?",
-    },
-    {
-      name: "banheira_hidromassagem",
-      label: "Banheira de hidromassagem - último teste de funcionamento?",
-    },
-  ];
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    const updatedQuestions = { ...questions, [name]: checked };
 
-  const trueAttributes = Object.keys(formData).filter(
-    (key) => formData[key] === true
-  );
+    // Se o usuário selecionar uma opção de checkbox, limpar o valor da data correspondente
+    if (name.includes("_nao_feito") || name.includes("_nao_lembro")) {
+      const questionName = name.replace(/_(nao_feito|nao_lembro)\d*$/, "");
+      updatedQuestions[`${questionName}_date`] = "";
 
-  const filteredQuestions = maintenanceQuestions.filter((question) =>
-    trueAttributes.includes(question.name)
-  );
+      // Garantir que apenas uma checkbox possa ser selecionada por campo
+      if (name.includes("_nao_feito")) {
+        updatedQuestions[`${questionName}_nao_lembro`] = false;
+      } else if (name.includes("_nao_lembro")) {
+        updatedQuestions[`${questionName}_nao_feito`] = false;
+      }
+    }
+
+    setQuestions(updatedQuestions);
+    setFormData({ ...formData, ...updatedQuestions });
+  };
+  const addNext = () => {
+
+    console.log('====================================');
+    console.log(questions);
+    console.log('====================================');
+    // handleNext
+  };
 
   return (
     <Box>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
         Parabéns! Você avançou mais uma etapa. Você ainda não preencheu as datas
         das últimas manutenções, precisamos delas para gerar sua gestão de
-        manutenções. Deseja preencher agora?{" "}
-      </Typography>{" "}
+        manutenções. Deseja preencher agora?
+      </Typography>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        {" "}
         Se você não preencher agora, o sistema irá gerar alertas para os itens
         prioritários.
       </Typography>
@@ -96,44 +104,46 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             flexDirection: "column",
           }}
         >
-          {filteredQuestions.map((question, index) => (
+          {formData.filteredQuestions.map((question, index) => (
             <Box key={index}>
               <Typography sx={{ mt: 3, mb: 2 }} component="h5" variant="h6">
                 {question.label}
               </Typography>
               <TextField
                 label="Data"
-                name={`${question.name}_date`}
+                name={`${question.name}_date${index}`}
                 type="date"
                 InputLabelProps={{
                   shrink: true,
                 }}
-                value={formData[`${question.name}_date`] || ""}
+                value={questions[`${question.name}_date${index}`] || ""}
                 onChange={handleFormChange}
                 fullWidth
                 sx={{ mb: 1 }}
               />
               <FormControlLabel
                 control={
-                  <RadioGroup
-                    row
-                    name={question.name}
-                    value={formData[question.name] || ""}
-                    onChange={handleFormChange}
-                  >
-                    <FormControlLabel
-                      value="nao_feito"
-                      control={<Radio />}
-                      label="Não foi feito"
-                    />
-                    <FormControlLabel
-                      value="nao_lembro"
-                      control={<Radio />}
-                      label="Não lembro"
-                    />
-                  </RadioGroup>
+                  <Checkbox
+                    name={`${question.name}_nao_feito${index}`}
+                    checked={
+                      questions[`${question.name}_nao_feito${index}`] || false
+                    }
+                    onChange={handleCheckboxChange}
+                  />
                 }
-                label=""
+                label="Não foi feito"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name={`${question.name}_nao_lembro${index}`}
+                    checked={
+                      questions[`${question.name}_nao_lembro${index}`] || false
+                    }
+                    onChange={handleCheckboxChange}
+                  />
+                }
+                label="Não lembro"
               />
             </Box>
           ))}
@@ -143,7 +153,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         <Button variant="contained" onClick={handleBack}>
           Voltar
         </Button>
-        <Button variant="contained" onClick={handleNext}>
+        <Button variant="contained" onClick={addNext}>
           Continuar
         </Button>
       </Box>
