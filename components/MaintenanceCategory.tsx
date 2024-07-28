@@ -25,9 +25,10 @@ interface MaintenanceCategoryProps {
 const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({ category, activities }) => {
   return (
     <Box mb={4}>
-      <Typography variant="h4" component="div" gutterBottom>
+      {/* Titulo */}
+      {/* <Typography variant="h4" component="div" gutterBottom>
         {category}
-      </Typography>
+      </Typography> */}
       {activities.map((activity, index) => (
         <MaintenanceActivity key={index} activity={activity} />
       ))}

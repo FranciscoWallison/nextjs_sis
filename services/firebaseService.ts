@@ -122,6 +122,30 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
   return false;
 };
 
+
+export const pegarUsuarioPeriodicidades= async (): Promise<object> => {
+  try {
+    const user: FirebaseUser | null = AuthStorage.getUser(); // Ensure the user is of type User or null
+    if (!user || !user.uid) {
+      return false;
+    }
+    const db = getFirestore(app);
+
+    const return_infor = doc(db, "cliente", user.uid);
+    const infor = await getDoc(return_infor);
+
+    return infor.data();
+    // const cliente = { ...infor.data(), id: user.uid };
+  } catch (error) {
+    console.log("====================================");
+    console.log("validaUsuarioForm", error);
+    console.log("====================================");
+    return false;
+  }
+  return false;
+};
+
+
 export const salvarNovo = async (data: any): Promise<boolean> => {
   try {
     const user: FirebaseUser | null = AuthStorage.getUser();
