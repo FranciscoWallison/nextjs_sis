@@ -1,10 +1,8 @@
 import React from "react";
-// import withAuth from '../hoc/withAuth';
-// import MainLayout from '../components/layout/MainLayout';
+import withAuthForm from "../hoc/withAuthForm";
 import HorizontalLinearStepper from "@/components/HorizontalLinearStepper";
 import { FormProvider } from "@/contexts/FormContext";
 import { Container, Box } from "@mui/material";
-
 
 const form: React.FC = () => {
   return (
@@ -25,5 +23,4 @@ const form: React.FC = () => {
     </FormProvider>
   );
 };
-
-export default form;
+export default withAuthForm(form);

@@ -12,6 +12,23 @@ import {
 } from "@mui/material";
 import { FormContext } from "@/contexts/FormContext";
 
+interface Questions {
+  [key: string]: string | boolean;
+}
+
+interface FormattedData {
+  id: number;
+  data: string;
+  nao_feito: boolean;
+  nao_lembro: boolean;
+}
+
+interface Question {
+  id: number;
+  name: string;
+  label: string;
+}
+
 const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   handleNext,
   handleBack,
@@ -24,7 +41,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const { formData, setFormData } = context;
   const [fillNow, setFillNow] = useState<"yes" | "no">("no");
-  const [questions, setQuestions] = useState({});
+  const [questions, setQuestions] = useState<Questions>({});
 
   const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFillNow((e.target as HTMLInputElement).value as "yes" | "no");
@@ -32,7 +49,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, id } = e.target;
-    const updatedQuestions = {
+    const updatedQuestions: Questions = {
       ...questions,
       [name]: value,
     };
@@ -52,7 +69,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked, id } = e.target;
-    const updatedQuestions = {
+    const updatedQuestions: Questions = {
       ...questions,
       [name]: checked,
     };
@@ -114,12 +131,12 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     console.log("====================================");
 
     // Validando logica de formulario preenchido
-    const formatData = (data) => {
-      const formattedArray = [];
-      const processedPrefixes = new Set();
+    const formatData = (data: { [key: string]: any }) => {
+      const formattedArray: FormattedData[] = [];
+      const processedPrefixes = new Set<string>();
 
       Object.keys(data).forEach((key) => {
-        const [prefix, suffix] = key.split(/_(?=[^_]+$)/);
+        const [prefix] = key.split(/_(?=[^_]+$)/);
 
         if (!processedPrefixes.has(prefix)) {
           const id =
@@ -130,11 +147,11 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             data[`${prefix}_date`] !== undefined ? data[`${prefix}_date`] : "";
           const nao_feito =
             data[`${prefix}_nao_feito`] !== undefined
-              ? data[`${prefix}_nao_feito`]
+              ? Boolean(data[`${prefix}_nao_feito`])
               : false;
           const nao_lembro =
             data[`${prefix}_nao_lembro`] !== undefined
-              ? data[`${prefix}_nao_lembro`]
+              ? Boolean(data[`${prefix}_nao_lembro`])
               : false;
 
           if (id !== null && (date !== "" || nao_feito || nao_lembro)) {
@@ -192,7 +209,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             flexDirection: "column",
           }}
         >
-          {formData.filteredQuestions.map((question, index) => (
+          {formData.filteredQuestions.map((question: Question, index: number) => (
             <Box key={index}>
               <Typography sx={{ mt: 3, mb: 2 }} component="h5" variant="h6">
                 {question.label}
@@ -215,7 +232,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
                   <Checkbox
                     id={`${question.id}`}
                     name={`${question.name}_nao_feito`}
-                    checked={questions[`${question.name}_nao_feito`] || false}
+                    checked={Boolean(questions[`${question.name}_nao_feito`])}
                     onChange={handleCheckboxChange}
                   />
                 }
@@ -226,7 +243,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
                   <Checkbox
                     id={`${question.id}`}
                     name={`${question.name}_nao_lembro`}
-                    checked={questions[`${question.name}_nao_lembro`] || false}
+                    checked={Boolean(questions[`${question.name}_nao_lembro`])}
                     onChange={handleCheckboxChange}
                   />
                 }

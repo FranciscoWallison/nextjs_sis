@@ -1,9 +1,35 @@
-// src/components/Step5.tsx
 import React, { useContext, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { FormContext } from "@/contexts/FormContext";
 import { salvarNovo } from "@/services/firebaseService";
+
+interface Building {
+  buildingName: string;
+  address: string;
+  hasElevator: boolean;
+  elevatorCount: number;
+}
+
+interface SelectQuestions {
+  grupo_gerador: boolean;
+  sauna_umida: boolean;
+  gerador_agua_quente: boolean;
+  banheira_hidromassagem: boolean;
+  porta_corta_fogo: boolean;
+  sistema_seguranca: boolean;
+  sistema_irrigacao: boolean;
+  portao_automatico: boolean;
+  bomba_incendio: boolean;
+  bomba_agua_potavel: boolean;
+  spda: boolean;
+}
+
+interface PrimeiroAcesso {
+  sindicoName: string;
+  buildings: Building[];
+  select_questions: SelectQuestions;
+}
 
 const Step5: React.FC = () => {
   const context = useContext(FormContext);
@@ -16,12 +42,25 @@ const Step5: React.FC = () => {
   const router = useRouter();
 
   const handleRedirect = async () => {
-    const primeiroAcesso = {};
+    const primeiroAcesso: PrimeiroAcesso = {
+      sindicoName: formData.sindicoName,
+      buildings: [],
+      select_questions: {
+        grupo_gerador: formData.grupo_gerador,
+        sauna_umida: formData.sauna_umida,
+        gerador_agua_quente: formData.gerador_agua_quente,
+        banheira_hidromassagem: formData.banheira_hidromassagem,
+        porta_corta_fogo: formData.porta_corta_fogo,
+        sistema_seguranca: formData.sistema_seguranca,
+        sistema_irrigacao: formData.sistema_irrigacao,
+        portao_automatico: formData.portao_automatico,
+        bomba_incendio: formData.bomba_incendio,
+        bomba_agua_potavel: formData.bomba_agua_potavel,
+        spda: formData.spda,
+      },
+    };
 
-    primeiroAcesso.sindicoName = formData.sindicoName;
-    primeiroAcesso.buildings = [];
-
-    const building = {
+    const building: Building = {
       buildingName: formData.buildingName,
       address: formData.address,
       hasElevator: formData.hasElevator,
@@ -30,33 +69,19 @@ const Step5: React.FC = () => {
 
     primeiroAcesso.buildings.push(building);
 
-    primeiroAcesso.select_questions = {
-      grupo_gerador: formData.grupo_gerador,
-      sauna_umida: formData.sauna_umida,
-      gerador_agua_quente: formData.gerador_agua_quente,
-      banheira_hidromassagem: formData.banheira_hidromassagem,
-      porta_corta_fogo: formData.porta_corta_fogo,
-      sistema_seguranca: formData.sistema_seguranca,
-      sistema_irrigacao: formData.sistema_irrigacao,
-      portao_automatico: formData.portao_automatico,
-      bomba_incendio: formData.bomba_incendio,
-      bomba_agua_potavel: formData.bomba_agua_potavel,
-      spda: formData.spda,
-    };
-
     const response = await fetch("/data.json");
     const result = await response.json();
 
-    const filtroPeriodicidades = (periodicidades, filtro) => {
+    const filtroPeriodicidades = (periodicidades: any[], filtro: SelectQuestions) => {
       const selecionados = [];
       const naoSelecionados = [];
 
       periodicidades.forEach((categoria) => {
         const itensFiltrados = categoria.data.filter(
-          (item) => filtro[item.id_name]
+          (item: any) => filtro[item.id_name]
         );
         const itensNaoFiltrados = categoria.data.filter(
-          (item) => !filtro[item.id_name]
+          (item: any) => !filtro[item.id_name]
         );
 
         if (itensFiltrados.length > 0) {
@@ -86,7 +111,7 @@ const Step5: React.FC = () => {
     console.log(selecionados, naoSelecionados, formData.questions);
     console.log("====================================");
 
-    const adicionarDados = (periodicidades, dadosAdicionais) => {
+    const adicionarDados = (periodicidades: any[], dadosAdicionais: any[]) => {
       // Criar um mapa de dados adicionais por ID para acesso rápido
       const dadosMap = new Map(dadosAdicionais.map((dado) => [dado.id, dado]));
 
@@ -106,7 +131,6 @@ const Step5: React.FC = () => {
 
     const resultado = adicionarDados(selecionados, formData.questions);
 
-
     const new_sindico = {
       questions: resultado,
       sindicoName: primeiroAcesso.sindicoName,
@@ -116,7 +140,6 @@ const Step5: React.FC = () => {
     console.log("====================================");
     console.log(new_sindico);
     console.log("====================================");
-    // await salvarNovo(formData);
 
     if (await salvarNovo(new_sindico)) {
       router.push("/");
