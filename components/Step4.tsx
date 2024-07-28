@@ -31,26 +31,34 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const updatedQuestions = { ...questions, [name]: value };
+    const { name, value, id } = e.target;
+    const updatedQuestions = {
+      ...questions,
+      [name]: value,
+    };
+
     const questionName = name.replace(/_(date)\d*$/, "");
+
+    updatedQuestions[`${questionName}_id`] = id;
 
     // Se o usuário selecionar uma data, limpar as opções de checkbox correspondentes
     if (name.includes("_date")) {
-  
       updatedQuestions[`${questionName}_nao_feito`] = false;
       updatedQuestions[`${questionName}_nao_lembro`] = false;
     }
-
     setQuestions(updatedQuestions);
     setFormData({ ...formData, ...updatedQuestions });
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    const updatedQuestions = { ...questions, [name]: checked };
-
+    const { name, checked, id } = e.target;
+    const updatedQuestions = {
+      ...questions,
+      [name]: checked,
+    };
     const questionName = name.replace(/_(nao_feito|nao_lembro)\d*$/, "");
+
+    updatedQuestions[`${questionName}_id`] = id;
 
     // Se o usuário selecionar uma opção de checkbox, limpar o valor da data correspondente
     if (name.includes("_nao_feito") || name.includes("_nao_lembro")) {
@@ -70,10 +78,86 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const addNext = () => {
     console.log("====================================");
-    console.log(questions);
-    formData.questions = questions;
+    const validar = {
+      // banheira_hidromassagem
+      banheira_hidromassagem_id: 7,
+      banheira_hidromassagem_nao_lembro:
+        questions.banheira_hidromassagem_nao_lembro || false,
+      banheira_hidromassagem_date: questions.banheira_hidromassagem_date || "",
+      banheira_hidromassagem_nao_feito:
+        questions.banheira_hidromassagem_nao_feito || false,
+      // sistema_seguranca
+      sistema_seguranca_id: 14,
+      sistema_seguranca_nao_lembro:
+        questions.sistema_seguranca_nao_lembro || false,
+      sistema_seguranca_date: questions.sistema_seguranca_date || "",
+      sistema_seguranca_nao_feito:
+        questions.sistema_seguranca_nao_feito || false,
+      // grupo_gerador
+      grupo_gerador_1_id: 2,
+      grupo_gerador_1_nao_lembro: questions.grupo_gerador_1_nao_lembro || false,
+      grupo_gerador_1_date: questions.grupo_gerador_1_date || "",
+      grupo_gerador_1_nao_feito: questions.grupo_gerador_1_nao_feito || false,
+      grupo_gerador_id: 1,
+      grupo_gerador_nao_lembro: questions.grupo_gerador_nao_lembro || false,
+      grupo_gerador_date: questions.grupo_gerador_date || "",
+      grupo_gerador_nao_feito: questions.grupo_gerador_nao_feito || false,
+      // sauna_umida
+      sauna_umida_id: 0,
+      sauna_umida_nao_lembro: questions.sauna_umida_nao_lembro || false,
+      sauna_umida_date: questions.sauna_umida_date || "",
+      sauna_umida_nao_feito: questions.sauna_umida_nao_feito || false,
+    };
+
     console.log("====================================");
-    setFormData(formData)
+    console.log(questions);
+    console.log("====================================");
+
+    // Validando logica de formulario preenchido
+    const formatData = (data) => {
+      const formattedArray = [];
+      const processedPrefixes = new Set();
+
+      Object.keys(data).forEach((key) => {
+        const [prefix, suffix] = key.split(/_(?=[^_]+$)/);
+
+        if (!processedPrefixes.has(prefix)) {
+          const id =
+            data[`${prefix}_id`] !== undefined
+              ? parseInt(data[`${prefix}_id`], 10)
+              : null;
+          const date =
+            data[`${prefix}_date`] !== undefined ? data[`${prefix}_date`] : "";
+          const nao_feito =
+            data[`${prefix}_nao_feito`] !== undefined
+              ? data[`${prefix}_nao_feito`]
+              : false;
+          const nao_lembro =
+            data[`${prefix}_nao_lembro`] !== undefined
+              ? data[`${prefix}_nao_lembro`]
+              : false;
+
+          if (id !== null && (date !== "" || nao_feito || nao_lembro)) {
+            formattedArray.push({
+              id: id,
+              data: date,
+              nao_feito: nao_feito,
+              nao_lembro: nao_lembro,
+            });
+          }
+
+          processedPrefixes.add(prefix);
+        }
+      });
+
+      return formattedArray;
+    };
+
+    const result_questions = formatData(validar);
+
+    formData.questions = result_questions;
+
+    setFormData(formData);
     handleNext(); // Chamando a função handleNext ao avançar
   };
 
@@ -115,6 +199,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               </Typography>
               <TextField
                 label="Data"
+                id={`${question.id}`}
                 name={`${question.name}_date`}
                 type="date"
                 InputLabelProps={{
@@ -128,6 +213,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               <FormControlLabel
                 control={
                   <Checkbox
+                    id={`${question.id}`}
                     name={`${question.name}_nao_feito`}
                     checked={questions[`${question.name}_nao_feito`] || false}
                     onChange={handleCheckboxChange}
@@ -138,6 +224,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               <FormControlLabel
                 control={
                   <Checkbox
+                    id={`${question.id}`}
                     name={`${question.name}_nao_lembro`}
                     checked={questions[`${question.name}_nao_lembro`] || false}
                     onChange={handleCheckboxChange}

@@ -27,20 +27,33 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const addNext = () => {
     const maintenanceQuestions = [
-      { name: "sauna_umida", label: "Saúna úmida - data da última drenagem?" },
       {
+        id: 0,
+        id_name: "sauna_umida",
+        name: "sauna_umida",
+        label: "Saúna úmida - data da última drenagem?",
+      },
+      {
+        id: 1,
+        id_name: "grupo_gerador",
         name: "grupo_gerador",
         label: "Grupo gerador - data da última checagem do nível do óleo?",
       },
       {
-        name: "grupo_gerador",
+        id: 2,
+        id_name: "grupo_gerador",
+        name: "grupo_gerador_1",
         label: "Grupo gerador - último teste de funcionamento?",
       },
       {
+        id: 14,
+        id_name: "sistema_seguranca",
         name: "sistema_seguranca",
         label: "Iluminação de emergência - último teste de funcionamento?",
       },
       {
+        id: 7,
+        id_name: "banheira_hidromassagem",
         name: "banheira_hidromassagem",
         label: "Banheira de hidromassagem - último teste de funcionamento?",
       },
@@ -51,7 +64,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     );
 
     const filteredQuestions = maintenanceQuestions.filter((question) =>
-      trueAttributes.includes(question.name)
+      trueAttributes.includes(question.id_name)
     );
     formData.filteredQuestions = filteredQuestions;
 

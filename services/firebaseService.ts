@@ -122,20 +122,30 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
   return false;
 };
 
-export const salvarNovo = async (data: object): Promise<boolean> => {
+export const salvarNovo = async (data: any): Promise<boolean> => {
   try {
-    const user: FirebaseUser | null = AuthStorage.getUser(); // Ensure the user is of type User or null
+    const user: FirebaseUser | null = AuthStorage.getUser();
     if (!user || !user.uid) {
       return false;
     }
-    const db = getFirestore(app);
 
-    const new_form = await setDoc(doc(db, "cliente", user.uid), data);
+    // Log dos dados recebidos
+    console.log("Dados recebidos para salvarNovo:", data);
+    console.log("Tipo de data:", typeof data);
+    console.log("É array?", Array.isArray(data));
+
+    // Verificar se 'data' é um objeto válido
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+      throw new Error("Data must be a valid object");
+    }
+
+    const db = getFirestore(app);
+    await setDoc(doc(db, "cliente", user.uid), data);
 
     return await validaUsuarioForm();
   } catch (error) {
     console.log("============salvarNovo================");
-    console.log(error);
+    console.error(error);
     console.log("====================================");
   }
   return false;
