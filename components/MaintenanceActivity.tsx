@@ -19,7 +19,7 @@ interface MaintenanceActivityProps {
   activity: Activity;
   onUpdate: (updatedActivity: Activity) => void;
   onRemove: (activityId: number) => void;
-  removeValid: boole;
+  removeValid: boolean;
 }
 
 const periodicityOptions = [
@@ -127,7 +127,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <Button variant="contained" color="primary" onClick={handleOpen}>
               Editar
             </Button>
-            {console.log("removeValid: ", removeValid)}
             {removeValid && (
               <Button
                 variant="contained"

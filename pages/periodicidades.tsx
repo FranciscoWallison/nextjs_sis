@@ -163,6 +163,7 @@ const Periodicidades: React.FC = () => {
               category={category.title}
               activities={applyFilters(category.data)}
               onUpdate={handleUpdate}
+              onRemove={()=>{}}
               removeValid={false}
             />
           ))}

@@ -240,9 +240,9 @@ class HelpQuestions {
   
     return item;
   };
-  static removeActivityById = async (data, activityId) => {
+  static removeActivityById = async (data: any[], activityId: any) => {
   return data.map(category => {
-    const filteredActivities = category.data.filter(activity => activity.id !== activityId);
+    const filteredActivities = category.data.filter((activity: any) => activity.id !== activityId);
     return {
       ...category,
       data: filteredActivities

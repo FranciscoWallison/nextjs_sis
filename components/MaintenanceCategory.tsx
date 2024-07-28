@@ -27,7 +27,7 @@ interface MaintenanceCategoryProps {
   activities: Activity[];
   onUpdate: (updatedActivity: Activity) => void;
   onRemove: (activityId: number) => void;
-  removeValid: boole;
+  removeValid: boolean;
 }
 
 const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({
