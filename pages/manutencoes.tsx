@@ -7,6 +7,8 @@ import {
   Box,
   Snackbar,
   Alert,
+  TextField,
+  Grid,
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
@@ -42,6 +44,7 @@ const Manutencoes: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [filters, setFilters] = useState({ title: "", responsavel: "", data: "" });
 
   useEffect(() => {
     fetchData();
@@ -97,6 +100,23 @@ const Manutencoes: React.FC = () => {
     setSnackbarOpen(true);
   };
 
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFilters({
+      ...filters,
+      [name]: value,
+    });
+  };
+
+  const applyFilters = (activities: Activity[]): Activity[] => {
+    return activities.filter((activity) => {
+      const matchTitle = activity.titulo.toLowerCase().includes(filters.title.toLowerCase());
+      const matchResponsavel = activity.responsavel.toLowerCase().includes(filters.responsavel.toLowerCase());
+      const matchData = !filters.data || (activity.data && activity.data.includes(filters.data));
+      return matchTitle && matchResponsavel && matchData;
+    });
+  };
+
   const progress = calculateProgress();
 
   return (
@@ -113,19 +133,53 @@ const Manutencoes: React.FC = () => {
               progress
             )}% completado`}</Typography>
           </Box>
+
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Filtrar por Título"
+                name="title"
+                value={filters.title}
+                onChange={handleFilterChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Filtrar por Responsável"
+                name="responsavel"
+                value={filters.responsavel}
+                onChange={handleFilterChange}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Filtrar por Data"
+                name="data"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={filters.data}
+                onChange={handleFilterChange}
+              />
+            </Grid>
+          </Grid>
+
           {data.map((category, index) => (
             <MaintenanceCategory
               key={index}
               category={category.title}
-              activities={category.data}
-              onUpdate={handleUpdate} // Pass the update function to MaintenanceCategory
+              activities={applyFilters(category.data)}
+              onUpdate={handleUpdate}
             />
           ))}
+
           <Snackbar
-            anchorOrigin={{ vertical: "top", horizontal: "right" }}
             open={snackbarOpen}
             autoHideDuration={6000}
             onClose={handleSnackbarClose}
+            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
             <Alert
               onClose={handleSnackbarClose}
