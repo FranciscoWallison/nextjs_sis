@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Container,
   Typography,
@@ -12,33 +12,8 @@ import {
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
+import { pegarUsuarioPeriodicidades, PeriodicidadeResponse, CategoryData, Activity } from "@/services/firebaseService";
 import MainLayout from "../components/layout/MainLayout";
-import { pegarUsuarioPeriodicidades } from "@/services/firebaseService";
-
-interface ResponsibleInfo {
-  nome: string;
-  telefone: string;
-  email: string;
-}
-
-interface Activity {
-  titulo: string;
-  atividade: string;
-  responsavel: string;
-  Periodicidade: string;
-  obrigatorio: string;
-  responsavel_info: ResponsibleInfo;
-  data?: string;
-  nao_feito?: boolean;
-  nao_lembro?: boolean;
-  id_name: string;
-  id: number;
-}
-
-interface CategoryData {
-  title: string;
-  data: Activity[];
-}
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
@@ -50,23 +25,23 @@ const Manutencoes: React.FC = () => {
     data: "",
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
-    const responseP = await pegarUsuarioPeriodicidades();
+    const responseP: PeriodicidadeResponse = await pegarUsuarioPeriodicidades();
     console.log("====================================");
     console.log(responseP.questions);
     console.log("====================================");
 
-    const sortedData = await sortActivities(responseP.questions);
+    const sortedData = sortActivities(responseP.questions);
     setData(sortedData);
     setLoading(false);
-  };
+  }, []);
 
-  const sortActivities = async (data: CategoryData[]): CategoryData[] => {
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const sortActivities = (data: CategoryData[]): CategoryData[] => {
     if (data === undefined) {
       return [];
     }

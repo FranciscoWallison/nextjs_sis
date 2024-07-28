@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { useRouter } from "next/router";
 import { FormContext } from "@/contexts/FormContext";
@@ -23,6 +23,19 @@ interface SelectQuestions {
   bomba_incendio: boolean;
   bomba_agua_potavel: boolean;
   spda: boolean;
+}
+
+interface Activity {
+  id: number;
+  data?: string;
+  nao_feito?: boolean;
+  nao_lembro?: boolean;
+  id_name: string;
+}
+
+interface Category {
+  title: string;
+  data: Activity[];
 }
 
 interface PrimeiroAcesso {
@@ -72,17 +85,17 @@ const Step5: React.FC = () => {
     const response = await fetch("/data.json");
     const result = await response.json();
 
-    const filtroPeriodicidades = (periodicidades: any[], filtro: SelectQuestions) => {
-      const selecionados = [];
-      const naoSelecionados = [];
+    const filtroPeriodicidades = (periodicidades: Category[], filtro: SelectQuestions) => {
+      const selecionados: Category[] = [];
+      const naoSelecionados: Category[] = [];
 
       periodicidades.forEach((categoria) => {
-        const itensFiltrados = categoria.data.filter(
-          (item: any) => filtro[item.id_name]
-        );
-        const itensNaoFiltrados = categoria.data.filter(
-          (item: any) => !filtro[item.id_name]
-        );
+        const itensFiltrados = categoria.data.filter((item) => {
+          return item.id_name in filtro && filtro[item.id_name as keyof SelectQuestions];
+        });
+        const itensNaoFiltrados = categoria.data.filter((item) => {
+          return !(item.id_name in filtro && filtro[item.id_name as keyof SelectQuestions]);
+        });
 
         if (itensFiltrados.length > 0) {
           selecionados.push({
@@ -111,7 +124,7 @@ const Step5: React.FC = () => {
     console.log(selecionados, naoSelecionados, formData.questions);
     console.log("====================================");
 
-    const adicionarDados = (periodicidades: any[], dadosAdicionais: any[]) => {
+    const adicionarDados = (periodicidades: Category[], dadosAdicionais: any[]) => {
       // Criar um mapa de dados adicionais por ID para acesso rápido
       const dadosMap = new Map(dadosAdicionais.map((dado) => [dado.id, dado]));
 
