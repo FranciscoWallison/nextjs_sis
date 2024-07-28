@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Container,
   Typography,
@@ -12,47 +12,22 @@ import {
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
+import { pegarUsuarioPeriodicidades, PeriodicidadeResponse, CategoryData, Activity } from "@/services/firebaseService";
 import MainLayout from "../components/layout/MainLayout";
-import { pegarUsuarioPeriodicidades } from "@/services/firebaseService";
-
-interface ResponsibleInfo {
-  nome: string;
-  telefone: string;
-  email: string;
-}
-
-interface Activity {
-  titulo: string;
-  atividade: string;
-  responsavel: string;
-  Periodicidade: string;
-  obrigatorio: string;
-  responsavel_info: ResponsibleInfo;
-  data?: string;
-  nao_feito?: boolean;
-  nao_lembro?: boolean;
-  id_name: string;
-  id: number;
-}
-
-interface CategoryData {
-  title: string;
-  data: Activity[];
-}
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [filters, setFilters] = useState({ title: "", responsavel: "", data: "" });
+  const [filters, setFilters] = useState({
+    title: "",
+    responsavel: "",
+    data: "",
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
-    const responseP = await pegarUsuarioPeriodicidades();
+    const responseP: PeriodicidadeResponse = await pegarUsuarioPeriodicidades();
     console.log("====================================");
     console.log(responseP.questions);
     console.log("====================================");
@@ -60,9 +35,17 @@ const Manutencoes: React.FC = () => {
     const sortedData = sortActivities(responseP.questions);
     setData(sortedData);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const sortActivities = (data: CategoryData[]): CategoryData[] => {
+    if (data === undefined) {
+      return [];
+    }
+
     return data.map((category) => {
       const sortedData = category.data.sort((a, b) => {
         const aDone = !!a.data || a.nao_lembro || a.nao_feito;
@@ -76,7 +59,9 @@ const Manutencoes: React.FC = () => {
   const calculateProgress = (): number => {
     let totalActivities = 0;
     let completedActivities = 0;
-
+    if (data.length === 0) {
+      return 0;
+    }
     data.forEach((category) => {
       totalActivities += category.data.length;
       category.data.forEach((activity) => {
@@ -110,9 +95,15 @@ const Manutencoes: React.FC = () => {
 
   const applyFilters = (activities: Activity[]): Activity[] => {
     return activities.filter((activity) => {
-      const matchTitle = activity.titulo.toLowerCase().includes(filters.title.toLowerCase());
-      const matchResponsavel = activity.responsavel.toLowerCase().includes(filters.responsavel.toLowerCase());
-      const matchData = !filters.data || (activity.data && activity.data.includes(filters.data));
+      const matchTitle = activity.titulo
+        .toLowerCase()
+        .includes(filters.title.toLowerCase());
+      const matchResponsavel = activity.responsavel
+        .toLowerCase()
+        .includes(filters.responsavel.toLowerCase());
+      const matchData =
+        !filters.data ||
+        (activity.data && activity.data.includes(filters.data));
       return matchTitle && matchResponsavel && matchData;
     });
   };
@@ -179,7 +170,7 @@ const Manutencoes: React.FC = () => {
             open={snackbarOpen}
             autoHideDuration={6000}
             onClose={handleSnackbarClose}
-            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
           >
             <Alert
               onClose={handleSnackbarClose}

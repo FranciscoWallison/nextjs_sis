@@ -25,32 +25,19 @@ import { FirebaseUser } from "@/interface/FirebaseUser";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
-// const firebaseConfig = {
-//   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-//   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-//   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-//   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-//   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-//   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-//   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-//   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-// };
-
 const firebaseConfig = {
-  apiKey: "AIzaSyAJXhhTYScTaOFUjeKWJ3yMcB7sbmknHrw",
-  authDomain: "manut-mais-inteligente.firebaseapp.com",
-  databaseURL: "https://manut-mais-inteligente-default-rtdb.firebaseio.com",
-  projectId: "manut-mais-inteligente",
-  storageBucket: "manut-mais-inteligente.appspot.com",
-  messagingSenderId: "1077928484057",
-  appId: "1:1077928484057:web:237e84101bffdac463b2c8",
-  measurementId: "G-2JCT8W4KGM",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
+
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-// export const analytics = getAnalytics(app);
-
-// TODO:: ADD informações na api com rotas rest-full
 
 export const CriarUsuario = async (data: LoginData): Promise<boolean> => {
   const auth = getAuth(app);
@@ -94,11 +81,9 @@ export const ObservadorEstado = async (): Promise<boolean> => {
   });
 };
 
-// TODO:: Logica de repositório e usar na api
-
 export const validaUsuarioForm = async (): Promise<boolean> => {
   try {
-    const user: FirebaseUser | null = AuthStorage.getUser(); // Ensure the user is of type User or null
+    const user: FirebaseUser | null = AuthStorage.getUser();
     if (!user || !user.uid) {
       return false;
     }
@@ -111,7 +96,6 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
       return false;
     }
     return true;
-    // const cliente = { ...infor.data(), id: user.uid };
   } catch (error) {
     console.log("====================================");
     console.log("validaUsuarioForm", error);
@@ -121,63 +105,93 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
   return false;
 };
 
-export const pegarUsuarioPeriodicidades = async (): Promise<object> => {
-  try {
-    const user: FirebaseUser | null = AuthStorage.getUser(); // Ensure the user is of type User or null
-    if (!user || !user.uid) {
-      return false;
+export interface ResponsibleInfo {
+  nome: string;
+  telefone: string;
+  email: string;
+}
+
+export interface Activity {
+  titulo: string;
+  atividade: string;
+  responsavel: string;
+  Periodicidade: string;
+  obrigatorio: string;
+  responsavel_info: ResponsibleInfo;
+  data?: string;
+  nao_feito?: boolean;
+  nao_lembro?: boolean;
+  id_name: string;
+  id: number;
+}
+
+export interface CategoryData {
+  title: string;
+  data: Activity[];
+}
+
+export interface PeriodicidadeResponse {
+  questions: CategoryData[];
+}
+
+// Your pegarUsuarioPeriodicidades function
+export const pegarUsuarioPeriodicidades =
+  async (): Promise<PeriodicidadeResponse> => {
+    try {
+      const user: FirebaseUser | null = AuthStorage.getUser();
+      if (!user || !user.uid) {
+        throw new Error("User not authenticated");
+      }
+      const db = getFirestore(app);
+      const docRef = doc(db, "cliente", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        throw new Error("No such document!");
+      }
+
+      const data = docSnap.data() as PeriodicidadeResponse;
+      return data;
+    } catch (error) {
+      console.error("pegarUsuarioPeriodicidades error", error);
+      throw error;
     }
-    const db = getFirestore(app);
-
-    const return_infor = doc(db, "cliente", user.uid);
-    const infor = await getDoc(return_infor);
-
-    return infor.data();
-    // const cliente = { ...infor.data(), id: user.uid };
-  } catch (error) {
-    console.log("====================================");
-    console.log("pegarUsuarioPeriodicidades", error);
-    console.log("====================================");
-    return false;
-  }
-  return false;
-};
+  };
 
 export const usuarioPeriodicidadesAtualizar = async (
-  updatedActivity: any
+  updatedActivity: Activity
 ): Promise<boolean> => {
   try {
     const data = await pegarUsuarioPeriodicidades();
 
-    console.log('======usuarioPeriodicidadesAtualizar===========');
+    console.log("======usuarioPeriodicidadesAtualizar===========");
     console.log(updatedActivity, data.questions);
-    console.log('====================================');
+    console.log("====================================");
 
-    const updateData = (data, updatedActivity) => {
-      return data.map(category => ({
+    const updateData = (data: CategoryData[], updatedActivity: Activity) => {
+      return data.map((category) => ({
         ...category,
-        data: category.data.map(activity =>
-          activity.id === updatedActivity.id ? { ...activity, ...updatedActivity } : activity
-        )
+        data: category.data.map((activity) =>
+          activity.id === updatedActivity.id
+            ? { ...activity, ...updatedActivity }
+            : activity
+        ),
       }));
     };
-    
+
     const updatedData = updateData(data.questions, updatedActivity);
-    
+
     console.log(updatedData);
     data.questions = updatedData;
 
-
-    await salvarNovo(data)
+    await salvarNovo(data);
     return true;
-    // const cliente = { ...infor.data(), id: user.uid };
   } catch (error) {
     console.log("====================================");
     console.log("validaUsuarioForm", error);
     console.log("====================================");
     return false;
   }
-  return false;
 };
 
 export const salvarNovo = async (data: any): Promise<boolean> => {
@@ -187,12 +201,10 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
       return false;
     }
 
-    // Log dos dados recebidos
     console.log("Dados recebidos para salvarNovo:", data);
     console.log("Tipo de data:", typeof data);
     console.log("É array?", Array.isArray(data));
 
-    // Verificar se 'data' é um objeto válido
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       throw new Error("Data must be a valid object");
     }

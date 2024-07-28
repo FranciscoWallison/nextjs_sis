@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Box, Button, Modal, TextField, FormControlLabel, Checkbox, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { Card, CardContent, Typography, Box, Button, Modal, TextField, FormControl, Select, MenuItem, InputLabel } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 import { usuarioPeriodicidadesAtualizar } from "@/services/firebaseService";
 
 interface ResponsibleInfo {
@@ -47,11 +48,19 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
     setEditedActivity({
       ...editedActivity,
-      [name as string]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+
+  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+    const { name, value } = event.target;
+    setEditedActivity({
+      ...editedActivity,
+      [name as string]: value
     });
   };
 
@@ -158,7 +167,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
               label="Periodicidade"
               name="Periodicidade"
               value={editedActivity.Periodicidade}
-              onChange={handleChange}
+              onChange={handleSelectChange}
             >
               {periodicityOptions.map((option, index) => (
                 <MenuItem key={index} value={option}>{option}</MenuItem>
