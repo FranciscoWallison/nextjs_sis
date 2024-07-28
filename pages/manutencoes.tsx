@@ -12,8 +12,16 @@ import {
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
-import { pegarUsuarioPeriodicidades, PeriodicidadeResponse, CategoryData, Activity, usuarioPeriodicidadesAtualizar } from "@/services/firebaseService";
+import {
+  pegarUsuarioPeriodicidades,
+  PeriodicidadeResponse,
+  CategoryData,
+  Activity,
+  usuarioPeriodicidadesAtualizar,
+  salvarNovo,
+} from "@/services/firebaseService";
 import MainLayout from "../components/layout/MainLayout";
+import HelpQuestions from "@/utils/HelpQuestions";
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
@@ -82,6 +90,25 @@ const Manutencoes: React.FC = () => {
 
   const handleUpdate = async (updatedActivity: Activity) => {
     await usuarioPeriodicidadesAtualizar(updatedActivity);
+    fetchData();
+    setSnackbarOpen(true);
+  };
+
+  const handleRemove = async (activityId: number) => {
+    const responseP: PeriodicidadeResponse = await pegarUsuarioPeriodicidades();
+    console.log("========handleRemove================");
+    console.log(responseP.questions);
+
+    const new_question = await HelpQuestions.removeActivityById(
+      responseP.questions,
+      activityId
+    );
+    // removeActivityById
+    console.log(new_question, activityId, responseP.questions);
+
+    responseP.questions = new_question;
+    console.log("====================================");
+    await salvarNovo(responseP);
     fetchData();
     setSnackbarOpen(true);
   };
@@ -164,6 +191,8 @@ const Manutencoes: React.FC = () => {
               category={category.title}
               activities={applyFilters(category.data)}
               onUpdate={handleUpdate}
+              onRemove={handleRemove}
+              removeValid={true}
             />
           ))}
 

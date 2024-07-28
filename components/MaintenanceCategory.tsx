@@ -25,17 +25,31 @@ interface Activity {
 interface MaintenanceCategoryProps {
   category: string;
   activities: Activity[];
-  onUpdate: (updatedActivity: Activity) => void; // Add this line
+  onUpdate: (updatedActivity: Activity) => void;
+  onRemove: (activityId: number) => void;
+  removeValid: boole;
 }
 
-const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({ category, activities, onUpdate }) => { // Add onUpdate here
+const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({
+  category,
+  activities,
+  onUpdate,
+  onRemove,
+  removeValid,
+}) => {
   return (
     <>
       {/* <Typography variant="h4" component="div" gutterBottom>
         {category}
       </Typography> */}
       {activities.map((activity, index) => (
-        <MaintenanceActivity key={index} activity={activity} onUpdate={onUpdate} /> // Pass onUpdate here
+        <MaintenanceActivity
+          key={index}
+          activity={activity}
+          onUpdate={onUpdate}
+          onRemove={onRemove}
+          removeValid={removeValid}
+        />
       ))}
     </>
   );

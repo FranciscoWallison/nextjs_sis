@@ -26,14 +26,14 @@ import { FirebaseUser } from "@/interface/FirebaseUser";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyAJXhhTYScTaOFUjeKWJ3yMcB7sbmknHrw",
+  authDomain: "manut-mais-inteligente.firebaseapp.com",
+  databaseURL: "https://manut-mais-inteligente-default-rtdb.firebaseio.com",
+  projectId: "manut-mais-inteligente",
+  storageBucket: "manut-mais-inteligente.appspot.com",
+  messagingSenderId: "1077928484057",
+  appId: "1:1077928484057:web:237e84101bffdac463b2c8",
+  measurementId: "G-2JCT8W4KGM",
 };
 
 // Initialize Firebase

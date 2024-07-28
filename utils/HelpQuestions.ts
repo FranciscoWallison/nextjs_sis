@@ -240,6 +240,15 @@ class HelpQuestions {
   
     return item;
   };
+  static removeActivityById = async (data, activityId) => {
+  return data.map(category => {
+    const filteredActivities = category.data.filter(activity => activity.id !== activityId);
+    return {
+      ...category,
+      data: filteredActivities
+    };
+  });
+};
   
 }
 
