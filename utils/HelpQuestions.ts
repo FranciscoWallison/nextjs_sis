@@ -194,6 +194,53 @@ class HelpQuestions {
 
     return { selecionados, naoSelecionados };
   };
+
+  static filterItems = async (dataItens: Category[], item: Category[]) => {
+    const itemIdsToRemove = item.flatMap(category => category.data.map(activity => activity.id));
+  
+    const filteredDataItens = dataItens.map(category => ({
+      ...category,
+      data: category.data.filter(activity => !itemIdsToRemove.includes(activity.id))
+    }));
+  
+    return filteredDataItens;
+  };
+
+  static addItem = async (dataItens: Category[], item: Category[], newItem: Activity) => {
+    // Encontrar a categoria em dataItens onde o novo item deve ser adicionado
+    const category = dataItens.find(category => 
+      category.data.some(activity => activity.id === newItem.id)
+    );
+
+
+    if (!category) {
+      console.error("Categoria não encontrada em dataItens para o id:", newItem.id);
+      return item;
+    }
+  
+    const categoryTitle = category.title;
+    const categoryIndex = item.findIndex(category => category.title === categoryTitle);
+    
+
+    console.log('==========addItem================');
+    console.log(categoryTitle, categoryIndex);
+    console.log('====================================');
+  
+
+    if (categoryIndex === -1) {
+      // Categoria não encontrada em item.json, adicionar uma nova categoria com o newItem
+      item.push({
+        title: categoryTitle,
+        data: [newItem]
+      });
+    } else {
+      // Adicionar o novo item à categoria existente em item.json
+      item[categoryIndex].data.push(newItem);
+    }
+  
+    return item;
+  };
+  
 }
 
 export default HelpQuestions;

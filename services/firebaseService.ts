@@ -188,7 +188,32 @@ export const usuarioPeriodicidadesAtualizar = async (
     return true;
   } catch (error) {
     console.log("====================================");
-    console.log("validaUsuarioForm", error);
+    console.error("usuarioPeriodicidadesAtualizar", error);
+    console.log("====================================");
+    return false;
+  }
+};
+
+
+
+export const usuarioPeriodicidadesAdicionar = async (
+  updatedActivity: any
+): Promise<boolean> => {
+  try {
+    const data = await pegarUsuarioPeriodicidades();
+
+    console.log("======usuarioPeriodicidadesAdicionar===========");
+    console.log(updatedActivity, data.questions);
+    console.log("====================================");
+
+    console.log(updatedActivity);
+    data.questions = updatedActivity;
+
+    await salvarNovo(data);
+    return true;
+  } catch (error) {
+    console.log("====================================");
+    console.log("usuarioPeriodicidadesAdicionar", error);
     console.log("====================================");
     return false;
   }

@@ -39,7 +39,7 @@ export const MainListItems: React.FC<DynamicListItemsProps> = ({ pages }) => {
 
 export const secondaryListItems = (
   <React.Fragment>
-    <ListSubheader component="div" inset>
+    {/* <ListSubheader component="div" inset>
       Saved reports
     </ListSubheader>
     <ListItemButton>
@@ -59,6 +59,6 @@ export const secondaryListItems = (
         <AssignmentIcon />
       </ListItemIcon>
       <ListItemText primary="Teste 3" />
-    </ListItemButton>
+    </ListItemButton> */}
   </React.Fragment>
 );

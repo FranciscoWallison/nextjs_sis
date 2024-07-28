@@ -7,6 +7,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/Layers";
 import EngineeringIcon from '@mui/icons-material/Engineering';
+import BusinessIcon from '@mui/icons-material/Business';
 
 interface Page {
   title: string;
@@ -30,8 +31,8 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
     { title: "Dashboard", url: "/dashboard", icon: DashboardIcon },
     { title: "Manutenções", url: "/manutencoes", icon: EngineeringIcon },
     { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
-    { title: "Reports", url: "/reports", icon: BarChartIcon },
-    { title: "Integrations", url: "/integrations", icon: LayersIcon },
+    { title: "Periodicidades", url: "/periodicidades", icon: BusinessIcon },
+    // { title: "Integrations", url: "/integrations", icon: LayersIcon },
   ]);
 
   const addPage = (page: Page) => {
