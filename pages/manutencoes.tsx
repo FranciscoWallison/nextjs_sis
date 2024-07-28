@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, CircularProgress, LinearProgress, Box } from "@mui/material";
+import {
+  Container,
+  Typography,
+  CircularProgress,
+  LinearProgress,
+  Box,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
 import MainLayout from "../components/layout/MainLayout";
@@ -33,24 +41,26 @@ interface CategoryData {
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const responseP = await pegarUsuarioPeriodicidades();
-      console.log('====================================');
-      console.log(responseP.questions);
-      console.log('====================================');
-
-      const sortedData = sortActivities(responseP.questions);
-      setData(sortedData);
-      setLoading(false);
-    };
-
     fetchData();
   }, []);
 
+  const fetchData = async () => {
+    setLoading(true);
+    const responseP = await pegarUsuarioPeriodicidades();
+    console.log("====================================");
+    console.log(responseP.questions);
+    console.log("====================================");
+
+    const sortedData = sortActivities(responseP.questions);
+    setData(sortedData);
+    setLoading(false);
+  };
+
   const sortActivities = (data: CategoryData[]): CategoryData[] => {
-    return data.map(category => {
+    return data.map((category) => {
       const sortedData = category.data.sort((a, b) => {
         const aDone = !!a.data || a.nao_lembro || a.nao_feito;
         const bDone = !!b.data || b.nao_lembro || b.nao_feito;
@@ -64,9 +74,9 @@ const Manutencoes: React.FC = () => {
     let totalActivities = 0;
     let completedActivities = 0;
 
-    data.forEach(category => {
+    data.forEach((category) => {
       totalActivities += category.data.length;
-      category.data.forEach(activity => {
+      category.data.forEach((activity) => {
         if (activity.data || activity.nao_lembro || activity.nao_feito) {
           completedActivities++;
         }
@@ -78,31 +88,55 @@ const Manutencoes: React.FC = () => {
     return (completedActivities / totalActivities) * 100;
   };
 
-  if (loading) {
-    return (
-      <Container>
-        <CircularProgress />
-      </Container>
-    );
-  }
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
+
+  const handleUpdate = () => {
+    fetchData();
+    setSnackbarOpen(true);
+  };
 
   const progress = calculateProgress();
 
   return (
     <MainLayout title={"Manutenção"}>
-      <Container>
-        <Box sx={{ width: '100%', mb: 2 }}>
-          <LinearProgress variant="determinate" value={progress} />
-          <Typography variant="body2" color="text.secondary">{`${Math.round(progress)}% completado`}</Typography>
-        </Box>
-        {data.map((category, index) => (
-          <MaintenanceCategory
-            key={index}
-            category={category.title}
-            activities={category.data}
-          />
-        ))}
-      </Container>
+      {loading ? (
+        <Container>
+          <CircularProgress />
+        </Container>
+      ) : (
+        <Container>
+          <Box sx={{ width: "100%", mb: 2 }}>
+            <LinearProgress variant="determinate" value={progress} />
+            <Typography variant="body2" color="text.secondary">{`${Math.round(
+              progress
+            )}% completado`}</Typography>
+          </Box>
+          {data.map((category, index) => (
+            <MaintenanceCategory
+              key={index}
+              category={category.title}
+              activities={category.data}
+              onUpdate={handleUpdate} // Pass the update function to MaintenanceCategory
+            />
+          ))}
+          <Snackbar
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            open={snackbarOpen}
+            autoHideDuration={6000}
+            onClose={handleSnackbarClose}
+          >
+            <Alert
+              onClose={handleSnackbarClose}
+              severity="success"
+              sx={{ width: "100%" }}
+            >
+              Atividade atualizada com sucesso!
+            </Alert>
+          </Snackbar>
+        </Container>
+      )}
     </MainLayout>
   );
 };

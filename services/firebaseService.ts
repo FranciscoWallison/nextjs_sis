@@ -36,7 +36,6 @@ import { FirebaseUser } from "@/interface/FirebaseUser";
 //   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 // };
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyAJXhhTYScTaOFUjeKWJ3yMcB7sbmknHrw",
   authDomain: "manut-mais-inteligente.firebaseapp.com",
@@ -45,7 +44,7 @@ const firebaseConfig = {
   storageBucket: "manut-mais-inteligente.appspot.com",
   messagingSenderId: "1077928484057",
   appId: "1:1077928484057:web:237e84101bffdac463b2c8",
-  measurementId: "G-2JCT8W4KGM"
+  measurementId: "G-2JCT8W4KGM",
 };
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
@@ -122,8 +121,7 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
   return false;
 };
 
-
-export const pegarUsuarioPeriodicidades= async (): Promise<object> => {
+export const pegarUsuarioPeriodicidades = async (): Promise<object> => {
   try {
     const user: FirebaseUser | null = AuthStorage.getUser(); // Ensure the user is of type User or null
     if (!user || !user.uid) {
@@ -138,13 +136,49 @@ export const pegarUsuarioPeriodicidades= async (): Promise<object> => {
     // const cliente = { ...infor.data(), id: user.uid };
   } catch (error) {
     console.log("====================================");
-    console.log("validaUsuarioForm", error);
+    console.log("pegarUsuarioPeriodicidades", error);
     console.log("====================================");
     return false;
   }
   return false;
 };
 
+export const usuarioPeriodicidadesAtualizar = async (
+  updatedActivity: any
+): Promise<boolean> => {
+  try {
+    const data = await pegarUsuarioPeriodicidades();
+
+    console.log('======usuarioPeriodicidadesAtualizar===========');
+    console.log(updatedActivity, data.questions);
+    console.log('====================================');
+
+    const updateData = (data, updatedActivity) => {
+      return data.map(category => ({
+        ...category,
+        data: category.data.map(activity =>
+          activity.id === updatedActivity.id ? { ...activity, ...updatedActivity } : activity
+        )
+      }));
+    };
+    
+    const updatedData = updateData(data.questions, updatedActivity);
+    
+    console.log(updatedData);
+    data.questions = updatedData;
+
+
+    await salvarNovo(data)
+    return true;
+    // const cliente = { ...infor.data(), id: user.uid };
+  } catch (error) {
+    console.log("====================================");
+    console.log("validaUsuarioForm", error);
+    console.log("====================================");
+    return false;
+  }
+  return false;
+};
 
 export const salvarNovo = async (data: any): Promise<boolean> => {
   try {
@@ -159,7 +193,7 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
     console.log("É array?", Array.isArray(data));
 
     // Verificar se 'data' é um objeto válido
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
       throw new Error("Data must be a valid object");
     }
 

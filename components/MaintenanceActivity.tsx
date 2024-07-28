@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, Typography, Box, Button, Modal, TextField, FormControlLabel, Checkbox, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
+import { usuarioPeriodicidadesAtualizar } from "@/services/firebaseService";
 
 interface ResponsibleInfo {
   nome: string;
@@ -23,6 +24,7 @@ interface Activity {
 
 interface MaintenanceActivityProps {
   activity: Activity;
+  onUpdate: () => void; // Add this line
 }
 
 const periodicityOptions = [
@@ -38,7 +40,7 @@ const periodicityOptions = [
   "A cada cinco anos"
 ];
 
-const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity }) => {
+const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onUpdate }) => { // Add onUpdate here
   const [open, setOpen] = useState(false);
   const [editedActivity, setEditedActivity] = useState(activity);
 
@@ -53,10 +55,10 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity }) =
     });
   };
 
-  const handleSave = () => {
-    // Salvar as mudanças - você pode adicionar lógica para salvar as mudanças aqui
-    console.log(editedActivity);
+  const handleSave = async () => {
+    await usuarioPeriodicidadesAtualizar(editedActivity);
     handleClose();
+    onUpdate(); // Call the update function
   };
 
   function formatDate(input: string | undefined) {
@@ -181,26 +183,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity }) =
             value={editedActivity.data || ""}
             onChange={handleChange}
           />
-          {/* <FormControlLabel
-            control={
-              <Checkbox
-                name="nao_feito"
-                checked={editedActivity.nao_feito || false}
-                onChange={handleChange}
-              />
-            }
-            label="Não foi feito"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="nao_lembro"
-                checked={editedActivity.nao_lembro || false}
-                onChange={handleChange}
-              />
-            }
-            label="Não lembro"
-          /> */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
             <Button variant="contained" color="secondary" onClick={handleClose}>
               Cancelar

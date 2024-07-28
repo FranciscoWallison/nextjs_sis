@@ -25,18 +25,19 @@ interface Activity {
 interface MaintenanceCategoryProps {
   category: string;
   activities: Activity[];
+  onUpdate: () => void; // Add this line
 }
 
-const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({ category, activities }) => {
+const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({ category, activities, onUpdate }) => { // Add onUpdate here
   return (
-    <Box mb={4}>
-      {/* <Typography variant="h4" gutterBottom>
+    <>
+      {/* <Typography variant="h4" component="div" gutterBottom>
         {category}
       </Typography> */}
       {activities.map((activity, index) => (
-        <MaintenanceActivity key={index} activity={activity} />
+        <MaintenanceActivity key={index} activity={activity} onUpdate={onUpdate} /> // Pass onUpdate here
       ))}
-    </Box>
+    </>
   );
 };
 
