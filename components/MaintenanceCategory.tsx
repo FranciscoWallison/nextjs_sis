@@ -1,6 +1,6 @@
-import React from 'react';
-import { Typography, Box } from '@mui/material';
-import MaintenanceActivity from './MaintenanceActivity';
+import React from "react";
+import MaintenanceActivity from "./MaintenanceActivity";
+import { Typography, Box } from "@mui/material";
 
 interface ResponsibleInfo {
   nome: string;
@@ -15,6 +15,11 @@ interface Activity {
   Periodicidade: string;
   obrigatorio: string;
   responsavel_info: ResponsibleInfo;
+  data?: string;
+  nao_feito?: boolean;
+  nao_lembro?: boolean;
+  id_name: string;
+  id: number;
 }
 
 interface MaintenanceCategoryProps {
@@ -25,8 +30,7 @@ interface MaintenanceCategoryProps {
 const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({ category, activities }) => {
   return (
     <Box mb={4}>
-      {/* Titulo */}
-      {/* <Typography variant="h4" component="div" gutterBottom>
+      {/* <Typography variant="h4" gutterBottom>
         {category}
       </Typography> */}
       {activities.map((activity, index) => (
