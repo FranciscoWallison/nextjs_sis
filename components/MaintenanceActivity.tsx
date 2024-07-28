@@ -1,31 +1,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, Typography, Box, Button, Modal, TextField, FormControl, Select, MenuItem, InputLabel } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
-import { usuarioPeriodicidadesAtualizar } from "@/services/firebaseService";
-
-interface ResponsibleInfo {
-  nome: string;
-  telefone: string;
-  email: string;
-}
-
-interface Activity {
-  titulo: string;
-  atividade: string;
-  responsavel: string;
-  Periodicidade: string;
-  obrigatorio: string;
-  responsavel_info: ResponsibleInfo;
-  data?: string;
-  nao_feito?: boolean;
-  nao_lembro?: boolean;
-  id_name: string;
-  id: number;
-}
+import { Activity } from "@/services/firebaseService";
 
 interface MaintenanceActivityProps {
   activity: Activity;
-  onUpdate: () => void; // Add this line
+  onUpdate: (updatedActivity: Activity) => void; // Add this line
 }
 
 const periodicityOptions = [
@@ -65,9 +45,8 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
   };
 
   const handleSave = async () => {
-    await usuarioPeriodicidadesAtualizar(editedActivity);
+    onUpdate(editedActivity); // Call the update function
     handleClose();
-    onUpdate(); // Call the update function
   };
 
   function formatDate(input: string | undefined) {

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
-import { pegarUsuarioPeriodicidades, PeriodicidadeResponse, CategoryData, Activity } from "@/services/firebaseService";
+import { pegarUsuarioPeriodicidades, PeriodicidadeResponse, CategoryData, Activity, usuarioPeriodicidadesAtualizar } from "@/services/firebaseService";
 import MainLayout from "../components/layout/MainLayout";
 
 const Manutencoes: React.FC = () => {
@@ -80,7 +80,8 @@ const Manutencoes: React.FC = () => {
     setSnackbarOpen(false);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async (updatedActivity: Activity) => {
+    await usuarioPeriodicidadesAtualizar(updatedActivity);
     fetchData();
     setSnackbarOpen(true);
   };

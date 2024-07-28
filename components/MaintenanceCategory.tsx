@@ -25,7 +25,7 @@ interface Activity {
 interface MaintenanceCategoryProps {
   category: string;
   activities: Activity[];
-  onUpdate: () => void; // Add this line
+  onUpdate: (updatedActivity: Activity) => void; // Add this line
 }
 
 const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({ category, activities, onUpdate }) => { // Add onUpdate here
