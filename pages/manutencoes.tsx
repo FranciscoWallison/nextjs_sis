@@ -44,7 +44,11 @@ const Manutencoes: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [filters, setFilters] = useState({ title: "", responsavel: "", data: "" });
+  const [filters, setFilters] = useState({
+    title: "",
+    responsavel: "",
+    data: "",
+  });
 
   useEffect(() => {
     fetchData();
@@ -57,12 +61,16 @@ const Manutencoes: React.FC = () => {
     console.log(responseP.questions);
     console.log("====================================");
 
-    const sortedData = sortActivities(responseP.questions);
+    const sortedData = await sortActivities(responseP.questions);
     setData(sortedData);
     setLoading(false);
   };
 
-  const sortActivities = (data: CategoryData[]): CategoryData[] => {
+  const sortActivities = async (data: CategoryData[]): CategoryData[] => {
+    if (data === undefined) {
+      return [];
+    }
+
     return data.map((category) => {
       const sortedData = category.data.sort((a, b) => {
         const aDone = !!a.data || a.nao_lembro || a.nao_feito;
@@ -76,7 +84,9 @@ const Manutencoes: React.FC = () => {
   const calculateProgress = (): number => {
     let totalActivities = 0;
     let completedActivities = 0;
-
+    if (data.length === 0) {
+      return 0;
+    }
     data.forEach((category) => {
       totalActivities += category.data.length;
       category.data.forEach((activity) => {
@@ -110,9 +120,15 @@ const Manutencoes: React.FC = () => {
 
   const applyFilters = (activities: Activity[]): Activity[] => {
     return activities.filter((activity) => {
-      const matchTitle = activity.titulo.toLowerCase().includes(filters.title.toLowerCase());
-      const matchResponsavel = activity.responsavel.toLowerCase().includes(filters.responsavel.toLowerCase());
-      const matchData = !filters.data || (activity.data && activity.data.includes(filters.data));
+      const matchTitle = activity.titulo
+        .toLowerCase()
+        .includes(filters.title.toLowerCase());
+      const matchResponsavel = activity.responsavel
+        .toLowerCase()
+        .includes(filters.responsavel.toLowerCase());
+      const matchData =
+        !filters.data ||
+        (activity.data && activity.data.includes(filters.data));
       return matchTitle && matchResponsavel && matchData;
     });
   };
@@ -179,7 +195,7 @@ const Manutencoes: React.FC = () => {
             open={snackbarOpen}
             autoHideDuration={6000}
             onClose={handleSnackbarClose}
-            anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
           >
             <Alert
               onClose={handleSnackbarClose}
