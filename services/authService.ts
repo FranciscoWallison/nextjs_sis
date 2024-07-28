@@ -1,6 +1,4 @@
 import { LoginData } from "@/interface/Login";
-import AuthStorage from "@/utils/AuthStorage";
-
 import {
   CriarUsuario,
   Login,

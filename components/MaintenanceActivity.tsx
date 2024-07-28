@@ -1,31 +1,25 @@
-import React, { useState } from 'react';
-import { Card, CardContent, Typography, Box, Button, Modal, TextField, FormControl, Select, MenuItem, InputLabel } from '@mui/material';
-import { SelectChangeEvent } from '@mui/material/Select';
-import { usuarioPeriodicidadesAtualizar } from "@/services/firebaseService";
-
-interface ResponsibleInfo {
-  nome: string;
-  telefone: string;
-  email: string;
-}
-
-interface Activity {
-  titulo: string;
-  atividade: string;
-  responsavel: string;
-  Periodicidade: string;
-  obrigatorio: string;
-  responsavel_info: ResponsibleInfo;
-  data?: string;
-  nao_feito?: boolean;
-  nao_lembro?: boolean;
-  id_name: string;
-  id: number;
-}
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Button,
+  Modal,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
+} from "@mui/material";
+import { SelectChangeEvent } from "@mui/material/Select";
+import { Activity } from "@/services/firebaseService";
 
 interface MaintenanceActivityProps {
   activity: Activity;
-  onUpdate: () => void; // Add this line
+  onUpdate: (updatedActivity: Activity) => void;
+  onRemove: (activityId: number) => void;
+  removeValid: boole;
 }
 
 const periodicityOptions = [
@@ -38,21 +32,30 @@ const periodicityOptions = [
   "A cada ano",
   "A cada dois anos",
   "A cada três anos",
-  "A cada cinco anos"
+  "A cada cinco anos",
 ];
 
-const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onUpdate }) => { // Add onUpdate here
+const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
+  activity,
+  onUpdate,
+  onRemove,
+  removeValid,
+}) => {
+  // Add onRemove here
   const [open, setOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false); // Add state for remove confirmation modal
   const [editedActivity, setEditedActivity] = useState(activity);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const handleRemoveOpen = () => setRemoveOpen(true); // Function to open remove confirmation modal
+  const handleRemoveClose = () => setRemoveOpen(false); // Function to close remove confirmation modal
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setEditedActivity({
       ...editedActivity,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -60,14 +63,18 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
     const { name, value } = event.target;
     setEditedActivity({
       ...editedActivity,
-      [name as string]: value
+      [name as string]: value,
     });
   };
 
   const handleSave = async () => {
-    await usuarioPeriodicidadesAtualizar(editedActivity);
+    onUpdate(editedActivity); // Call the update function
     handleClose();
-    onUpdate(); // Call the update function
+  };
+
+  const handleRemove = () => {
+    onRemove(activity.id); // Call the remove function
+    handleRemoveClose();
   };
 
   function formatDate(input: string | undefined) {
@@ -75,8 +82,8 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
     const datePart = input.match(/\d+/g);
     if (!datePart) return;
     const year = datePart[0].substring(2),
-          month = datePart[1],
-          day = datePart[2];
+      month = datePart[1],
+      day = datePart[2];
     return `${day}/${month}/${year}`;
   }
 
@@ -116,24 +123,38 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
             </Typography>
           )}
 
-          <Button sx={{ mt: 1.5 }} variant="contained" color="primary" onClick={handleOpen}>
-            Editar
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+            <Button variant="contained" color="primary" onClick={handleOpen}>
+              Editar
+            </Button>
+            {console.log("removeValid: ", removeValid)}
+            {removeValid && (
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleRemoveOpen}
+              >
+                Remover
+              </Button>
+            )}
+          </Box>
         </CardContent>
       </Card>
 
       <Modal open={open} onClose={handleClose}>
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          border: '2px solid #000',
-          boxShadow: 24,
-          p: 4,
-        }}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            border: "2px solid #000",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
           <Typography variant="h6" component="h2">
             Editar Atividade
           </Typography>
@@ -170,7 +191,9 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
               onChange={handleSelectChange}
             >
               {periodicityOptions.map((option, index) => (
-                <MenuItem key={index} value={option}>{option}</MenuItem>
+                <MenuItem key={index} value={option}>
+                  {option}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -192,12 +215,47 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({ activity, onU
             value={editedActivity.data || ""}
             onChange={handleChange}
           />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button variant="contained" color="secondary" onClick={handleClose}>
               Cancelar
             </Button>
             <Button variant="contained" color="primary" onClick={handleSave}>
               Salvar
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      <Modal open={removeOpen} onClose={handleRemoveClose}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            border: "2px solid #000",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <Typography variant="h6" component="h2">
+            Confirmar Remoção
+          </Typography>
+          <Typography variant="body2" sx={{ my: 2 }}>
+            Você tem certeza que deseja remover esta atividade?
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleRemoveClose}
+            >
+              Cancelar
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleRemove}>
+              Remover
             </Button>
           </Box>
         </Box>

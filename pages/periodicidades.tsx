@@ -17,13 +17,12 @@ import {
   PeriodicidadeResponse,
   CategoryData,
   Activity,
-  usuarioPeriodicidadesAtualizar,
-  salvarNovo,
+  usuarioPeriodicidadesAdicionar,
 } from "@/services/firebaseService";
 import MainLayout from "../components/layout/MainLayout";
 import HelpQuestions from "@/utils/HelpQuestions";
 
-const Manutencoes: React.FC = () => {
+const Periodicidades: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
@@ -36,11 +35,18 @@ const Manutencoes: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const responseP: PeriodicidadeResponse = await pegarUsuarioPeriodicidades();
+    const response = await fetch("/data.json");
+    const result = await response.json();
+    const addData = await HelpQuestions.filterItems(
+      result,
+      responseP.questions
+    );
+
     console.log("====================================");
-    console.log(responseP.questions);
+    console.log(responseP.questions, result, addData);
     console.log("====================================");
 
-    const sortedData = sortActivities(responseP.questions);
+    const sortedData = sortActivities(addData);
     setData(sortedData);
     setLoading(false);
   }, []);
@@ -49,13 +55,13 @@ const Manutencoes: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const sortActivities = (data: CategoryData[]): CategoryData[] => {
+  const sortActivities = (data: any[]): CategoryData[] => {
     if (data === undefined) {
       return [];
     }
 
     return data.map((category) => {
-      const sortedData = category.data.sort((a, b) => {
+      const sortedData = category.data.sort((a: any, b: any) => {
         const aDone = !!a.data || a.nao_lembro || a.nao_feito;
         const bDone = !!b.data || b.nao_lembro || b.nao_feito;
         return aDone === bDone ? 0 : aDone ? 1 : -1;
@@ -64,51 +70,26 @@ const Manutencoes: React.FC = () => {
     });
   };
 
-  const calculateProgress = (): number => {
-    let totalActivities = 0;
-    let completedActivities = 0;
-    if (data.length === 0) {
-      return 0;
-    }
-    data.forEach((category) => {
-      totalActivities += category.data.length;
-      category.data.forEach((activity) => {
-        if (activity.data || activity.nao_lembro || activity.nao_feito) {
-          completedActivities++;
-        }
-      });
-    });
-
-    if (totalActivities === 0) return 0;
-
-    return (completedActivities / totalActivities) * 100;
-  };
-
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
   };
 
   const handleUpdate = async (updatedActivity: Activity) => {
-    await usuarioPeriodicidadesAtualizar(updatedActivity);
-    fetchData();
-    setSnackbarOpen(true);
-  };
-
-  const handleRemove = async (activityId: number) => {
     const responseP: PeriodicidadeResponse = await pegarUsuarioPeriodicidades();
-    console.log("========handleRemove================");
-    console.log(responseP.questions);
-
-    const new_question = await HelpQuestions.removeActivityById(
-      responseP.questions,
-      activityId
+    const response = await fetch("/data.json");
+    const result = await response.json();
+    const addData = await HelpQuestions.filterItems(
+      result,
+      responseP.questions
     );
-    // removeActivityById
-    console.log(new_question, activityId, responseP.questions);
 
-    responseP.questions = new_question;
-    console.log("====================================");
-    await salvarNovo(responseP);
+    const add_new = await HelpQuestions.addItem(
+      result,
+      responseP.questions,
+      updatedActivity
+    );
+
+    await usuarioPeriodicidadesAdicionar(add_new);
     fetchData();
     setSnackbarOpen(true);
   };
@@ -136,23 +117,14 @@ const Manutencoes: React.FC = () => {
     });
   };
 
-  const progress = calculateProgress();
-
   return (
-    <MainLayout title={"Manutenção"}>
+    <MainLayout title={"Periodicidades"}>
       {loading ? (
         <Container>
           <CircularProgress />
         </Container>
       ) : (
         <Container>
-          <Box sx={{ width: "100%", mb: 2 }}>
-            <LinearProgress variant="determinate" value={progress} />
-            <Typography variant="body2" color="text.secondary">{`${Math.round(
-              progress
-            )}% completado`}</Typography>
-          </Box>
-
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={4}>
               <TextField
@@ -191,8 +163,7 @@ const Manutencoes: React.FC = () => {
               category={category.title}
               activities={applyFilters(category.data)}
               onUpdate={handleUpdate}
-              onRemove={handleRemove}
-              removeValid={true}
+              removeValid={false}
             />
           ))}
 
@@ -207,7 +178,7 @@ const Manutencoes: React.FC = () => {
               severity="success"
               sx={{ width: "100%" }}
             >
-              Atividade atualizada com sucesso!
+              Atividade adicionado em Manutenções!
             </Alert>
           </Snackbar>
         </Container>
@@ -216,4 +187,4 @@ const Manutencoes: React.FC = () => {
   );
 };
 
-export default withAuth(Manutencoes);
+export default withAuth(Periodicidades);

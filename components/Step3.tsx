@@ -67,10 +67,6 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
       trueAttributes.includes(question.id_name)
     );
     formData.filteredQuestions = filteredQuestions;
-
-    console.log("========handleCheckboxChange==========");
-    console.log(filteredQuestions);
-    console.log("====================================");
     setFormData(formData);
     handleNext();
   };

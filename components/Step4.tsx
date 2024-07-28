@@ -11,17 +11,13 @@ import {
   RadioGroup,
 } from "@mui/material";
 import { FormContext } from "@/contexts/FormContext";
+import HelpQuestions from "@/utils/HelpQuestions";
 
 interface Questions {
   [key: string]: string | boolean;
 }
 
-interface FormattedData {
-  id: number;
-  data: string;
-  nao_feito: boolean;
-  nao_lembro: boolean;
-}
+
 
 interface Question {
   id: number;
@@ -93,87 +89,9 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, ...updatedQuestions });
   };
 
-  const addNext = () => {
-    console.log("====================================");
-    const validar = {
-      // banheira_hidromassagem
-      banheira_hidromassagem_id: 7,
-      banheira_hidromassagem_nao_lembro:
-        questions.banheira_hidromassagem_nao_lembro || false,
-      banheira_hidromassagem_date: questions.banheira_hidromassagem_date || "",
-      banheira_hidromassagem_nao_feito:
-        questions.banheira_hidromassagem_nao_feito || false,
-      // sistema_seguranca
-      sistema_seguranca_id: 14,
-      sistema_seguranca_nao_lembro:
-        questions.sistema_seguranca_nao_lembro || false,
-      sistema_seguranca_date: questions.sistema_seguranca_date || "",
-      sistema_seguranca_nao_feito:
-        questions.sistema_seguranca_nao_feito || false,
-      // grupo_gerador
-      grupo_gerador_1_id: 2,
-      grupo_gerador_1_nao_lembro: questions.grupo_gerador_1_nao_lembro || false,
-      grupo_gerador_1_date: questions.grupo_gerador_1_date || "",
-      grupo_gerador_1_nao_feito: questions.grupo_gerador_1_nao_feito || false,
-      grupo_gerador_id: 1,
-      grupo_gerador_nao_lembro: questions.grupo_gerador_nao_lembro || false,
-      grupo_gerador_date: questions.grupo_gerador_date || "",
-      grupo_gerador_nao_feito: questions.grupo_gerador_nao_feito || false,
-      // sauna_umida
-      sauna_umida_id: 0,
-      sauna_umida_nao_lembro: questions.sauna_umida_nao_lembro || false,
-      sauna_umida_date: questions.sauna_umida_date || "",
-      sauna_umida_nao_feito: questions.sauna_umida_nao_feito || false,
-    };
-
-    console.log("====================================");
-    console.log(questions);
-    console.log("====================================");
-
-    // Validando logica de formulario preenchido
-    const formatData = (data: { [key: string]: any }) => {
-      const formattedArray: FormattedData[] = [];
-      const processedPrefixes = new Set<string>();
-
-      Object.keys(data).forEach((key) => {
-        const [prefix] = key.split(/_(?=[^_]+$)/);
-
-        if (!processedPrefixes.has(prefix)) {
-          const id =
-            data[`${prefix}_id`] !== undefined
-              ? parseInt(data[`${prefix}_id`], 10)
-              : null;
-          const date =
-            data[`${prefix}_date`] !== undefined ? data[`${prefix}_date`] : "";
-          const nao_feito =
-            data[`${prefix}_nao_feito`] !== undefined
-              ? Boolean(data[`${prefix}_nao_feito`])
-              : false;
-          const nao_lembro =
-            data[`${prefix}_nao_lembro`] !== undefined
-              ? Boolean(data[`${prefix}_nao_lembro`])
-              : false;
-
-          if (id !== null && (date !== "" || nao_feito || nao_lembro)) {
-            formattedArray.push({
-              id: id,
-              data: date,
-              nao_feito: nao_feito,
-              nao_lembro: nao_lembro,
-            });
-          }
-
-          processedPrefixes.add(prefix);
-        }
-      });
-
-      return formattedArray;
-    };
-
-    const result_questions = formatData(validar);
-
+  const addNext = async () => {
+    const result_questions = await HelpQuestions.formatDataStep4(questions);
     formData.questions = result_questions;
-
     setFormData(formData);
     handleNext(); // Chamando a função handleNext ao avançar
   };
@@ -209,48 +127,52 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             flexDirection: "column",
           }}
         >
-          {formData.filteredQuestions.map((question: Question, index: number) => (
-            <Box key={index}>
-              <Typography sx={{ mt: 3, mb: 2 }} component="h5" variant="h6">
-                {question.label}
-              </Typography>
-              <TextField
-                label="Data"
-                id={`${question.id}`}
-                name={`${question.name}_date`}
-                type="date"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                value={questions[`${question.name}_date`] || ""}
-                onChange={handleFormChange}
-                fullWidth
-                sx={{ mb: 1 }}
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id={`${question.id}`}
-                    name={`${question.name}_nao_feito`}
-                    checked={Boolean(questions[`${question.name}_nao_feito`])}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Não foi feito"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id={`${question.id}`}
-                    name={`${question.name}_nao_lembro`}
-                    checked={Boolean(questions[`${question.name}_nao_lembro`])}
-                    onChange={handleCheckboxChange}
-                  />
-                }
-                label="Não lembro"
-              />
-            </Box>
-          ))}
+          {formData.filteredQuestions.map(
+            (question: Question, index: number) => (
+              <Box key={index}>
+                <Typography sx={{ mt: 3, mb: 2 }} component="h5" variant="h6">
+                  {question.label}
+                </Typography>
+                <TextField
+                  label="Data"
+                  id={`${question.id}`}
+                  name={`${question.name}_date`}
+                  type="date"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  value={questions[`${question.name}_date`] || ""}
+                  onChange={handleFormChange}
+                  fullWidth
+                  sx={{ mb: 1 }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      id={`${question.id}`}
+                      name={`${question.name}_nao_feito`}
+                      checked={Boolean(questions[`${question.name}_nao_feito`])}
+                      onChange={handleCheckboxChange}
+                    />
+                  }
+                  label="Não foi feito"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      id={`${question.id}`}
+                      name={`${question.name}_nao_lembro`}
+                      checked={Boolean(
+                        questions[`${question.name}_nao_lembro`]
+                      )}
+                      onChange={handleCheckboxChange}
+                    />
+                  }
+                  label="Não lembro"
+                />
+              </Box>
+            )
+          )}
         </Paper>
       )}
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
