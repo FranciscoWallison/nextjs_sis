@@ -28,6 +28,7 @@ interface MaintenanceCategoryProps {
   onUpdate: (updatedActivity: Activity) => void;
   onRemove: (activityId: number) => void;
   removeValid: boolean;
+  titleUpdate: string;
 }
 
 const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({
@@ -36,6 +37,7 @@ const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({
   onUpdate,
   onRemove,
   removeValid,
+  titleUpdate
 }) => {
   return (
     <>
@@ -49,6 +51,7 @@ const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({
           onUpdate={onUpdate}
           onRemove={onRemove}
           removeValid={removeValid}
+          titleUpdate={titleUpdate}
         />
       ))}
     </>

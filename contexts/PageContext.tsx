@@ -27,11 +27,11 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [pages, setPages] = useState<Page[]>([
-    { title: "Home", url: "/", icon: HomeIcon },
-    { title: "Dashboard", url: "/dashboard", icon: DashboardIcon },
-    { title: "Manutenções", url: "/manutencoes", icon: EngineeringIcon },
+    // { title: "Home", url: "/", icon: HomeIcon },
+    { title: "Dashboard", url: "/", icon: DashboardIcon },
+    { title: "Manutenções", url: "/ManutencoesDashboard", icon: EngineeringIcon },
     { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
-    { title: "Periodicidades", url: "/periodicidades", icon: BusinessIcon },
+    // { title: "Periodicidades", url: "/periodicidades", icon: BusinessIcon },
     // { title: "Integrations", url: "/integrations", icon: LayersIcon },
   ]);
 
