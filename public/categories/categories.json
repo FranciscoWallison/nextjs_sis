@@ -1,0 +1,34 @@
+[
+    {
+        "id": 0,
+        "title": "Equipamentos Industrializados"
+    },
+    {
+        "id": 1,
+        "title": "Sistemas Hidrossanitários"
+    },
+    {
+        "id": 2,
+        "title": "Sistema de automação"
+    },
+    {
+        "id": 3,
+        "title": "Revestimentos de parede, piso e teto"
+    },
+    {
+        "id": 4,
+        "title": "Esquadrias"
+    },
+    {
+        "id": 5,
+        "title": "Instalações elétricas"
+    },
+    {
+        "id": 6,
+        "title": "Equipamentos de incêndio"
+    },
+    {
+        "id": 7,
+        "title": "Outros"
+    }
+]
