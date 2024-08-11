@@ -1,5 +1,4 @@
-// src/components/Step3.tsx
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -9,11 +8,35 @@ import {
 } from "@mui/material";
 import { FormContext } from "../contexts/FormContext";
 
+interface FormItem {
+  name: string;
+  label: string;
+}
+
+interface Item {
+  titulo: string;
+  atividade: string;
+  responsavel: string;
+  Periodicidade: string;
+  obrigatorio: string;
+  responsavel_info: {
+    nome: string;
+    telefone: string;
+    email: string;
+  };
+  data: string;
+  id_name: string;
+  id: number;
+  category_id: number;
+}
+
 const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   handleNext,
   handleBack,
 }) => {
   const context = useContext(FormContext);
+  const [formItems, setFormItems] = useState<FormItem[]>([]);
+  const [allItems, setAllItems] = useState<Item[]>([]);
 
   if (!context) {
     throw new Error("FormContext must be used within a FormProvider");
@@ -21,86 +44,82 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const { formData, setFormData } = context;
 
+  // Função para buscar e processar os dados dos itens
+  const fetchFormItems = async () => {
+    try {
+      const response = await fetch("/items/items.json");
+      const items = await response.json();
+
+      // Filtrar e mapear itens para remover duplicatas com base em id_name
+      const mappedItems: FormItem[] = items.reduce((acc: FormItem[], item: any) => {
+        if (!acc.some((formItem) => formItem.name === item.id_name)) {
+          acc.push({
+            name: item.id_name,
+            label: item.titulo,
+          });
+        }
+        return acc;
+      }, []);
+      // mappedItems.push({ name: "hasElevator", label: "Possui Elevadores?" })
+      setFormItems(mappedItems);
+      setAllItems(items); // Salva todos os itens para uso posterior
+    } catch (error) {
+      console.error("Erro ao buscar ou processar os itens:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFormItems();
+  }, []);
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.checked });
   };
 
   const addNext = () => {
-    const maintenanceQuestions = [
-      {
-        id: 0,
-        id_name: "sauna_umida",
-        name: "sauna_umida",
-        label: "Saúna úmida - data da última drenagem?",
-      },
-      {
-        id: 1,
-        id_name: "grupo_gerador",
-        name: "grupo_gerador",
-        label: "Grupo gerador - data da última checagem do nível do óleo?",
-      },
-      {
-        id: 2,
-        id_name: "grupo_gerador",
-        name: "grupo_gerador_1",
-        label: "Grupo gerador - último teste de funcionamento?",
-      },
-      {
-        id: 14,
-        id_name: "sistema_seguranca",
-        name: "sistema_seguranca",
-        label: "Iluminação de emergência - último teste de funcionamento?",
-      },
-      {
-        id: 7,
-        id_name: "banheira_hidromassagem",
-        name: "banheira_hidromassagem",
-        label: "Banheira de hidromassagem - último teste de funcionamento?",
-      },
-    ];
-
     const trueAttributes = Object.keys(formData).filter(
       (key) => formData[key] === true
     );
 
-    const filteredQuestions = maintenanceQuestions.filter((question) =>
-      trueAttributes.includes(question.id_name)
+    // Filtrar todos os itens que correspondem aos atributos selecionados
+    const selectedItems = allItems.filter((item) =>
+      trueAttributes.includes(item.id_name)
     );
-    formData.filteredQuestions = filteredQuestions;
-    setFormData(formData);
+
+    // Adicionar todos os itens obrigatórios
+    const mandatoryItems = allItems.filter((item) => item.obrigatorio === "Sim");
+
+    // Combinar os itens selecionados e obrigatórios, removendo duplicatas
+    const combinedItems = Array.from(new Set([...selectedItems, ...mandatoryItems]));
+
+    // Adicionar o campo `data` a cada item combinado
+    const finalItems = combinedItems.map((item) => ({
+      ...item,
+      data: "", // Inicializa o campo data como string vazia
+    }));
+
+    // Atualizar o estado do formulário com os itens finais
+    // TODO::ADICIONAR A TIPAGEM
+    setFormData((prevData: any) => ({
+      ...prevData,
+      questions: finalItems,
+    }));
+
     handleNext();
   };
-
-  const items = [
-    { name: "sauna_umida", label: "Saúna úmida" },
-    { name: "grupo_gerador", label: "Grupo gerador" },
-    { name: "banheira_hidromassagem", label: "Banheira de hidromassagem" },
-    { name: "gerador_agua_quente", label: "Gerador de água quente coletivo" },
-    { name: "porta_corta_fogo", label: "Porta corta fogo" },
-    { name: "sistema_seguranca", label: "Sistema de segurança" },
-    {
-      name: "spda",
-      label: "SPDA (Sistema de proteção contra descargas atmosféricas)",
-    },
-    { name: "sistema_irrigacao", label: "Sistema de irrigação" },
-    { name: "bomba_agua_potavel", label: "Bomba de água potável" },
-    { name: "bomba_incendio", label: "Bomba de incêndio" },
-    { name: "portao_automatico", label: "Portão automático" },
-  ];
 
   return (
     <Box>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
         Excelente! Estamos quase finalizando. Precisamos que você preencha as
-        informações iniciais referentes às manutenções.{" "}
+        informações iniciais referentes às manutenções.
       </Typography>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        {" "}
         Para o sistema gerar as manutenções necessárias conforme NBR 5674, por
         favor selecione abaixo caso o {formData.buildingName} possua algum
         desses itens:
       </Typography>
-      {items.map((item) => (
+      {formItems.map((item) => (
         <FormControlLabel
           key={item.name}
           control={

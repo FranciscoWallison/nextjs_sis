@@ -17,30 +17,38 @@ import {
   PeriodicidadeResponse,
   CategoryData,
   Activity,
-  usuarioPeriodicidadesAtualizar,
-  salvarNovo,
+  usuarioPeriodicidadesAdicionar,
 } from "@/services/firebaseService";
 import MainLayout from "../components/layout/MainLayout";
 import HelpQuestions from "@/utils/HelpQuestions";
 
-const Manutencoes: React.FC = () => {
+const Periodicidades: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [filters, setFilters] = useState({
-    title: "",
+    titulo: "",
     responsavel: "",
     data: "",
   });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const responseP: PeriodicidadeResponse = await pegarUsuarioPeriodicidades();
-    console.log("====================================");
-    console.log(responseP.questions);
-    console.log("====================================");
+    const responseP = await pegarUsuarioPeriodicidades();
 
-    const sortedData = sortActivities(responseP.questions);
+    if (responseP === null) {
+      return;
+    }
+
+    const response = await fetch("/items/items.json");
+    const result = await response.json();
+    const addData = await HelpQuestions.filterItems(
+      result,
+      responseP.questions
+    );
+
+    const sortedData = sortActivities(addData);
+
     setData(sortedData);
     setLoading(false);
   }, []);
@@ -49,39 +57,19 @@ const Manutencoes: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const sortActivities = (data: CategoryData[]): CategoryData[] => {
-    if (data === undefined) {
+  const sortActivities = (activities: Activity[]): Activity[] => {
+    if (!Array.isArray(activities)) {
       return [];
     }
 
-    return data.map((category) => {
-      const sortedData = category.data.sort((a, b) => {
-        const aDone = !!a.data || a.nao_lembro || a.nao_feito;
-        const bDone = !!b.data || b.nao_lembro || b.nao_feito;
-        return aDone === bDone ? 0 : aDone ? 1 : -1;
-      });
-      return { ...category, data: sortedData };
+    // Ordena as atividades com base na presença do campo 'data'
+    return activities.sort((a, b) => {
+      const aDone = !!a.data; // Verifica se 'a.data' está preenchido
+      const bDone = !!b.data; // Verifica se 'b.data' está preenchido
+
+      // Ordena com base na presença do campo 'data'
+      return aDone === bDone ? 0 : aDone ? 1 : -1;
     });
-  };
-
-  const calculateProgress = (): number => {
-    let totalActivities = 0;
-    let completedActivities = 0;
-    if (data.length === 0) {
-      return 0;
-    }
-    data.forEach((category) => {
-      totalActivities += category.data.length;
-      category.data.forEach((activity) => {
-        if (activity.data || activity.nao_lembro || activity.nao_feito) {
-          completedActivities++;
-        }
-      });
-    });
-
-    if (totalActivities === 0) return 0;
-
-    return (completedActivities / totalActivities) * 100;
   };
 
   const handleSnackbarClose = () => {
@@ -89,26 +77,25 @@ const Manutencoes: React.FC = () => {
   };
 
   const handleUpdate = async (updatedActivity: Activity) => {
-    await usuarioPeriodicidadesAtualizar(updatedActivity);
-    fetchData();
-    setSnackbarOpen(true);
-  };
+    const responseP = await pegarUsuarioPeriodicidades();
+    if (responseP === null) {
+      return;
+    }
 
-  const handleRemove = async (activityId: number) => {
-    const responseP: PeriodicidadeResponse = await pegarUsuarioPeriodicidades();
-    console.log("========handleRemove================");
-    console.log(responseP.questions);
-
-    const new_question = await HelpQuestions.removeActivityById(
-      responseP.questions,
-      activityId
+    const response = await fetch("/items/items.json");
+    const result = await response.json();
+    const addData = await HelpQuestions.filterItems(
+      result,
+      responseP.questions
     );
-    // removeActivityById
-    console.log(new_question, activityId, responseP.questions);
 
-    responseP.questions = new_question;
-    console.log("====================================");
-    await salvarNovo(responseP);
+    const add_new = await HelpQuestions.addItem(
+      result,
+      responseP.questions,
+      updatedActivity
+    );
+
+    await usuarioPeriodicidadesAdicionar(add_new);
     fetchData();
     setSnackbarOpen(true);
   };
@@ -122,44 +109,39 @@ const Manutencoes: React.FC = () => {
   };
 
   const applyFilters = (activities: Activity[]): Activity[] => {
+    if (!Array.isArray(activities)) {
+      return [];
+    }
+
     return activities.filter((activity) => {
       const matchTitle = activity.titulo
         .toLowerCase()
-        .includes(filters.title.toLowerCase());
+        .includes(filters.titulo.toLowerCase());
       const matchResponsavel = activity.responsavel
         .toLowerCase()
         .includes(filters.responsavel.toLowerCase());
       const matchData =
-        !filters.data ||
-        (activity.data && activity.data.includes(filters.data));
+        !filters.data || activity.data === filters.data;
+
       return matchTitle && matchResponsavel && matchData;
     });
   };
 
-  const progress = calculateProgress();
-
   return (
-    <MainLayout title={"Manutenção"}>
+    <>
       {loading ? (
         <Container>
           <CircularProgress />
         </Container>
       ) : (
         <Container>
-          <Box sx={{ width: "100%", mb: 2 }}>
-            <LinearProgress variant="determinate" value={progress} />
-            <Typography variant="body2" color="text.secondary">{`${Math.round(
-              progress
-            )}% completado`}</Typography>
-          </Box>
-
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 label="Filtrar por Título"
-                name="title"
-                value={filters.title}
+                name="titulo"
+                value={filters.titulo}
                 onChange={handleFilterChange}
               />
             </Grid>
@@ -188,11 +170,12 @@ const Manutencoes: React.FC = () => {
           {data.map((category, index) => (
             <MaintenanceCategory
               key={index}
-              category={category.title}
-              activities={applyFilters(category.data)}
+              category={category.titulo}
+              activities={applyFilters([category])} // Certifique-se de que o category é um array ou transforme-o em um array
               onUpdate={handleUpdate}
-              onRemove={handleRemove}
-              removeValid={true}
+              onRemove={()=>{}}
+              removeValid={false}
+              titleUpdate={"Adicionar"}
             />
           ))}
 
@@ -207,13 +190,13 @@ const Manutencoes: React.FC = () => {
               severity="success"
               sx={{ width: "100%" }}
             >
-              Atividade atualizada com sucesso!
+              Atividade adicionado em Manutenções!
             </Alert>
           </Snackbar>
         </Container>
       )}
-    </MainLayout>
+    </>
   );
 };
 
-export default withAuth(Manutencoes);
+export default withAuth(Periodicidades);

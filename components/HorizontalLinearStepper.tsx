@@ -13,13 +13,11 @@ import Step1 from "./Step1";
 import Step2 from "./Step2";
 import Step3 from "./Step3";
 import Step4 from "./Step4";
-import Step5 from "./Step5";
 
 const steps = [
   "Saudação Inicial",
   "Informações do Prédio",
   "Cadastrando as Manutenções",
-  "Cadastrando Periodicidades",
   "Confirmação e Conclusão",
 ];
 
@@ -48,8 +46,6 @@ export default function HorizontalLinearStepper() {
         return <Step3 handleNext={handleNext} handleBack={handleBack} />;
       case 3:
         return <Step4 handleNext={handleNext} handleBack={handleBack} />;
-      case 4:
-        return <Step5 />;
       default:
         return "Unknown step";
     }

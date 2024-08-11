@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -20,6 +20,7 @@ interface MaintenanceActivityProps {
   onUpdate: (updatedActivity: Activity) => void;
   onRemove: (activityId: number) => void;
   removeValid: boolean;
+  titleUpdate: string;
 }
 
 const periodicityOptions = [
@@ -40,53 +41,56 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   onUpdate,
   onRemove,
   removeValid,
+  titleUpdate
 }) => {
-  // Add onRemove here
   const [open, setOpen] = useState(false);
-  const [removeOpen, setRemoveOpen] = useState(false); // Add state for remove confirmation modal
-  const [editedActivity, setEditedActivity] = useState(activity);
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-  const handleRemoveOpen = () => setRemoveOpen(true); // Function to open remove confirmation modal
-  const handleRemoveClose = () => setRemoveOpen(false); // Function to close remove confirmation modal
+  const handleOpen = () => {
+    setEditedActivity(activity);
+    setOpen(true);
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleClose = () => {
+    setOpen(false);
+    setEditedActivity(null);
+  };
+
+  const handleRemoveOpen = () => setRemoveOpen(true);
+  const handleRemoveClose = () => setRemoveOpen(false);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setEditedActivity({
-      ...editedActivity,
-      [name]: type === "checkbox" ? checked : value,
-    });
-  };
+    setEditedActivity((prevActivity) =>
+      prevActivity ? { ...prevActivity, [name]: type === "checkbox" ? checked : value } : null
+    );
+  }, []);
 
-  const handleSelectChange = (event: SelectChangeEvent<string>) => {
+  const handleSelectChange = useCallback((event: SelectChangeEvent<string>) => {
     const { name, value } = event.target;
-    setEditedActivity({
-      ...editedActivity,
-      [name as string]: value,
-    });
-  };
+    setEditedActivity((prevActivity) =>
+      prevActivity ? { ...prevActivity, [name as string]: value } : null
+    );
+  }, []);
 
-  const handleSave = async () => {
-    onUpdate(editedActivity); // Call the update function
-    handleClose();
+  const handleSave = () => {
+    if (editedActivity) {
+      onUpdate(editedActivity);
+      handleClose();
+    }
   };
 
   const handleRemove = () => {
-    onRemove(activity.id); // Call the remove function
+    onRemove(activity.id);
     handleRemoveClose();
   };
 
-  function formatDate(input: string | undefined) {
-    if (!input) return;
-    const datePart = input.match(/\d+/g);
-    if (!datePart) return;
-    const year = datePart[0].substring(2),
-      month = datePart[1],
-      day = datePart[2];
+  const formatDate = (input: string | undefined) => {
+    if (!input) return "";
+    const [year, month, day] = input.split("-");
     return `${day}/${month}/${year}`;
-  }
-
+  };
   return (
     <>
       <Card sx={{ mb: 2 }}>
@@ -125,7 +129,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button variant="contained" color="primary" onClick={handleOpen}>
-              Editar
+              {titleUpdate}
             </Button>
             {removeValid && (
               <Button
@@ -162,7 +166,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             margin="normal"
             label="Título"
             name="titulo"
-            value={editedActivity.titulo}
+            value={editedActivity?.titulo || ""}
             onChange={handleChange}
           />
           <TextField
@@ -170,7 +174,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             margin="normal"
             label="Atividade"
             name="atividade"
-            value={editedActivity.atividade}
+            value={editedActivity?.atividade || ""}
             onChange={handleChange}
           />
           <TextField
@@ -178,16 +182,19 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             margin="normal"
             label="Responsável"
             name="responsavel"
-            value={editedActivity.responsavel}
+            value={editedActivity?.responsavel || ""}
             onChange={handleChange}
+            disabled={true} // Ou apenas disabled se quiser desabilitar o campo
+
           />
           <FormControl fullWidth margin="normal">
             <InputLabel>Periodicidade</InputLabel>
             <Select
               label="Periodicidade"
               name="Periodicidade"
-              value={editedActivity.Periodicidade}
+              value={editedActivity?.Periodicidade || ""}
               onChange={handleSelectChange}
+              disabled={true} // Ou apenas disabled se quiser desabilitar o campo
             >
               {periodicityOptions.map((option, index) => (
                 <MenuItem key={index} value={option}>
@@ -201,7 +208,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             margin="normal"
             label="Obrigatório"
             name="obrigatorio"
-            value={editedActivity.obrigatorio}
+            value={editedActivity?.obrigatorio || ""}
             onChange={handleChange}
           />
           <TextField
@@ -211,7 +218,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             name="data"
             type="date"
             InputLabelProps={{ shrink: true }}
-            value={editedActivity.data || ""}
+            value={editedActivity?.data || ""}
             onChange={handleChange}
           />
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>

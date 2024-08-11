@@ -1,12 +1,10 @@
-// src/components/Step2.tsx
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   Box,
   Button,
   TextField,
   Typography,
-  Checkbox,
-  FormControlLabel,
+  Grid,
 } from "@mui/material";
 import { FormContext } from "../contexts/FormContext";
 
@@ -15,6 +13,7 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   handleBack,
 }) => {
   const context = useContext(FormContext);
+  const [loadingCEP, setLoadingCEP] = useState(false);
 
   if (!context) {
     throw new Error("FormContext must be used within a FormProvider");
@@ -26,8 +25,43 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.checked });
+  const handleCEPBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const cep = e.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+    if (cep.length === 8) {
+      setLoadingCEP(true);
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+
+        if (!data.erro) {
+          setFormData({
+            ...formData,
+            cep: data.cep,
+            address: data.logradouro,
+            bairro: data.bairro,
+            cidade: data.localidade,
+            uf: data.uf,
+          });
+        } else {
+          alert("CEP não encontrado.");
+        }
+      } catch (error) {
+        console.error("Erro ao buscar o CEP:", error);
+      } finally {
+        setLoadingCEP(false);
+      }
+    }
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = e.target.value;
+    const today = new Date().toISOString().split("T")[0]; // Data atual no formato YYYY-MM-DD
+
+    if (selectedDate > today) {
+      alert("A data de entrega não pode ser no futuro.");
+    } else {
+      setFormData({ ...formData, [e.target.name]: selectedDate });
+    }
   };
 
   return (
@@ -36,50 +70,93 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         Olá, {formData.sindicoName}! Precisamos que você preencha as informações
         iniciais referente ao prédio.
       </Typography>
-      <TextField
-        label="Nome do Prédio"
-        name="buildingName"
-        value={formData.buildingName || ""}
-        onChange={handleChange}
-        fullWidth
-        sx={{ mt: 2 }}
-      />
-      <TextField
-        label="Endereço"
-        name="address"
-        value={formData.address || ""}
-        onChange={handleChange}
-        fullWidth
-        sx={{ mt: 2 }}
-      />
-      <TextField
-        label="Idade do Prédio"
-        name="buildingAge"
-        value={formData.buildingAge || ""}
-        onChange={handleChange}
-        fullWidth
-        sx={{ mt: 2 }}
-      />
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={formData.hasElevator || false}
-            onChange={handleCheckboxChange}
-            name="hasElevator"
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Nome do Prédio"
+            name="buildingName"
+            value={formData.buildingName || ""}
+            onChange={handleChange}
+            fullWidth
+            sx={{ mt: 2 }}
           />
-        }
-        label="Possui Elevadores?"
-      />
-      {formData.hasElevator && (
-        <TextField
-          label="Quantos?"
-          name="elevatorCount"
-          value={formData.elevatorCount || ""}
-          onChange={handleChange}
-          fullWidth
-          sx={{ mt: 2 }}
-        />
-      )}
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Data de Entrega"
+            name="buildingAge"
+            type="date"
+            value={formData.buildingAge || ""}
+            onChange={handleDateChange}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            inputProps={{
+              max: new Date().toISOString().split("T")[0], // Define a data máxima como hoje
+            }}
+            sx={{ mt: 2 }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="CNPJ"
+            name="cnpj"
+            value={formData.cnpj || ""}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mt: 2 }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="CEP"
+            name="cep"
+            value={formData.cep || ""}
+            onChange={handleChange}
+            onBlur={handleCEPBlur}
+            fullWidth
+            required
+            sx={{ mt: 2 }}
+            disabled={loadingCEP}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Rua/Endereço"
+            name="address"
+            value={formData.address || ""}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mt: 2 }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Bairro"
+            name="bairro"
+            value={formData.bairro || ""}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mt: 2 }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Cidade"
+            name="cidade"
+            value={formData.cidade || ""}
+            onChange={handleChange}
+            fullWidth
+            required
+            sx={{ mt: 2 }}
+          />
+        </Grid>
+      </Grid>
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
         <Button variant="contained" onClick={handleBack}>
           Voltar
