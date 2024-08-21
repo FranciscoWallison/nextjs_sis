@@ -134,7 +134,7 @@ const Periodicidades: React.FC = () => {
           <CircularProgress />
         </Container>
       ) : (
-        <Container>
+        <>
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={4}>
               <TextField
@@ -193,7 +193,7 @@ const Periodicidades: React.FC = () => {
               Atividade adicionado em Manutenções!
             </Alert>
           </Snackbar>
-        </Container>
+        </>
       )}
     </>
   );

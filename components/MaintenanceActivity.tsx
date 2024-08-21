@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
 import { Activity } from "@/services/firebaseService";
+import ActivityStatus  from "@/components/layout/ActivityStatus";
 
 interface MaintenanceActivityProps {
   activity: Activity;
@@ -91,12 +92,13 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     const [year, month, day] = input.split("-");
     return `${day}/${month}/${year}`;
   };
+
   return (
     <>
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h5" component="div">
-            {activity.titulo}
+            {activity.titulo} <ActivityStatus activity={{ ...activity, data: activity.data || "", category_id: activity.category_id ?? 0 }} />
           </Typography>
           <Typography sx={{ mb: 1.5 }} color="text.secondary">
             {activity.atividade}
@@ -107,9 +109,9 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           <Typography variant="body2">
             <strong>Periodicidade:</strong> {activity.Periodicidade}
           </Typography>
-          <Typography variant="body2">
+          {/* <Typography variant="body2">
             <strong>Obrigatório:</strong> {activity.obrigatorio}
-          </Typography>
+          </Typography> */}
           <Typography variant="body2">
             <strong>Feitos:</strong>
           </Typography>
@@ -203,14 +205,14 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               ))}
             </Select>
           </FormControl>
-          <TextField
+          {/* <TextField
             fullWidth
             margin="normal"
             label="Obrigatório"
             name="obrigatorio"
             value={editedActivity?.obrigatorio || ""}
             onChange={handleChange}
-          />
+          /> */}
           <TextField
             fullWidth
             margin="normal"

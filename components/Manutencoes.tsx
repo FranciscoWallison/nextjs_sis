@@ -23,6 +23,7 @@ import {
   usuarioPeriodicidadesAdicionar
 } from "@/services/firebaseService";
 import HelpQuestions from "@/utils/HelpQuestions";
+import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<Activity[]>([]);
@@ -33,6 +34,11 @@ const Manutencoes: React.FC = () => {
     titulo: "",
     responsavel: "",
     data: "",
+  });
+  const [statusFilters, setStatusFilters] = useState({
+    regular: false,
+    aVencer: false,
+    vencido: false,
   });
 
   const fetchData = useCallback(async () => {
@@ -122,6 +128,13 @@ const Manutencoes: React.FC = () => {
     });
   };
 
+  const handleStatusFilterChange = (status: keyof typeof statusFilters) => {
+    setStatusFilters((prevFilters) => ({
+      ...prevFilters,
+      [status]: !prevFilters[status],
+    }));
+  };
+
   const applyFilters = (activities: Activity[]): Activity[] => {
     return activities.filter((activity) => {
       const matchTitle = activity.titulo
@@ -133,7 +146,23 @@ const Manutencoes: React.FC = () => {
       const matchData =
         !filters.data ||
         (activity.data && activity.data.includes(filters.data));
-      return matchTitle && matchResponsavel && matchData;
+
+      const status = getStatus(activity); // Supondo que a função getStatus existe
+
+      const matchStatus =
+        (statusFilters.regular && status === "Regular") ||
+        (statusFilters.aVencer && status === "A vencer") ||
+        (statusFilters.vencido && status === "Vencido");
+
+      return (
+        matchTitle &&
+        matchResponsavel &&
+        matchData &&
+        (!statusFilters.regular &&
+          !statusFilters.aVencer &&
+          !statusFilters.vencido ||
+          matchStatus)
+      );
     });
   };
 
@@ -171,10 +200,10 @@ const Manutencoes: React.FC = () => {
       item.id = (new_object.length + 200);
 
       item.responsavel_info = {
-            "nome": "",
-            "telefone": "",
-            "email": ""
-        };
+        "nome": "",
+        "telefone": "",
+        "email": ""
+      };
 
       item.id_name = "hasElevator";
       item.category_id = 0;
@@ -185,7 +214,7 @@ const Manutencoes: React.FC = () => {
       await usuarioPeriodicidadesAdicionar(new_object);
       fetchData();
       setSnackbarOpen(true);
-    
+
     } catch (error) {
       console.error(error)
     }
@@ -199,7 +228,7 @@ const Manutencoes: React.FC = () => {
           <CircularProgress />
         </Container>
       ) : (
-        <Container>
+        <>
           <Box sx={{ width: "100%", mb: 2 }}>
             <LinearProgress variant="determinate" value={progress} />
             <Typography variant="body2" color="text.secondary">{`${Math.round(
@@ -238,10 +267,44 @@ const Manutencoes: React.FC = () => {
               />
             </Grid>
           </Grid>
+            
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid  item xs={12} sm={4}>
+              <Button
+                fullWidth={true}
+                variant={statusFilters.regular ? "contained" : "outlined"}
+                color="success"
+                onClick={() => handleStatusFilterChange("regular")}
+              >
+                Regular
+              </Button>
+            </Grid>
+            <Grid  item xs={12} sm={4}>
+              <Button
+                fullWidth={true}
+                variant={statusFilters.aVencer ? "contained" : "outlined"}
+                color="warning"
+                onClick={() => handleStatusFilterChange("aVencer")}
+              >
+                A vencer
+              </Button>
+            </Grid>
+            <Grid  item xs={12} sm={4}>
+              <Button
+                fullWidth={true}
+                variant={statusFilters.vencido ? "contained" : "outlined"}
+                color="error"
+                onClick={() => handleStatusFilterChange("vencido")}
+              >
+                Vencido
+              </Button>
+            </Grid>
+          </Grid>
+
           <Grid
             container
             spacing={2}
-            sx={{ mb: 2, justifyContent: "flex-start", alignItems: "center" }} // Alinha o conteúdo à esquerda
+            sx={{ mb: 2, justifyContent: "flex-start", alignItems: "center" }}
           >
             <Grid item xs={12} sm={4}>
               <Button variant="contained" onClick={handleOpenModal}>
@@ -253,7 +316,7 @@ const Manutencoes: React.FC = () => {
               onClose={handleCloseModal}
               activity={initialActivity}
               onSave={onSave}
-              disabled={false} // Define como true para manter os campos desabilitados
+              disabled={false}
             />
           </Grid>
 
@@ -280,7 +343,7 @@ const Manutencoes: React.FC = () => {
               Atividade atualizada com sucesso!
             </Alert>
           </Snackbar>
-        </Container>
+        </>
       )}
     </>
   );

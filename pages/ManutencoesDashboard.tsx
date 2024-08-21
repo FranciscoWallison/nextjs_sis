@@ -11,7 +11,7 @@ const ManutencoesDashboard: React.FC = () => {
   return (
     <MainLayout title="Manutenções">
       <Container>
-        <Grid container spacing={2} sx={{ mb: 2, mt: 2 }}>
+        <Grid container spacing={2} sx={{ mb: 4 , mt: 2 }} >
           <Grid item xs={6}>
             <Button
               fullWidth
@@ -32,10 +32,10 @@ const ManutencoesDashboard: React.FC = () => {
           </Grid>
         </Grid>
 
-        <Box sx={{ mt: 2 }}>
+      
           {selectedTab === "manutencoes" && <Manutencoes />}
           {selectedTab === "periodicidades" && <Periodicidades />}
-        </Box>
+      
       </Container>
     </MainLayout>
   );
