@@ -87,13 +87,13 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     );
 
     // Adicionar todos os itens obrigatórios
-    const mandatoryItems = allItems.filter((item) => item.obrigatorio === "Sim");
+    // const mandatoryItems = allItems.filter((item) => item.obrigatorio === "Sim");
 
     // Combinar os itens selecionados e obrigatórios, removendo duplicatas
-    const combinedItems = Array.from(new Set([...selectedItems, ...mandatoryItems]));
+    // const combinedItems = Array.from(new Set([...selectedItems, ...mandatoryItems]));
 
     // Adicionar o campo `data` a cada item combinado
-    const finalItems = combinedItems.map((item) => ({
+    const finalItems = selectedItems.map((item) => ({
       ...item,
       data: "", // Inicializa o campo data como string vazia
     }));
@@ -110,10 +110,6 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   return (
     <Box>
-      <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        Excelente! Estamos quase finalizando. Precisamos que você preencha as
-        informações iniciais referentes às manutenções.
-      </Typography>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
         Para o sistema gerar as manutenções necessárias conforme NBR 5674, por
         favor selecione abaixo caso o {formData.buildingName} possua algum

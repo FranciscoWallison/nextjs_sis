@@ -124,14 +124,14 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
             ))}
           </Select>
         </FormControl>
-        <TextField
+        {/* <TextField
           fullWidth
           margin="normal"
           label="Obrigatório"
           name="obrigatorio"
           value={editedActivity.obrigatorio || ""}
           onChange={handleChange}
-        />
+        /> */}
         <TextField
           fullWidth
           margin="normal"
