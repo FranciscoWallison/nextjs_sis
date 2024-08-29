@@ -22,6 +22,7 @@ interface ActivityModalProps {
 }
 
 const periodicityOptions = [
+  "Não aplicável",
   "A cada semana",
   "A cada duas semanas",
   "A cada mês",

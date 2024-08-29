@@ -19,7 +19,7 @@ interface Activity {
 }
 
 const ActivityStatus: React.FC<{ activity: Activity }> = ({ activity }) => {
-  const status = getStatus(activity);
+  const dataStatus = getStatus(activity);
 
   const getColor = (status: string) => {
     switch (status) {
@@ -34,7 +34,7 @@ const ActivityStatus: React.FC<{ activity: Activity }> = ({ activity }) => {
     }
   };
 
-  return <Chip label={status} color={getColor(status)} size="small" />;
+  return <Chip label={dataStatus.status} color={getColor(dataStatus.status)} size="small" />;
 };
 
 export default ActivityStatus;

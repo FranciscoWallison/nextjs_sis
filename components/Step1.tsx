@@ -1,5 +1,5 @@
 // src/components/Step1.tsx
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { FormContext } from "@/contexts/FormContext";
 
@@ -11,9 +11,34 @@ const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
   }
 
   const { formData, setFormData } = context;
+  
+  const [firstNameError, setFirstNameError] = useState(false);
+  const [lastNameError, setLastNameError] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, sindicoName: e.target.value });
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, firstName: e.target.value });
+  };
+
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, lastName: e.target.value });
+  };
+
+  const handleNextStep = () => {
+    if (!formData.firstName) {
+      setFirstNameError(true);
+    } else {
+      setFirstNameError(false);
+    }
+
+    if (!formData.lastName) {
+      setLastNameError(true);
+    } else {
+      setLastNameError(false);
+    }
+
+    if (formData.firstName && formData.lastName) {
+      handleNext();
+    }
   };
 
   return (
@@ -22,12 +47,26 @@ const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
         Olá, Síndico! Seja bem-vindo ao GMP+.
       </Typography>
       <TextField
-        label="Nome do Síndico"
-        value={formData.sindicoName || ""}
-        onChange={handleChange}
+        label="Nome"
+        value={formData.firstName || ""}
+        onChange={handleFirstNameChange}
         fullWidth
+        required
+        error={firstNameError}
+        helperText={firstNameError ? "Nome é obrigatório" : ""}
+        sx={{ mb: 2 }}
       />
-      <Button variant="contained" onClick={handleNext} sx={{ mt: 2 }}>
+      <TextField
+        label="Sobrenome"
+        value={formData.lastName || ""}
+        onChange={handleLastNameChange}
+        fullWidth
+        required
+        error={lastNameError}
+        helperText={lastNameError ? "Sobrenome é obrigatório" : ""}
+        sx={{ mb: 2 }}
+      />
+      <Button variant="contained" onClick={handleNextStep} sx={{ mt: 2 }}>
         Continuar
       </Button>
     </Box>

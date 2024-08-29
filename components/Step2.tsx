@@ -68,12 +68,12 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     <Box>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
         Olá, {formData.sindicoName}! Precisamos que você preencha as informações
-        iniciais referente ao prédio.
+        iniciais referentes ao condomínio.
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
-            label="Nome do Prédio"
+            label="Nome do Condomínio"
             name="buildingName"
             value={formData.buildingName || ""}
             onChange={handleChange}

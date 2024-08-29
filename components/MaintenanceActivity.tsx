@@ -14,7 +14,8 @@ import {
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
 import { Activity } from "@/services/firebaseService";
-import ActivityStatus  from "@/components/layout/ActivityStatus";
+import ActivityStatus from "@/components/layout/ActivityStatus";
+import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
 
 interface MaintenanceActivityProps {
   activity: Activity;
@@ -42,7 +43,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   onUpdate,
   onRemove,
   removeValid,
-  titleUpdate
+  titleUpdate,
 }) => {
   const [open, setOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -64,7 +65,9 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setEditedActivity((prevActivity) =>
-      prevActivity ? { ...prevActivity, [name]: type === "checkbox" ? checked : value } : null
+      prevActivity
+        ? { ...prevActivity, [name]: type === "checkbox" ? checked : value }
+        : null
     );
   }, []);
 
@@ -93,12 +96,44 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     return `${day}/${month}/${year}`;
   };
 
+  const formatDateToDDMMYYYY = (
+    activity: Activity
+  ): { status: string; dueDate: Date | null } => {
+    const dataStatus = getStatus(activity);
+
+    if (!dataStatus.dueDate) {
+      return "";
+    }
+    // Cria um objeto Date a partir da string de data
+    const date = new Date(dataStatus.dueDate);
+
+    // Verifica se a data é válida
+    if (isNaN(date.getTime())) {
+      throw new Error("Data inválida");
+    }
+
+    // Extrai o dia, mês e ano da data
+    const day = date.getDate().toString().padStart(2, "0"); // Adiciona zero à esquerda se necessário
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Os meses são baseados em zero (janeiro = 0)
+    const year = date.getFullYear().toString();
+
+    // Retorna a data formatada como dd/mm/yyyy
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <>
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Typography variant="h5" component="div">
-            {activity.titulo} <ActivityStatus activity={{ ...activity, data: activity.data || "", category_id: activity.category_id ?? 0 }} />
+            {activity.titulo}{" "}
+            <ActivityStatus
+              activity={{
+                ...activity,
+                data: activity.data || "",
+                category_id: activity.category_id ?? 0,
+              }}
+            />
           </Typography>
           <Typography sx={{ mb: 1.5 }} color="text.secondary">
             {activity.atividade}
@@ -112,12 +147,21 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           {/* <Typography variant="body2">
             <strong>Obrigatório:</strong> {activity.obrigatorio}
           </Typography> */}
-          <Typography variant="body2">
+          {/* <Typography variant="body2">
             <strong>Feitos:</strong>
-          </Typography>
-          <Typography variant="body2">
-            Data: {formatDate(activity.data)}
-          </Typography>
+          </Typography> */}
+
+          {activity.data && (
+            <>
+              <Typography variant="body2">
+                Última manutenção: {formatDate(activity.data)}
+              </Typography>
+              <Typography variant="body2">
+                Vencimento: {formatDateToDDMMYYYY(activity)}
+              </Typography>
+            </>
+          )}
+
           {activity.nao_feito && (
             <Typography variant="body2">
               Não foi feito: {activity.nao_feito ? "sim" : "não"}
@@ -187,7 +231,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             value={editedActivity?.responsavel || ""}
             onChange={handleChange}
             disabled={true} // Ou apenas disabled se quiser desabilitar o campo
-
           />
           <FormControl fullWidth margin="normal">
             <InputLabel>Periodicidade</InputLabel>

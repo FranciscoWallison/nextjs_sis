@@ -147,12 +147,12 @@ const Manutencoes: React.FC = () => {
         !filters.data ||
         (activity.data && activity.data.includes(filters.data));
 
-      const status = getStatus(activity); // Supondo que a função getStatus existe
+      const dataStatus = getStatus(activity); // Supondo que a função getStatus existe
 
       const matchStatus =
-        (statusFilters.regular && status === "Regular") ||
-        (statusFilters.aVencer && status === "A vencer") ||
-        (statusFilters.vencido && status === "Vencido");
+        (statusFilters.regular && dataStatus.status === "Regular") ||
+        (statusFilters.aVencer && dataStatus.status === "A vencer") ||
+        (statusFilters.vencido && dataStatus.status === "Vencido");
 
       return (
         matchTitle &&
