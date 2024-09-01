@@ -105,6 +105,12 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
   return false;
 };
 
+// Interface para o tipo Block
+export interface Block {
+  id: string;
+  name: string;
+}
+
 export interface ResponsibleInfo {
   nome: string;
   telefone: string;
@@ -256,4 +262,40 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
     console.log("====================================");
   }
   return false;
+};
+
+
+// Função para buscar todos os blocos do Firestore
+export const fetchBlocks = async (): Promise<Block[]> => {
+  const db = getFirestore(app);
+  const blocksCollection = collection(db, "bloco");
+  const blocksSnapshot = await getDocs(blocksCollection);
+  const blocksList = blocksSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Block[];
+  return blocksList;
+};
+
+// Função para adicionar um novo bloco no Firestore
+export const addBlock = async (blockName: string): Promise<Block> => {
+  const db = getFirestore(app);
+  const newBlockRef = await addDoc(collection(db, "bloco"), {
+    name: blockName,
+  });
+  return { id: newBlockRef.id, name: blockName };
+};
+
+// Função para atualizar um bloco existente no Firestore
+export const updateBlock = async (blockId: string, blockName: string): Promise<void> => {
+  const db = getFirestore(app);
+  const blockRef = doc(db, "bloco", blockId);
+  await updateDoc(blockRef, { name: blockName });
+};
+
+// Função para remover um bloco do Firestore
+export const deleteBlock = async (blockId: string): Promise<void> => {
+  const db = getFirestore(app);
+  const blockRef = doc(db, "bloco", blockId);
+  await deleteDoc(blockRef);
 };
