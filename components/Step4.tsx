@@ -32,7 +32,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     console.log("====================================");
 
     if (await salvarNovo(formData)) {
-      router.push("/");
+      router.push("/ManutencoesDashboard");
     } else {
       // modal de aviso de erro
     }

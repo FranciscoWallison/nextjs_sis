@@ -18,6 +18,10 @@ import {
   deleteDoc,
   setDoc,
   getFirestore,
+  Timestamp,
+  query,
+  where, 
+  orderBy,
   // "@firebase/firestore";
 } from "firebase/firestore";
 
@@ -186,10 +190,9 @@ export const usuarioPeriodicidadesAtualizar = async (
     if (data === null) {
       return false;
     }
-    console.log("======usuarioPeriodicidadesAtualizar===========");
-    console.log(updatedActivity, data.questions);
-    console.log("====================================");
-
+    console.log('====================================');
+    console.log(updatedActivity);
+    console.log('====================================');
     // Atualizar a atividade correspondente
     const updatedData = data.questions.map((activity: Activity) =>
       activity.id === updatedActivity.id
@@ -202,6 +205,7 @@ export const usuarioPeriodicidadesAtualizar = async (
 
     // Salvar os dados atualizados no servidor
     await salvarNovo(data);
+    await registrarHistoricoAlteracao(updatedActivity);
 
     return true;
   } catch (error) {
@@ -328,5 +332,49 @@ export const fetchBlockById = async (blocoID: string): Promise<{ name: string } 
   } catch (error) {
     console.error("Erro ao buscar bloco pelo ID:", error);
     return null;
+  }
+};
+
+// Função para registrar o histórico de alteração no Firestore
+const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
+  try {
+    const db = getFirestore(app);
+    const historicoCollectionRef = collection(db, "historico_manutencao");
+    
+    // Dados para o log de alteração
+    const historicoData = {
+      activityId: updatedActivity.id,
+      updatedFields: updatedActivity, // Salvar todos os campos atualizados
+      timestamp: Timestamp.now(), // Registrar a data/hora da alteração
+    };
+
+    await addDoc(historicoCollectionRef, historicoData);
+  } catch (error) {
+    console.error("Erro ao registrar histórico de alteração:", error);
+  }
+};
+
+export const getActivityHistory = async (activityId: number) => {
+  try {
+    const db = getFirestore(app);
+    const historicoCollectionRef = collection(db, "historico_manutencao");
+    
+    // Consulta para buscar todas as alterações feitas na atividade especificada, ordenadas por timestamp
+    const q = query(
+      historicoCollectionRef,
+      where("activityId", "==", activityId),
+      orderBy("timestamp", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+    const historicoList = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return historicoList;
+  } catch (error) {
+    console.error("Erro ao buscar histórico de atividade:", error);
+    return [];
   }
 };

@@ -133,7 +133,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           value={editedActivity.obrigatorio || ""}
           onChange={handleChange}
         /> */}
-        <TextField
+        {/* <TextField
           fullWidth
           margin="normal"
           label="Data"
@@ -142,7 +142,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           InputLabelProps={{ shrink: true }}
           value={editedActivity.data || ""}
           onChange={handleChange}
-        />
+        /> */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
           <Button variant="contained" color="secondary" onClick={onClose}>
             Cancelar

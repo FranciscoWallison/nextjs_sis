@@ -13,7 +13,7 @@ import {
   InputLabel,
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
-import { Activity, fetchBlocks } from "@/services/firebaseService"; // Supondo que fetchBlocks está no firebaseService
+import { Activity, fetchBlocks, getActivityHistory } from "@/services/firebaseService"; // Importar getActivityHistory
 import ActivityStatus from "@/components/layout/ActivityStatus";
 import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
 
@@ -47,8 +47,10 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false); // Estado para o modal de histórico
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos
+  const [history, setHistory] = useState<any[]>([]); // Estado para armazenar o histórico de alterações
 
   useEffect(() => {
     const loadBlocks = async () => {
@@ -71,6 +73,15 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
   const handleRemoveOpen = () => setRemoveOpen(true);
   const handleRemoveClose = () => setRemoveOpen(false);
+
+  const handleHistoryOpen = async () => {
+    // Buscar o histórico de alterações ao abrir o modal
+    const fetchedHistory = await getActivityHistory(activity.id);
+    setHistory(fetchedHistory);
+    setHistoryOpen(true);
+  };
+
+  const handleHistoryClose = () => setHistoryOpen(false);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -175,6 +186,13 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button variant="contained" color="primary" onClick={handleOpen}>
               {titleUpdate}
+            </Button>
+            <Button
+              variant="contained"
+              color="info"
+              onClick={handleHistoryOpen} // Botão para ver o histórico
+            >
+              Ver Histórico
             </Button>
             {removeValid && (
               <Button
@@ -317,6 +335,46 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             </Button>
             <Button variant="contained" color="primary" onClick={handleRemove}>
               Remover
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      {/* Modal para ver histórico de alterações */}
+      <Modal open={historyOpen} onClose={handleHistoryClose}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            border: "2px solid #000",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <Typography variant="h6" component="h2">
+            Histórico de Alterações
+          </Typography>
+          {history.length > 0 ? (
+            history.map((entry, index) => (
+              <Box key={index} sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  <strong>Data:</strong> {new Date(entry.timestamp.seconds * 1000).toLocaleString()}
+                </Typography>
+                {/* <Typography variant="body2">
+                  <strong>Alterações:</strong> {JSON.stringify(entry.updatedFields)}
+                </Typography> */}
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body2">Nenhum histórico disponível.</Typography>
+          )}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button variant="contained" color="primary" onClick={handleHistoryClose}>
+              Fechar
             </Button>
           </Box>
         </Box>
