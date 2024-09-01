@@ -9,6 +9,7 @@ import {
   Alert,
   TextField,
   Grid,
+  Button,
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
@@ -21,6 +22,7 @@ import {
 } from "@/services/firebaseService";
 import MainLayout from "../components/layout/MainLayout";
 import HelpQuestions from "@/utils/HelpQuestions";
+import ActivityModal from "./ActivityModal";
 
 const Periodicidades: React.FC = () => {
   const [data, setData] = useState<CategoryData[]>([]);
@@ -56,6 +58,57 @@ const Periodicidades: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
+
+  const handleOpenModal = () => {
+    setModalOpen(true);
+  };
+
+  const initialActivity: Activity = {
+    id: 0,
+    titulo: "",
+    atividade: "",
+    responsavel: "",
+    Periodicidade: "",
+    obrigatorio: "",
+    data: "",
+    id_name: "",
+    responsavel_info: {
+      nome: "",
+      telefone: "",
+      email: "",
+    },
+  };
+
+  const onSave = async (item: Activity) => {
+    try {
+      const new_object = [...data];
+      item.id = new_object.length + 200;
+
+      item.responsavel_info = {
+        nome: "",
+        telefone: "",
+        email: "",
+      };
+
+      item.id_name = "hasElevator";
+      item.category_id = 0;
+
+      new_object.push(item);
+      console.log(new_object);
+
+      await usuarioPeriodicidadesAdicionar(new_object);
+      fetchData();
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!Array.isArray(activities)) {
@@ -120,8 +173,7 @@ const Periodicidades: React.FC = () => {
       const matchResponsavel = activity.responsavel
         .toLowerCase()
         .includes(filters.responsavel.toLowerCase());
-      const matchData =
-        !filters.data || activity.data === filters.data;
+      const matchData = !filters.data || activity.data === filters.data;
 
       return matchTitle && matchResponsavel && matchData;
     });
@@ -167,13 +219,32 @@ const Periodicidades: React.FC = () => {
             </Grid>
           </Grid>
 
+          <Grid
+            container
+            spacing={2}
+            sx={{ mb: 2, justifyContent: "flex-start", alignItems: "center" }}
+          >
+            <Grid item xs={12} sm={4}>
+              <Button variant="contained" onClick={handleOpenModal}>
+                Nova Manutenção
+              </Button>
+            </Grid>
+            <ActivityModal
+              open={modalOpen}
+              onClose={handleCloseModal}
+              activity={initialActivity}
+              onSave={onSave}
+              disabled={false}
+            />
+          </Grid>
+
           {data.map((category, index) => (
             <MaintenanceCategory
               key={index}
               category={category.titulo}
               activities={applyFilters([category])} // Certifique-se de que o category é um array ou transforme-o em um array
               onUpdate={handleUpdate}
-              onRemove={()=>{}}
+              onRemove={() => {}}
               removeValid={false}
               titleUpdate={"Adicionar"}
             />

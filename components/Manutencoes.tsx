@@ -13,14 +13,14 @@ import {
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
-import ActivityModal from "./ActivityModal";
 import {
   pegarUsuarioPeriodicidades,
   PeriodicidadeResponse,
   Activity,
   usuarioPeriodicidadesAtualizar,
   salvarNovo,
-  usuarioPeriodicidadesAdicionar
+  usuarioPeriodicidadesAdicionar,
+  fetchBlockById
 } from "@/services/firebaseService";
 import HelpQuestions from "@/utils/HelpQuestions";
 import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
@@ -50,8 +50,32 @@ const Manutencoes: React.FC = () => {
       // Lidar com o caso onde responseP é null, por exemplo, exibir uma mensagem de erro
       return;
     }
+    // Cria um array de promessas para buscar blocos do Firestore
+    const activitiesWithBlocks = await Promise.all(
+      responseP.questions.map(async (activity) => {
+        if (activity.blocoID) {
+          try {
+            const blocoDoc = await fetchBlockById(activity.blocoID);
+            if (blocoDoc) {
+              // Adiciona o bloco ao objeto activity
+              return {
+                ...activity,
+                bloco: { name: blocoDoc.name },
+              };
+            }
+          } catch (error) {
+            console.error(
+              `Erro ao buscar bloco com ID ${activity.blocoID}:`,
+              error
+            );
+          }
+        }
+        // Retorna a atividade original se blocoID não existir ou bloco não encontrado
+        return activity;
+      })
+    );
 
-    const sortedData = sortActivities(responseP.questions);
+    const sortedData = sortActivities(activitiesWithBlocks);
     setData(sortedData);
     setLoading(false);
   }, []);
@@ -158,68 +182,15 @@ const Manutencoes: React.FC = () => {
         matchTitle &&
         matchResponsavel &&
         matchData &&
-        (!statusFilters.regular &&
+        ((!statusFilters.regular &&
           !statusFilters.aVencer &&
-          !statusFilters.vencido ||
+          !statusFilters.vencido) ||
           matchStatus)
       );
     });
   };
 
   const progress = calculateProgress();
-
-  const initialActivity: Activity = {
-    id: 0,
-    titulo: "",
-    atividade: "",
-    responsavel: "",
-    Periodicidade: "",
-    obrigatorio: "",
-    data: "",
-    id_name: "",
-    responsavel_info: {
-      nome: "",
-      telefone: "",
-      email: ""
-    }
-  };
-
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const handleOpenModal = () => {
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
-
-  const onSave = async (item: Activity) => {
-    try {
-      const new_object = [...data];
-      item.id = (new_object.length + 200);
-
-      item.responsavel_info = {
-        "nome": "",
-        "telefone": "",
-        "email": ""
-      };
-
-      item.id_name = "hasElevator";
-      item.category_id = 0;
-
-      new_object.push(item);
-      console.log(new_object);
-
-      await usuarioPeriodicidadesAdicionar(new_object);
-      fetchData();
-      setSnackbarOpen(true);
-
-    } catch (error) {
-      console.error(error)
-    }
-
-  }
 
   return (
     <>
@@ -267,9 +238,9 @@ const Manutencoes: React.FC = () => {
               />
             </Grid>
           </Grid>
-            
+
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid  item xs={12} sm={4}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.regular ? "contained" : "outlined"}
@@ -279,7 +250,7 @@ const Manutencoes: React.FC = () => {
                 Regular
               </Button>
             </Grid>
-            <Grid  item xs={12} sm={4}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.aVencer ? "contained" : "outlined"}
@@ -289,7 +260,7 @@ const Manutencoes: React.FC = () => {
                 A vencer
               </Button>
             </Grid>
-            <Grid  item xs={12} sm={4}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.vencido ? "contained" : "outlined"}
@@ -299,25 +270,6 @@ const Manutencoes: React.FC = () => {
                 Vencido
               </Button>
             </Grid>
-          </Grid>
-
-          <Grid
-            container
-            spacing={2}
-            sx={{ mb: 2, justifyContent: "flex-start", alignItems: "center" }}
-          >
-            <Grid item xs={12} sm={4}>
-              <Button variant="contained" onClick={handleOpenModal}>
-                Adicionar
-              </Button>
-            </Grid>
-            <ActivityModal
-              open={modalOpen}
-              onClose={handleCloseModal}
-              activity={initialActivity}
-              onSave={onSave}
-              disabled={false}
-            />
           </Grid>
 
           <MaintenanceCategory

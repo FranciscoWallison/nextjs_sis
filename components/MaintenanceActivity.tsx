@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   InputLabel,
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
-import { Activity } from "@/services/firebaseService";
+import { Activity, fetchBlocks } from "@/services/firebaseService"; // Supondo que fetchBlocks está no firebaseService
 import ActivityStatus from "@/components/layout/ActivityStatus";
 import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
 
@@ -48,6 +48,16 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const [open, setOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos
+
+  useEffect(() => {
+    const loadBlocks = async () => {
+      const fetchedBlocks = await fetchBlocks();
+      setBlocks(fetchedBlocks);
+    };
+
+    loadBlocks();
+  }, []);
 
   const handleOpen = () => {
     setEditedActivity(activity);
@@ -98,7 +108,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
   const formatDateToDDMMYYYY = (
     activity: Activity
-  ): { status: string; dueDate: Date | null } => {
+  ): string => {
     const dataStatus = getStatus(activity);
 
     if (!dataStatus.dueDate) {
@@ -144,12 +154,12 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           <Typography variant="body2">
             <strong>Periodicidade:</strong> {activity.Periodicidade}
           </Typography>
-          {/* <Typography variant="body2">
-            <strong>Obrigatório:</strong> {activity.obrigatorio}
-          </Typography> */}
-          {/* <Typography variant="body2">
-            <strong>Feitos:</strong>
-          </Typography> */}
+
+          {activity.bloco && (
+            <Typography variant="body2">
+              <strong>Bloco:</strong> {activity.bloco.name}
+            </Typography>
+          )}
 
           {activity.data && (
             <>
@@ -160,17 +170,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                 Vencimento: {formatDateToDDMMYYYY(activity)}
               </Typography>
             </>
-          )}
-
-          {activity.nao_feito && (
-            <Typography variant="body2">
-              Não foi feito: {activity.nao_feito ? "sim" : "não"}
-            </Typography>
-          )}
-          {activity.nao_lembro && (
-            <Typography variant="body2">
-              Não Lembro: {activity.nao_lembro ? "sim" : "não"}
-            </Typography>
           )}
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
@@ -248,14 +247,25 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               ))}
             </Select>
           </FormControl>
-          {/* <TextField
-            fullWidth
-            margin="normal"
-            label="Obrigatório"
-            name="obrigatorio"
-            value={editedActivity?.obrigatorio || ""}
-            onChange={handleChange}
-          /> */}
+          
+          {blocks.length > 0 && (
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Bloco</InputLabel>
+              <Select
+                label="Bloco"
+                name="blocoID"
+                value={editedActivity?.blocoID || ""}
+                onChange={handleSelectChange}
+              >
+                {blocks.map((block) => (
+                  <MenuItem key={block.id} value={block.id}>
+                    {block.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
           <TextField
             fullWidth
             margin="normal"

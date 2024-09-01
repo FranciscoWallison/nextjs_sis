@@ -82,7 +82,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
         }}
       >
         <Typography variant="h6" component="h2">
-          Editar Atividade
+          Nova Manutenção
         </Typography>
         <TextField
           fullWidth

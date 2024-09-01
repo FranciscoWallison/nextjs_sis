@@ -299,3 +299,34 @@ export const deleteBlock = async (blockId: string): Promise<void> => {
   const blockRef = doc(db, "bloco", blockId);
   await deleteDoc(blockRef);
 };
+
+// Função para buscar o único registro da coleção "bloco" no Firestore
+export const fetchSingleBlock = async () => {
+  const db = getFirestore(app);
+  const blocksCollection = collection(db, "bloco");
+  const blocksSnapshot = await getDocs(blocksCollection);
+
+  if (blocksSnapshot.empty) {
+    return null; // Retorna null se não houver registros
+  }
+
+  // Retorna o primeiro registro encontrado
+  return blocksSnapshot.docs[0].data();
+};
+
+// Função para buscar um bloco pelo ID
+export const fetchBlockById = async (blocoID: string): Promise<{ name: string } | null> => {
+  try {
+    const db = getFirestore(app);
+    const blocoRef = doc(db, "bloco", blocoID);
+    const blocoSnapshot = await getDoc(blocoRef);
+    if (blocoSnapshot.exists()) {
+      return { name: blocoSnapshot.data().name };
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Erro ao buscar bloco pelo ID:", error);
+    return null;
+  }
+};
