@@ -13,7 +13,11 @@ import {
   InputLabel,
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
-import { Activity, fetchBlocks, getActivityHistory } from "@/services/firebaseService"; // Importar getActivityHistory
+import {
+  Activity,
+  fetchBlocks,
+  getActivityHistory,
+} from "@/services/firebaseService"; // Importar getActivityHistory
 import ActivityStatus from "@/components/layout/ActivityStatus";
 import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
 
@@ -26,6 +30,7 @@ interface MaintenanceActivityProps {
 }
 
 const periodicityOptions = [
+  "Não aplicável",
   "A cada semana",
   "A cada duas semanas",
   "A cada mês",
@@ -52,6 +57,9 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos
   const [history, setHistory] = useState<any[]>([]); // Estado para armazenar o histórico de alterações
 
+  // Novo estado para controlar se a atividade é regular
+  const [activityRegular, setActivityRegular] = useState<boolean>(false);
+
   useEffect(() => {
     const loadBlocks = async () => {
       const fetchedBlocks = await fetchBlocks();
@@ -63,6 +71,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
   const handleOpen = () => {
     setEditedActivity(activity);
+    setActivityRegular(activity.activityRegular || false); // Inicializa com o valor atual se existir
     setOpen(true);
   };
 
@@ -97,11 +106,20 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     setEditedActivity((prevActivity) =>
       prevActivity ? { ...prevActivity, [name as string]: value } : null
     );
+
+    // Se "Não aplicável" for selecionado, ajusta o estado de activityRegular
+    if (value === "Não aplicável") {
+      setActivityRegular(true);
+    } else {
+      setActivityRegular(false);
+    }
   }, []);
 
   const handleSave = () => {
     if (editedActivity) {
-      onUpdate(editedActivity);
+      // Adiciona activityRegular ao objeto editado
+      const updatedActivity = { ...editedActivity, activityRegular };
+      onUpdate(updatedActivity);
       handleClose();
     }
   };
@@ -117,9 +135,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     return `${day}/${month}/${year}`;
   };
 
-  const formatDateToDDMMYYYY = (
-    activity: Activity
-  ): string => {
+  const formatDateToDDMMYYYY = (activity: Activity): string => {
     const dataStatus = getStatus(activity);
 
     if (!dataStatus.dueDate) {
@@ -265,7 +281,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               ))}
             </Select>
           </FormControl>
-          
+
           {blocks.length > 0 && (
             <FormControl fullWidth margin="normal">
               <InputLabel>Bloco</InputLabel>
@@ -284,16 +300,30 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             </FormControl>
           )}
 
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Data"
-            name="data"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={editedActivity?.data || ""}
-            onChange={handleChange}
-          />
+          {/* Condicional para exibir o campo de data ou o botão "Feito" */}
+          {editedActivity?.Periodicidade !== "Não aplicável" ? (
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Data"
+              name="data"
+              type="date"
+              InputLabelProps={{ shrink: true }}
+              value={editedActivity?.data || ""}
+              onChange={handleChange}
+            />
+          ) : (
+            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
+              <Button
+                variant="contained"
+                color={activityRegular ? "success" : "primary"}
+                onClick={() => setActivityRegular(!activityRegular)}
+              >
+                {activityRegular ? "Feito" : "Marcar como Feito"}
+              </Button>
+            </Box>
+          )}
+
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button variant="contained" color="secondary" onClick={handleClose}>
               Cancelar
@@ -362,18 +392,23 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             history.map((entry, index) => (
               <Box key={index} sx={{ mb: 2 }}>
                 <Typography variant="body2">
-                  <strong>Data:</strong> {new Date(entry.timestamp.seconds * 1000).toLocaleString()}
+                  <strong>Data:</strong>{" "}
+                  {new Date(entry.timestamp.seconds * 1000).toLocaleString()}
                 </Typography>
-                {/* <Typography variant="body2">
-                  <strong>Alterações:</strong> {JSON.stringify(entry.updatedFields)}
-                </Typography> */}
+                {/* Exibir informações adicionais de histórico se necessário */}
               </Box>
             ))
           ) : (
-            <Typography variant="body2">Nenhum histórico disponível.</Typography>
+            <Typography variant="body2">
+              Nenhum histórico disponível.
+            </Typography>
           )}
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Button variant="contained" color="primary" onClick={handleHistoryClose}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleHistoryClose}
+            >
               Fechar
             </Button>
           </Box>

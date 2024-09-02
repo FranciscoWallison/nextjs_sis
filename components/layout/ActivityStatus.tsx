@@ -21,9 +21,6 @@ interface Activity {
 const ActivityStatus: React.FC<{ activity: Activity }> = ({ activity }) => {
 
   const dataStatus = getStatus(activity);
-  console.log('=======ActivityStatus=============');
-  console.log(activity, dataStatus);
-  console.log('====================================');
   const getColor = (status: string) => {
     switch (status) {
       case "Regular":

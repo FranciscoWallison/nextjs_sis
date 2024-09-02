@@ -808,20 +808,5 @@
         "id_name": "inspecao_predial_total",
         "id": 53,
         "category_id": 7
-    },
-    {
-        "titulo": "Possui Elevadores?",
-        "atividade": "Validar os Elevadores",
-        "responsavel": "Equipe de manutenção local",
-        "Periodicidade": "A cada mês",
-        "obrigatorio": "Não",
-        "responsavel_info": {
-            "nome": "",
-            "telefone": "",
-            "email": ""
-        },
-        "id_name": "hasElevator",
-        "id": 54,
-        "category_id": 0
     }
 ]

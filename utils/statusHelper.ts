@@ -41,17 +41,27 @@ const calculateNextDate = (startDate: string, periodicity: string) => {
 };
 
 // Função para determinar o status e a data de vencimento
-export const getStatus = (activity: Activity): { status: string; dueDate: Date | null } => {
+export const getStatus = (
+  activity: Activity
+): { status: string; dueDate: Date | null } => {
+  if (activity.activityRegular && activity.Periodicidade === "Não aplicável") {
+    return { status: "Regular", dueDate: null };
+  } if (!activity.activityRegular && activity.Periodicidade === "Não aplicável"){
+    return { status: "Não Regularizado", dueDate: null };
+  } // Lida com data indefinida
+
   if (!activity.data) return { status: "Data não cadastrada", dueDate: null }; // Lida com data indefinida
 
   const today = new Date();
   const nextDate = calculateNextDate(activity.data, activity.Periodicidade);
 
-  if (!nextDate || !isValid(nextDate)) return { status: "Data não cadastrada", dueDate: null };
+  if (!nextDate || !isValid(nextDate))
+    return { status: "Data não cadastrada", dueDate: null };
 
   const daysDifference = differenceInDays(nextDate, today);
 
   if (daysDifference > 7) return { status: "Regular", dueDate: nextDate };
-  if (daysDifference <= 7 && daysDifference >= 0) return { status: "A vencer", dueDate: nextDate };
+  if (daysDifference <= 7 && daysDifference >= 0)
+    return { status: "A vencer", dueDate: nextDate };
   return { status: "Vencido", dueDate: nextDate };
 };

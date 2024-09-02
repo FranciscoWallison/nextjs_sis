@@ -1,11 +1,5 @@
 import React, { useContext, useState } from "react";
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Grid,
-} from "@mui/material";
+import { Box, Button, TextField, Typography, Grid } from "@mui/material";
 import { FormContext } from "../contexts/FormContext";
 
 const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
@@ -14,6 +8,14 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 }) => {
   const context = useContext(FormContext);
   const [loadingCEP, setLoadingCEP] = useState(false);
+
+  // Estados de erro para cada campo
+  const [buildingNameError, setBuildingNameError] = useState(false);
+  const [buildingAgeError, setBuildingAgeError] = useState(false);
+  const [cepError, setCepError] = useState(false);
+  const [addressError, setAddressError] = useState(false);
+  const [bairroError, setBairroError] = useState(false);
+  const [cidadeError, setCidadeError] = useState(false);
 
   if (!context) {
     throw new Error("FormContext must be used within a FormProvider");
@@ -42,11 +44,14 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             cidade: data.localidade,
             uf: data.uf,
           });
+          setCepError(false); // Resetar erro após preencher com sucesso
         } else {
           alert("CEP não encontrado.");
+          setCepError(true); // Definir erro se o CEP não for encontrado
         }
       } catch (error) {
         console.error("Erro ao buscar o CEP:", error);
+        setCepError(true); // Definir erro se houver um problema na busca do CEP
       } finally {
         setLoadingCEP(false);
       }
@@ -59,16 +64,31 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
     if (selectedDate > today) {
       alert("A data de entrega não pode ser no futuro.");
+      setBuildingAgeError(true);
     } else {
       setFormData({ ...formData, [e.target.name]: selectedDate });
+      setBuildingAgeError(false);
+    }
+  };
+
+  const handleNextStep = () => {
+    // Verificação dos campos obrigatórios
+    setBuildingNameError(!formData.buildingName);
+    setBuildingAgeError(!formData.buildingAge);
+    setCepError(!formData.cep);
+    setAddressError(!formData.address);
+    setBairroError(!formData.bairro);
+    setCidadeError(!formData.cidade);
+
+    if (formData.buildingName && formData.buildingAge && formData.cep && formData.address && formData.bairro && formData.cidade) {
+      handleNext();
     }
   };
 
   return (
     <Box>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        Olá, {formData.sindicoName}! Precisamos que você preencha as informações
-        iniciais referentes ao condomínio.
+        Olá, {formData.lastName}! Precisamos que você preencha as informações iniciais referentes ao condomínio.
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
@@ -78,6 +98,9 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             value={formData.buildingName || ""}
             onChange={handleChange}
             fullWidth
+            required
+            error={buildingNameError}
+            helperText={buildingNameError ? "Nome do condomínio é obrigatório" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -96,6 +119,9 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             inputProps={{
               max: new Date().toISOString().split("T")[0], // Define a data máxima como hoje
             }}
+            required
+            error={buildingAgeError}
+            helperText={buildingAgeError ? "Data de entrega é obrigatória e não pode ser no futuro" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -106,7 +132,7 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             value={formData.cnpj || ""}
             onChange={handleChange}
             fullWidth
-            required
+            // Não é obrigatório, portanto, sem `required`
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -119,6 +145,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onBlur={handleCEPBlur}
             fullWidth
             required
+            error={cepError}
+            helperText={cepError ? "CEP é obrigatório" : ""}
             sx={{ mt: 2 }}
             disabled={loadingCEP}
           />
@@ -131,6 +159,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onChange={handleChange}
             fullWidth
             required
+            error={addressError}
+            helperText={addressError ? "Endereço é obrigatório" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -142,6 +172,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onChange={handleChange}
             fullWidth
             required
+            error={bairroError}
+            helperText={bairroError ? "Bairro é obrigatório" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -153,6 +185,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onChange={handleChange}
             fullWidth
             required
+            error={cidadeError}
+            helperText={cidadeError ? "Cidade é obrigatória" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -161,7 +195,7 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         <Button variant="contained" onClick={handleBack}>
           Voltar
         </Button>
-        <Button variant="contained" onClick={handleNext}>
+        <Button variant="contained" onClick={handleNextStep}>
           Continuar
         </Button>
       </Box>

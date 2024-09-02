@@ -188,7 +188,7 @@ const Periodicidades: React.FC = () => {
       ) : (
         <>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Filtrar por Título"
@@ -197,7 +197,7 @@ const Periodicidades: React.FC = () => {
                 onChange={handleFilterChange}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Filtrar por Responsável"
@@ -206,7 +206,7 @@ const Periodicidades: React.FC = () => {
                 onChange={handleFilterChange}
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            {/* <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
                 label="Filtrar por Data"
@@ -216,7 +216,7 @@ const Periodicidades: React.FC = () => {
                 value={filters.data}
                 onChange={handleFilterChange}
               />
-            </Grid>
+            </Grid> */}
           </Grid>
 
           <Grid
