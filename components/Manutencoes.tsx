@@ -10,17 +10,19 @@ import {
   TextField,
   Grid,
   Button,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
 import {
   pegarUsuarioPeriodicidades,
-  PeriodicidadeResponse,
   Activity,
   usuarioPeriodicidadesAtualizar,
   salvarNovo,
-  usuarioPeriodicidadesAdicionar,
-  fetchBlockById
+  fetchBlockById,
 } from "@/services/firebaseService";
 import HelpQuestions from "@/utils/HelpQuestions";
 import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
@@ -34,7 +36,9 @@ const Manutencoes: React.FC = () => {
     titulo: "",
     responsavel: "",
     data: "",
+    blocos: [] as string[], // Novo estado para blocos selecionados
   });
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos carregados
   const [statusFilters, setStatusFilters] = useState({
     regular: false,
     aVencer: false,
@@ -47,30 +51,37 @@ const Manutencoes: React.FC = () => {
 
     if (responseP === null) {
       setLoading(false);
-      // Lidar com o caso onde responseP é null, por exemplo, exibir uma mensagem de erro
       return;
     }
-    // Cria um array de promessas para buscar blocos do Firestore
+
     const activitiesWithBlocks = await Promise.all(
       responseP.questions.map(async (activity) => {
-        if (activity.blocoID) {
+        if (activity.blocoIDs && activity.blocoIDs.length > 0) {
           try {
-            const blocoDoc = await fetchBlockById(activity.blocoID);
-            if (blocoDoc) {
-              // Adiciona o bloco ao objeto activity
+            const blocosPromises = activity.blocoIDs.map((blocoID) =>
+              fetchBlockById(blocoID)
+            );
+            const blocosDocs = await Promise.all(blocosPromises);
+
+            const blocos = blocosDocs.filter((blocoDoc) => blocoDoc !== null);
+
+            if (blocos.length > 0) {
               return {
                 ...activity,
-                bloco: { name: blocoDoc.name },
+                blocos: blocos.map((bloco) => ({
+                  id: bloco.id,
+                  name: bloco.name,
+                })),
               };
             }
           } catch (error) {
             console.error(
-              `Erro ao buscar bloco com ID ${activity.blocoID}:`,
+              `Erro ao buscar blocos para activity com IDs: ${activity.blocoIDs}:`,
               error
             );
           }
         }
-        // Retorna a atividade original se blocoID não existir ou bloco não encontrado
+
         return activity;
       })
     );
@@ -78,6 +89,16 @@ const Manutencoes: React.FC = () => {
     const sortedData = sortActivities(activitiesWithBlocks);
     setData(sortedData);
     setLoading(false);
+
+    // Carregar blocos únicos para o filtro
+    const uniqueBlocks = Array.from(
+      new Set(
+        activitiesWithBlocks.flatMap((activity) =>
+          activity.blocos?.map((bloco) => ({ id: bloco.id, name: bloco.name }))
+        )
+      )
+    );
+    setBlocks(uniqueBlocks);
   }, []);
 
   useEffect(() => {
@@ -89,12 +110,10 @@ const Manutencoes: React.FC = () => {
       return [];
     }
 
-    // Ordena as atividades com base na presença do campo 'data'
     return activities.sort((a, b) => {
-      const aDone = !!a.data; // Verifica se 'a.data' está preenchido
-      const bDone = !!b.data; // Verifica se 'b.data' está preenchido
+      const aDone = !!a.data;
+      const bDone = !!b.data;
 
-      // Ordena com base na presença do campo 'data'
       return aDone === bDone ? 0 : aDone ? 1 : -1;
     });
   };
@@ -152,6 +171,15 @@ const Manutencoes: React.FC = () => {
     });
   };
 
+  const handleBlockFilterChange = (
+    e: React.ChangeEvent<{ value: unknown }>
+  ) => {
+    setFilters({
+      ...filters,
+      blocos: e.target.value as string[],
+    });
+  };
+
   const handleStatusFilterChange = (status: keyof typeof statusFilters) => {
     setStatusFilters((prevFilters) => ({
       ...prevFilters,
@@ -171,17 +199,24 @@ const Manutencoes: React.FC = () => {
         !filters.data ||
         (activity.data && activity.data.includes(filters.data));
 
-      const dataStatus = getStatus(activity); // Supondo que a função getStatus existe
+      const dataStatus = getStatus(activity);
 
       const matchStatus =
         (statusFilters.regular && dataStatus.status === "Regular") ||
         (statusFilters.aVencer && dataStatus.status === "A vencer") ||
         (statusFilters.vencido && dataStatus.status === "Vencido");
 
+      // Filtrar por blocos selecionados
+      const matchBlock =
+        filters.blocos.length === 0 ||
+        (activity.blocos &&
+          activity.blocos.some((bloco) => filters.blocos.includes(bloco.name)));
+
       return (
         matchTitle &&
         matchResponsavel &&
         matchData &&
+        matchBlock &&
         ((!statusFilters.regular &&
           !statusFilters.aVencer &&
           !statusFilters.vencido) ||
@@ -237,6 +272,27 @@ const Manutencoes: React.FC = () => {
                 onChange={handleFilterChange}
               />
             </Grid>
+            <Grid item xs={12} sm={12}>
+              {blocks.length > 0 && (
+                <FormControl fullWidth>
+                  <InputLabel>Filtrar por Bloco</InputLabel>
+                  <Select
+                    multiple
+                    value={filters.blocos}
+                    onChange={handleBlockFilterChange}
+                    renderValue={(selected) => selected.join(", ")}
+                  >
+                    {blocks
+                      .filter((block) => block) // Filtra os blocos não definidos
+                      .map((block) => (
+                        <MenuItem key={block.id} value={block.name}>
+                          {block.name}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
+              )}
+            </Grid>
           </Grid>
 
           <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -250,7 +306,7 @@ const Manutencoes: React.FC = () => {
                 Regular
               </Button>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={2}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.aVencer ? "contained" : "outlined"}
@@ -260,7 +316,7 @@ const Manutencoes: React.FC = () => {
                 A vencer
               </Button>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={2}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.vencido ? "contained" : "outlined"}

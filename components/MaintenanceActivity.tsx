@@ -17,9 +17,9 @@ import {
   Activity,
   fetchBlocks,
   getActivityHistory,
-} from "@/services/firebaseService"; // Importar getActivityHistory
+} from "@/services/firebaseService";
 import ActivityStatus from "@/components/layout/ActivityStatus";
-import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
+import { getStatus } from "@/utils/statusHelper";
 
 interface MaintenanceActivityProps {
   activity: Activity;
@@ -52,12 +52,11 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false); // Estado para o modal de histórico
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
-  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos
-  const [history, setHistory] = useState<any[]>([]); // Estado para armazenar o histórico de alterações
-
-  // Novo estado para controlar se a atividade é regular
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
+  const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]); // Estado para blocos selecionados
+  const [history, setHistory] = useState<any[]>([]);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
 
   useEffect(() => {
@@ -71,26 +70,35 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
   const handleOpen = () => {
     setEditedActivity(activity);
-    setActivityRegular(activity.activityRegular || false); // Inicializa com o valor atual se existir
+    setActivityRegular(activity.activityRegular || false);
+    setSelectedBlocks(activity.blocoIDs || []); // Preenche com os blocos atuais da atividade (se houver)
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
     setEditedActivity(null);
+    setSelectedBlocks([]); // Reseta os blocos selecionados ao fechar
   };
 
   const handleRemoveOpen = () => setRemoveOpen(true);
   const handleRemoveClose = () => setRemoveOpen(false);
 
   const handleHistoryOpen = async () => {
-    // Buscar o histórico de alterações ao abrir o modal
     const fetchedHistory = await getActivityHistory(activity.id);
     setHistory(fetchedHistory);
     setHistoryOpen(true);
   };
 
   const handleHistoryClose = () => setHistoryOpen(false);
+
+  const handleSelectChange = useCallback(
+    (event: SelectChangeEvent<string[]>) => {
+      const value = event.target.value as string[];
+      setSelectedBlocks(value); // Atualiza os blocos selecionados
+    },
+    []
+  );
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -101,24 +109,18 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     );
   }, []);
 
-  const handleSelectChange = useCallback((event: SelectChangeEvent<string>) => {
-    const { name, value } = event.target;
-    setEditedActivity((prevActivity) =>
-      prevActivity ? { ...prevActivity, [name as string]: value } : null
-    );
-
-    // Se "Não aplicável" for selecionado, ajusta o estado de activityRegular
-    if (value === "Não aplicável") {
-      setActivityRegular(true);
-    } else {
-      setActivityRegular(false);
-    }
-  }, []);
-
   const handleSave = () => {
     if (editedActivity) {
-      // Adiciona activityRegular ao objeto editado
-      const updatedActivity = { ...editedActivity, activityRegular };
+      // Se nenhum bloco for selecionado, aplica a todos os blocos
+      const finalBlocks =
+        selectedBlocks.length === 0 ? blocks.map((b) => b.id) : selectedBlocks;
+
+      // Atualiza a atividade com os blocos finais
+      const updatedActivity = {
+        ...editedActivity,
+        blocoIDs: finalBlocks,
+        activityRegular,
+      };
       onUpdate(updatedActivity);
       handleClose();
     }
@@ -141,23 +143,19 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     if (!dataStatus.dueDate) {
       return "";
     }
-    // Cria um objeto Date a partir da string de data
     const date = new Date(dataStatus.dueDate);
-
-    // Verifica se a data é válida
     if (isNaN(date.getTime())) {
       throw new Error("Data inválida");
     }
-
-    // Extrai o dia, mês e ano da data
-    const day = date.getDate().toString().padStart(2, "0"); // Adiciona zero à esquerda se necessário
-    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Os meses são baseados em zero (janeiro = 0)
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear().toString();
-
-    // Retorna a data formatada como dd/mm/yyyy
     return `${day}/${month}/${year}`;
   };
 
+  console.log("====================================");
+  console.log(activity);
+  console.log("====================================");
   return (
     <>
       <Card sx={{ mb: 2 }}>
@@ -182,9 +180,15 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <strong>Periodicidade:</strong> {activity.Periodicidade}
           </Typography>
 
-          {activity.bloco && (
+          {activity.blocos && activity.blocos.length > 0 && (
             <Typography variant="body2">
-              <strong>Bloco:</strong> {activity.bloco.name}
+              <strong>Blocos:</strong>{" "}
+              {activity.blocos.map((bloco, index) => (
+                <span key={index}>
+                  {bloco.name}
+                  {index < activity.blocos.length - 1 && ", "}
+                </span>
+              ))}
             </Typography>
           )}
 
@@ -206,7 +210,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <Button
               variant="contained"
               color="info"
-              onClick={handleHistoryOpen} // Botão para ver o histórico
+              onClick={handleHistoryOpen}
             >
               Ver Histórico
             </Button>
@@ -263,7 +267,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             name="responsavel"
             value={editedActivity?.responsavel || ""}
             onChange={handleChange}
-            disabled={true} // Ou apenas disabled se quiser desabilitar o campo
+            disabled={true}
           />
           <FormControl fullWidth margin="normal">
             <InputLabel>Periodicidade</InputLabel>
@@ -272,7 +276,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               name="Periodicidade"
               value={editedActivity?.Periodicidade || ""}
               onChange={handleSelectChange}
-              disabled={true} // Ou apenas disabled se quiser desabilitar o campo
+              disabled={true}
             >
               {periodicityOptions.map((option, index) => (
                 <MenuItem key={index} value={option}>
@@ -286,10 +290,18 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <FormControl fullWidth margin="normal">
               <InputLabel>Bloco</InputLabel>
               <Select
+                multiple
                 label="Bloco"
-                name="blocoID"
-                value={editedActivity?.blocoID || ""}
+                value={selectedBlocks}
                 onChange={handleSelectChange}
+                renderValue={(selected) =>
+                  selected
+                    .map(
+                      (selectedId) =>
+                        blocks.find((block) => block.id === selectedId)?.name
+                    )
+                    .join(", ")
+                }
               >
                 {blocks.map((block) => (
                   <MenuItem key={block.id} value={block.id}>
@@ -300,7 +312,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             </FormControl>
           )}
 
-          {/* Condicional para exibir o campo de data ou o botão "Feito" */}
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
             <TextField
               fullWidth
@@ -370,7 +381,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
         </Box>
       </Modal>
 
-      {/* Modal para ver histórico de alterações */}
       <Modal open={historyOpen} onClose={handleHistoryClose}>
         <Box
           sx={{
@@ -395,7 +405,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                   <strong>Data:</strong>{" "}
                   {new Date(entry.timestamp.seconds * 1000).toLocaleString()}
                 </Typography>
-                {/* Exibir informações adicionais de histórico se necessário */}
               </Box>
             ))
           ) : (

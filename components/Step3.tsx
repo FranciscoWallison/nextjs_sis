@@ -5,6 +5,7 @@ import {
   Checkbox,
   FormControlLabel,
   Typography,
+  Grid,
 } from "@mui/material";
 import { FormContext } from "../contexts/FormContext";
 
@@ -37,6 +38,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   const context = useContext(FormContext);
   const [formItems, setFormItems] = useState<FormItem[]>([]);
   const [allItems, setAllItems] = useState<Item[]>([]);
+  const [selectAllChecked, setSelectAllChecked] = useState(false); // Estado para controlar o botão "Selecionar Todos"
 
   if (!context) {
     throw new Error("FormContext must be used within a FormProvider");
@@ -50,17 +52,29 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
       const response = await fetch("/items/items.json");
       const items = await response.json();
 
-      // Filtrar e mapear itens para remover duplicatas com base em id_name
-      const mappedItems: FormItem[] = items.reduce((acc: FormItem[], item: any) => {
-        if (!acc.some((formItem) => formItem.name === item.id_name)) {
-          acc.push({
-            name: item.id_name,
-            label: item.titulo,
-          });
-        }
-        return acc;
-      }, []);
-      // mappedItems.push({ name: "hasElevator", label: "Possui Elevadores?" })
+      const atividadesParaRemover = [
+        "Fazer teste de funcionamento do sistema de ventilação conforme instruções do fornecedor e projeto",
+        "Fazer manutenção geral dos sistemas conforme instruções do fornecedor",
+        "Verificar o funcionamento, limpeza e regulagem, conforme legislação vigente",
+        "Verificar e se necessário, encerar as peças polidas",
+      ];
+
+      const mappedItems: FormItem[] = items.reduce(
+        (acc: FormItem[], item: any) => {
+          // Verifica se o item possui uma das atividades que devem ser removidas
+          if (!atividadesParaRemover.includes(item.atividade)) {
+            if (!acc.some((formItem) => formItem.name === item.id_name)) {
+              acc.push({
+                name: item.id_name,
+                label: item.titulo,
+              });
+            }
+          }
+          return acc;
+        },
+        []
+      );
+
       setFormItems(mappedItems);
       setAllItems(items); // Salva todos os itens para uso posterior
     } catch (error) {
@@ -76,6 +90,19 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, [e.target.name]: e.target.checked });
   };
 
+  // Função para o botão "Selecionar Todos"
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setSelectAllChecked(checked); // Atualiza o estado do botão "Selecionar Todos"
+
+    const updatedFormData = formItems.reduce((acc, item) => {
+      acc[item.name] = checked;
+      return acc;
+    }, {} as Record<string, boolean>);
+
+    setFormData({ ...formData, ...updatedFormData }); // Atualiza o formData com todos selecionados ou desmarcados
+  };
+
   const addNext = () => {
     const trueAttributes = Object.keys(formData).filter(
       (key) => formData[key] === true
@@ -86,20 +113,11 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
       trueAttributes.includes(item.id_name)
     );
 
-    // Adicionar todos os itens obrigatórios
-    // const mandatoryItems = allItems.filter((item) => item.obrigatorio === "Sim");
-
-    // Combinar os itens selecionados e obrigatórios, removendo duplicatas
-    // const combinedItems = Array.from(new Set([...selectedItems, ...mandatoryItems]));
-
-    // Adicionar o campo `data` a cada item combinado
     const finalItems = selectedItems.map((item) => ({
       ...item,
       data: "", // Inicializa o campo data como string vazia
     }));
 
-    // Atualizar o estado do formulário com os itens finais
-    // TODO::ADICIONAR A TIPAGEM
     setFormData((prevData: any) => ({
       ...prevData,
       questions: finalItems,
@@ -115,6 +133,22 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         favor selecione abaixo caso o {formData.buildingName} possua algum
         desses itens:
       </Typography>
+
+      {/* Checkbox para "Selecionar Todos" */}
+      <Grid spacing={2}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={selectAllChecked}
+              onChange={handleSelectAll}
+              name="selectAll"
+            />
+          }
+          label="Selecionar Todos"
+        />
+      </Grid>
+
+      {/* Checkbox para cada item do formulário */}
       {formItems.map((item) => (
         <FormControlLabel
           key={item.name}
@@ -128,6 +162,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
           label={item.label}
         />
       ))}
+
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
         <Button variant="contained" onClick={handleBack}>
           Voltar
