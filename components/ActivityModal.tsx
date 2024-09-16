@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -10,7 +10,7 @@ import {
   MenuItem,
   InputLabel,
 } from "@mui/material";
-import { Activity } from "@/services/firebaseService";
+import { Activity, fetchBlocks } from "@/services/firebaseService"; // Assumindo que fetchBlocks está no serviço
 import { SelectChangeEvent } from "@mui/material/Select";
 
 interface ActivityModalProps {
@@ -21,20 +21,6 @@ interface ActivityModalProps {
   disabled: boolean;
 }
 
-const periodicityOptions = [
-  "Não aplicável",
-  "A cada semana",
-  "A cada duas semanas",
-  "A cada mês",
-  "A cada dois meses",
-  "A cada três meses",
-  "A cada seis meses",
-  "A cada ano",
-  "A cada dois anos",
-  "A cada três anos",
-  "A cada cinco anos",
-];
-
 const ActivityModal: React.FC<ActivityModalProps> = ({
   open,
   onClose,
@@ -43,6 +29,40 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
   disabled,
 }) => {
   const [editedActivity, setEditedActivity] = useState<Activity>(activity);
+  const [periodicityOptions, setPeriodicityOptions] = useState<{ id: number; descricao: string }[]>([]);
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Blocos disponíveis
+  const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]); // Blocos selecionados
+
+  // Fetch para carregar as opções de periodicidade
+  useEffect(() => {
+    const fetchPeriodicityOptions = async () => {
+      try {
+        const response = await fetch("/periodicidades/periodicidade.json");
+        const items = await response.json();
+        setPeriodicityOptions(items);
+      } catch (error) {
+        console.error("Erro ao carregar periodicidades:", error);
+      }
+    };
+
+    fetchPeriodicityOptions();
+  }, []);
+
+  // Fetch para carregar os blocos
+  useEffect(() => {
+    const loadBlocks = async () => {
+      try {
+        const fetchedBlocks = await fetchBlocks();
+        setBlocks(fetchedBlocks);
+        // Preenche os blocos selecionados a partir da atividade (se houver)
+        setSelectedBlocks(activity.blocoIDs || []);
+      } catch (error) {
+        console.error("Erro ao carregar blocos:", error);
+      }
+    };
+
+    loadBlocks();
+  }, [activity]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -55,15 +75,26 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
     (event: SelectChangeEvent<string>) => {
       const { name, value } = event.target;
       setEditedActivity((prevActivity) =>
-        prevActivity ? { ...prevActivity, [name as string]: value } : prevActivity
+        prevActivity ? { ...prevActivity, [name]: value } : prevActivity
       );
     },
     []
   );
 
+  // Manipula a seleção de blocos
+  const handleBlockSelectChange = (event: SelectChangeEvent<string[]>) => {
+    setSelectedBlocks(event.target.value as string[]);
+  };
+
   const handleSave = () => {
-    onSave(editedActivity);
-    onClose();
+    if (editedActivity) {
+      const updatedActivity = {
+        ...editedActivity,
+        blocoIDs: selectedBlocks, // Adiciona os blocos selecionados
+      };
+      onSave(updatedActivity);
+      onClose();
+    }
   };
 
   return (
@@ -118,31 +149,41 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
             onChange={handleSelectChange}
             disabled={disabled}
           >
-            {periodicityOptions.map((option, index) => (
-              <MenuItem key={index} value={option}>
-                {option}
+            {periodicityOptions.map((option) => (
+              <MenuItem key={option.id} value={option.descricao}>
+                {option.descricao}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
-        {/* <TextField
-          fullWidth
-          margin="normal"
-          label="Obrigatório"
-          name="obrigatorio"
-          value={editedActivity.obrigatorio || ""}
-          onChange={handleChange}
-        /> */}
-        {/* <TextField
-          fullWidth
-          margin="normal"
-          label="Data"
-          name="data"
-          type="date"
-          InputLabelProps={{ shrink: true }}
-          value={editedActivity.data || ""}
-          onChange={handleChange}
-        /> */}
+
+        {/* Adicionar seleção de blocos */}
+        {blocks.length > 0 && (
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Blocos</InputLabel>
+            <Select
+              multiple
+              label="Blocos"
+              value={selectedBlocks}
+              onChange={handleBlockSelectChange}
+              renderValue={(selected) =>
+                selected
+                  .map(
+                    (selectedId) =>
+                      blocks.find((block) => block.id === selectedId)?.name
+                  )
+                  .join(", ")
+              }
+            >
+              {blocks.map((block) => (
+                <MenuItem key={block.id} value={block.id}>
+                  {block.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
           <Button variant="contained" color="secondary" onClick={onClose}>
             Cancelar

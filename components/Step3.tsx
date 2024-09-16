@@ -1,12 +1,16 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import {
   Box,
   Button,
-  Checkbox,
-  FormControlLabel,
+  Chip,
   Typography,
   Grid,
+  CircularProgress,
+  FormControlLabel,
+  Checkbox,
+  Container,
 } from "@mui/material";
+import DoneIcon from "@mui/icons-material/Done";
 import { FormContext } from "../contexts/FormContext";
 
 interface FormItem {
@@ -38,16 +42,17 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   const context = useContext(FormContext);
   const [formItems, setFormItems] = useState<FormItem[]>([]);
   const [allItems, setAllItems] = useState<Item[]>([]);
-  const [selectAllChecked, setSelectAllChecked] = useState(false); // Estado para controlar o botão "Selecionar Todos"
+  const [selectAllChecked, setSelectAllChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   if (!context) {
-    throw new Error("FormContext must be used within a FormProvider");
+    return <div>Erro: FormContext não está disponível</div>;
   }
 
   const { formData, setFormData } = context;
 
-  // Função para buscar e processar os dados dos itens
-  const fetchFormItems = async () => {
+  const fetchFormItems = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await fetch("/items/items.json");
       const items = await response.json();
@@ -57,74 +62,100 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         "Fazer manutenção geral dos sistemas conforme instruções do fornecedor",
         "Verificar o funcionamento, limpeza e regulagem, conforme legislação vigente",
         "Verificar e se necessário, encerar as peças polidas",
+        "Efetuar a inspeção total de todos os elementos da edificação conforme ABNT NBR 16747",
       ];
 
-      const mappedItems: FormItem[] = items.reduce(
-        (acc: FormItem[], item: any) => {
-          // Verifica se o item possui uma das atividades que devem ser removidas
-          if (!atividadesParaRemover.includes(item.atividade)) {
-            if (!acc.some((formItem) => formItem.name === item.id_name)) {
-              acc.push({
-                name: item.id_name,
-                label: item.titulo,
-              });
-            }
-          }
-          return acc;
-        },
-        []
-      );
+      const mappedItems: FormItem[] = items
+        .filter((item: Item) => !atividadesParaRemover.includes(item.atividade))
+        .map((item: Item) => ({
+          name: item.id_name,
+          label: item.titulo,
+        }));
 
       setFormItems(mappedItems);
-      setAllItems(items); // Salva todos os itens para uso posterior
+      setAllItems(items);
     } catch (error) {
       console.error("Erro ao buscar ou processar os itens:", error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchFormItems();
-  }, []);
+  }, [fetchFormItems]);
+
+  useEffect(() => {
+    const allChecked = formItems.every((item) => formData[item.name]);
+    setSelectAllChecked(allChecked);
+  }, [formItems, formData]);
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.checked });
   };
 
-  // Função para o botão "Selecionar Todos"
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-    setSelectAllChecked(checked); // Atualiza o estado do botão "Selecionar Todos"
+  // Função de "Selecionar Todos" agora com Chip
+  const handleSelectAll = () => {
+    const checked = !selectAllChecked; // Inverte o estado atual
+    setSelectAllChecked(checked);
 
     const updatedFormData = formItems.reduce((acc, item) => {
       acc[item.name] = checked;
       return acc;
     }, {} as Record<string, boolean>);
 
-    setFormData({ ...formData, ...updatedFormData }); // Atualiza o formData com todos selecionados ou desmarcados
+    setFormData({ ...formData, ...updatedFormData });
   };
 
-  const addNext = () => {
+  const handleChipClick = (name: string) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: !prevFormData[name], // Alterna entre true e false
+    }));
+  };
+
+  const addNext = async () => {
     const trueAttributes = Object.keys(formData).filter(
       (key) => formData[key] === true
     );
 
-    // Filtrar todos os itens que correspondem aos atributos selecionados
+    if (trueAttributes.length === 0) {
+      alert("Selecione ao menos um item antes de continuar.");
+      return;
+    }
+
     const selectedItems = allItems.filter((item) =>
       trueAttributes.includes(item.id_name)
     );
 
     const finalItems = selectedItems.map((item) => ({
       ...item,
-      data: "", // Inicializa o campo data como string vazia
+      data: "",
     }));
+
+    const response_all = await fetch("/items/items.json");
+    const items_all = await response_all.json();
+
+    const atividadesParaAdicionar = [
+      "Efetuar a inspeção total de todos os elementos da edificação conforme ABNT NBR 16747",
+    ];
+
+    // Filtrar objetos com base nas atividades
+    const objetosFiltrados = items_all.filter((objeto) =>
+      atividadesParaAdicionar.includes(objeto.atividade)
+    );
+
+    const arrayCombinado = [...objetosFiltrados, ...finalItems];
 
     setFormData((prevData: any) => ({
       ...prevData,
-      questions: finalItems,
+      questions: arrayCombinado,
     }));
 
     handleNext();
   };
+
+  if (loading) return <CircularProgress />;
 
   return (
     <Box>
@@ -133,44 +164,43 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         favor selecione abaixo caso o {formData.buildingName} possua algum
         desses itens:
       </Typography>
+      <Container>
+        <Grid container spacing={2}>
+          {/* Chip substituindo o Checkbox para Selecionar Todos */}
+          <Chip
+            icon={selectAllChecked ? <DoneIcon /> : undefined}
+            label={selectAllChecked ? "Todos Selecionados" : "Selecionar Todos"}
+            onClick={handleSelectAll} // Alterna o estado ao clicar
+            color={selectAllChecked ? "primary" : "default"} // Muda a cor do Chip
+            sx={{ mt: 2, mb: 2 }}
+          />
+        </Grid>
 
-      {/* Checkbox para "Selecionar Todos" */}
-      <Grid spacing={2}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={selectAllChecked}
-              onChange={handleSelectAll}
-              name="selectAll"
-            />
-          }
-          label="Selecionar Todos"
-        />
-      </Grid>
+        <Grid container spacing={2}>
+          <Grid container spacing={2}>
+            {formItems.map((item) => (
+              <Grid item xs={12} sm={6} key={item.name}>
+                <Chip
+                  icon={formData[item.name] ? <DoneIcon /> : undefined} // Mostra o ícone apenas se o item estiver selecionado
+                  label={item.label}
+                  onClick={() => handleChipClick(item.name)} // Função para alternar o estado do Chip
+                  color={formData[item.name] ? "primary" : "default"} // Muda a cor do Chip com base no estado
+                  sx={{ mt: 1, mb: 1 }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Grid>
 
-      {/* Checkbox para cada item do formulário */}
-      {formItems.map((item) => (
-        <FormControlLabel
-          key={item.name}
-          control={
-            <Checkbox
-              checked={formData[item.name] || false}
-              onChange={handleCheckboxChange}
-              name={item.name}
-            />
-          }
-          label={item.label}
-        />
-      ))}
-
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-        <Button variant="contained" onClick={handleBack}>
-          Voltar
-        </Button>
-        <Button variant="contained" onClick={addNext}>
-          Continuar
-        </Button>
-      </Box>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+          <Button variant="contained" onClick={handleBack}>
+            Voltar
+          </Button>
+          <Button variant="contained" onClick={addNext}>
+            Continuar
+          </Button>
+        </Box>
+      </Container>
     </Box>
   );
 };

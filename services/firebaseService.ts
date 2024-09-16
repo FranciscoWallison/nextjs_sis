@@ -155,7 +155,6 @@ export interface PeriodicidadeResponse {
   questions: CategoryData[];
 }
 
-// Your pegarUsuarioPeriodicidades function
 export const pegarUsuarioPeriodicidades =
   async (): Promise<PeriodicidadeResponse | null> => {
     try {
@@ -269,11 +268,19 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
 };
 
 
-// Função para buscar todos os blocos do Firestore
-export const fetchBlocks = async (): Promise<Block[]> => {
+// Função para buscar blocos do usuário autenticado
+export const fetchBlocks = async (): Promise<Block[] | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
   const db = getFirestore(app);
   const blocksCollection = collection(db, "bloco");
-  const blocksSnapshot = await getDocs(blocksCollection);
+  // Busca apenas os blocos do usuário autenticado
+  const blocksQuery = query(blocksCollection, where("userId", "==", user.uid));
+  const blocksSnapshot = await getDocs(blocksQuery);
   const blocksList = blocksSnapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
@@ -281,41 +288,70 @@ export const fetchBlocks = async (): Promise<Block[]> => {
   return blocksList;
 };
 
-// Função para adicionar um novo bloco no Firestore
-export const addBlock = async (blockName: string): Promise<Block> => {
+// Função para adicionar um novo bloco ao Firestore com o id do usuário
+export const addBlock = async (blockName: string): Promise<Block | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
   const db = getFirestore(app);
   const newBlockRef = await addDoc(collection(db, "bloco"), {
     name: blockName,
+    userId: user.uid,  // Adiciona o ID do usuário ao bloco
   });
-  return { id: newBlockRef.id, name: blockName };
+  return { id: newBlockRef.id, name: blockName, userId: user.uid };
 };
 
-// Função para atualizar um bloco existente no Firestore
-export const updateBlock = async (blockId: string, blockName: string): Promise<void> => {
+// Função para atualizar um bloco existente no Firestore associado ao usuário
+export const updateBlock = async (blockId: string, blockName: string): Promise<void | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
   const db = getFirestore(app);
   const blockRef = doc(db, "bloco", blockId);
-  await updateDoc(blockRef, { name: blockName });
+  await updateDoc(blockRef, { name: blockName, userId: user.uid });  // Atualiza o ID do usuário no bloco
 };
 
-// Função para remover um bloco do Firestore
-export const deleteBlock = async (blockId: string): Promise<void> => {
+// Função para remover um bloco do Firestore associado ao usuário
+export const deleteBlock = async (blockId: string): Promise<void | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
   const db = getFirestore(app);
   const blockRef = doc(db, "bloco", blockId);
   await deleteDoc(blockRef);
 };
 
 // Função para buscar o único registro da coleção "bloco" no Firestore
-export const fetchSingleBlock = async () => {
+export const fetchSingleBlock = async (): Promise<Block | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
   const db = getFirestore(app);
   const blocksCollection = collection(db, "bloco");
-  const blocksSnapshot = await getDocs(blocksCollection);
+
+  // Filtra os blocos pelo userId do usuário autenticado
+  const blocksQuery = query(blocksCollection, where("userId", "==", user.uid));
+  const blocksSnapshot = await getDocs(blocksQuery);
 
   if (blocksSnapshot.empty) {
     return null; // Retorna null se não houver registros
   }
 
   // Retorna o primeiro registro encontrado
-  return blocksSnapshot.docs[0].data();
+  return blocksSnapshot.docs[0].data() as Block;
 };
 
 // Função para buscar um bloco pelo ID

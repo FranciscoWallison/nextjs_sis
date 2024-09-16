@@ -152,10 +152,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     const year = date.getFullYear().toString();
     return `${day}/${month}/${year}`;
   };
-
-  console.log("====================================");
-  console.log(activity);
-  console.log("====================================");
   return (
     <>
       <Card sx={{ mb: 2 }}>

@@ -96,13 +96,14 @@ const Periodicidades: React.FC = () => {
         email: "",
       };
 
-      item.id_name = "hasElevator";
-      item.category_id = 0;
+      item.id_name = "hasCriado";
+      item.category_id = 200;
 
-      new_object.push(item);
-      console.log(new_object);
+      const arrayItenNew = [];
 
-      await usuarioPeriodicidadesAdicionar(new_object);
+      arrayItenNew.push(item);
+
+      await usuarioPeriodicidadesAdicionar(arrayItenNew);
       fetchData();
       setSnackbarOpen(true);
     } catch (error) {

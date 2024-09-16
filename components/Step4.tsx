@@ -27,10 +27,6 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   const router = useRouter();
 
   const handleRedirect = async () => {
-    console.log("====================================");
-    console.log(formData);
-    console.log("====================================");
-
     if (await salvarNovo(formData)) {
       router.push("/ManutencoesDashboard");
     } else {

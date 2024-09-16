@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
-import { Box, Button, TextField, Typography, Grid } from "@mui/material";
+import React, { useContext, useState, useCallback } from "react";
+import { Box, Button, TextField, Typography, Grid, CircularProgress } from "@mui/material";
+import InputMask from "react-input-mask";
 import { FormContext } from "../contexts/FormContext";
 
 const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
@@ -10,12 +11,14 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   const [loadingCEP, setLoadingCEP] = useState(false);
 
   // Estados de erro para cada campo
-  const [buildingNameError, setBuildingNameError] = useState(false);
-  const [buildingAgeError, setBuildingAgeError] = useState(false);
-  const [cepError, setCepError] = useState(false);
-  const [addressError, setAddressError] = useState(false);
-  const [bairroError, setBairroError] = useState(false);
-  const [cidadeError, setCidadeError] = useState(false);
+  const [errors, setErrors] = useState({
+    buildingName: false,
+    buildingAge: false,
+    cep: false,
+    address: false,
+    bairro: false,
+    cidade: false,
+  });
 
   if (!context) {
     throw new Error("FormContext must be used within a FormProvider");
@@ -27,7 +30,7 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleCEPBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleCEPBlur = useCallback(async (e: React.FocusEvent<HTMLInputElement>) => {
     const cep = e.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
     if (cep.length === 8) {
       setLoadingCEP(true);
@@ -44,43 +47,52 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             cidade: data.localidade,
             uf: data.uf,
           });
-          setCepError(false); // Resetar erro após preencher com sucesso
+          setErrors((prev) => ({ ...prev, cep: false }));
         } else {
           alert("CEP não encontrado.");
-          setCepError(true); // Definir erro se o CEP não for encontrado
+          setErrors((prev) => ({ ...prev, cep: true }));
         }
       } catch (error) {
         console.error("Erro ao buscar o CEP:", error);
-        setCepError(true); // Definir erro se houver um problema na busca do CEP
+        setErrors((prev) => ({ ...prev, cep: true }));
       } finally {
         setLoadingCEP(false);
       }
     }
-  };
+  }, [formData, setFormData]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDate = e.target.value;
     const today = new Date().toISOString().split("T")[0]; // Data atual no formato YYYY-MM-DD
 
     if (selectedDate > today) {
-      alert("A data de entrega não pode ser no futuro.");
-      setBuildingAgeError(true);
+      setErrors((prev) => ({ ...prev, buildingAge: true }));
     } else {
       setFormData({ ...formData, [e.target.name]: selectedDate });
-      setBuildingAgeError(false);
+      setErrors((prev) => ({ ...prev, buildingAge: false }));
     }
   };
 
   const handleNextStep = () => {
     // Verificação dos campos obrigatórios
-    setBuildingNameError(!formData.buildingName);
-    setBuildingAgeError(!formData.buildingAge);
-    setCepError(!formData.cep);
-    setAddressError(!formData.address);
-    setBairroError(!formData.bairro);
-    setCidadeError(!formData.cidade);
+    setErrors({
+      buildingName: !formData.buildingName,
+      buildingAge: !formData.buildingAge,
+      cep: !formData.cep,
+      address: !formData.address,
+      bairro: !formData.bairro,
+      cidade: !formData.cidade,
+    });
 
-    if (formData.buildingName && formData.buildingAge && formData.cep && formData.address && formData.bairro && formData.cidade) {
+    const isValid =
+      formData.buildingName &&
+      formData.buildingAge &&
+      formData.cep &&
+      formData.address &&
+      formData.bairro &&
+      formData.cidade;
+
+    if (isValid) {
       handleNext();
     }
   };
@@ -99,8 +111,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onChange={handleChange}
             fullWidth
             required
-            error={buildingNameError}
-            helperText={buildingNameError ? "Nome do condomínio é obrigatório" : ""}
+            error={errors.buildingName}
+            helperText={errors.buildingName ? "Nome do condomínio é obrigatório" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -120,36 +132,55 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               max: new Date().toISOString().split("T")[0], // Define a data máxima como hoje
             }}
             required
-            error={buildingAgeError}
-            helperText={buildingAgeError ? "Data de entrega é obrigatória e não pode ser no futuro" : ""}
+            error={errors.buildingAge}
+            helperText={
+              errors.buildingAge ? "Data de entrega é obrigatória e não pode ser no futuro" : ""
+            }
             sx={{ mt: 2 }}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField
-            label="CNPJ"
-            name="cnpj"
+          <InputMask
+            mask="99.999.999/9999-99"
             value={formData.cnpj || ""}
             onChange={handleChange}
-            fullWidth
-            // Não é obrigatório, portanto, sem `required`
-            sx={{ mt: 2 }}
-          />
+            disabled={loadingCEP} // Opcional: Ajuste conforme necessário
+          >
+            {(inputProps: any) => (
+              <TextField
+                {...inputProps}
+                label="CNPJ"
+                name="cnpj"
+                fullWidth
+                sx={{ mt: 2 }}
+              />
+            )}
+          </InputMask>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField
-            label="CEP"
-            name="cep"
+          <InputMask
+            mask="99999-999"
             value={formData.cep || ""}
             onChange={handleChange}
             onBlur={handleCEPBlur}
-            fullWidth
-            required
-            error={cepError}
-            helperText={cepError ? "CEP é obrigatório" : ""}
-            sx={{ mt: 2 }}
             disabled={loadingCEP}
-          />
+          >
+            {(inputProps: any) => (
+              <TextField
+                {...inputProps}
+                label="CEP"
+                name="cep"
+                fullWidth
+                required
+                error={errors.cep}
+                helperText={errors.cep ? "CEP é obrigatório" : ""}
+                sx={{ mt: 2 }}
+                InputProps={{
+                  endAdornment: loadingCEP ? <CircularProgress size={20} /> : null,
+                }}
+              />
+            )}
+          </InputMask>
         </Grid>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -159,8 +190,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onChange={handleChange}
             fullWidth
             required
-            error={addressError}
-            helperText={addressError ? "Endereço é obrigatório" : ""}
+            error={errors.address}
+            helperText={errors.address ? "Endereço é obrigatório" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -172,8 +203,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onChange={handleChange}
             fullWidth
             required
-            error={bairroError}
-            helperText={bairroError ? "Bairro é obrigatório" : ""}
+            error={errors.bairro}
+            helperText={errors.bairro ? "Bairro é obrigatório" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -185,8 +216,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onChange={handleChange}
             fullWidth
             required
-            error={cidadeError}
-            helperText={cidadeError ? "Cidade é obrigatória" : ""}
+            error={errors.cidade}
+            helperText={errors.cidade ? "Cidade é obrigatória" : ""}
             sx={{ mt: 2 }}
           />
         </Grid>

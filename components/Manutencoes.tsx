@@ -306,7 +306,7 @@ const Manutencoes: React.FC = () => {
                 Regular
               </Button>
             </Grid>
-            <Grid item xs={12} sm={2}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.aVencer ? "contained" : "outlined"}
@@ -316,7 +316,7 @@ const Manutencoes: React.FC = () => {
                 A vencer
               </Button>
             </Grid>
-            <Grid item xs={12} sm={2}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.vencido ? "contained" : "outlined"}
