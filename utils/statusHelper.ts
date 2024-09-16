@@ -1,12 +1,16 @@
 import { add, differenceInDays, isValid, parseISO } from "date-fns";
 import { Activity } from "@/services/firebaseService";
 
+// Função para calcular a próxima data com base na data de início e na periodicidade
 const calculateNextDate = (startDate: string, periodicity: string) => {
   if (startDate === "") {
     return null;
   }
 
-  const date = parseISO(startDate); // Converte a string diretamente para uma data, mantendo a interpretação correta
+  const date = parseISO(startDate);
+  if (!isValid(date)) {
+    return null; // Retorna null se a data não for válida
+  }
 
   switch (periodicity) {
     case "A cada semana":
@@ -36,18 +40,28 @@ const calculateNextDate = (startDate: string, periodicity: string) => {
   }
 };
 
-// Função que determina o status com base na data e periodicidade
-export const getStatus = (activity: Activity) => {
-  if (!activity.data) return "Desconhecido"; // Lidar com data indefinida
+// Função para determinar o status e a data de vencimento
+export const getStatus = (
+  activity: Activity
+): { status: string; dueDate: Date | null } => {
+  if (activity.activityRegular && activity.Periodicidade === "Não aplicável") {
+    return { status: "Regular", dueDate: null };
+  } if (!activity.activityRegular && activity.Periodicidade === "Não aplicável"){
+    return { status: "Não Regularizado", dueDate: null };
+  } // Lida com data indefinida
+
+  if (!activity.data) return { status: "Data não cadastrada", dueDate: null }; // Lida com data indefinida
 
   const today = new Date();
   const nextDate = calculateNextDate(activity.data, activity.Periodicidade);
 
-  if (!nextDate || !isValid(nextDate)) return "Desconhecido";
+  if (!nextDate || !isValid(nextDate))
+    return { status: "Data não cadastrada", dueDate: null };
 
   const daysDifference = differenceInDays(nextDate, today);
 
-  if (daysDifference > 7) return "Regular";
-  if (daysDifference <= 7 && daysDifference >= 0) return "A vencer";
-  return "Vencido";
+  if (daysDifference > 7) return { status: "Regular", dueDate: nextDate };
+  if (daysDifference <= 7 && daysDifference >= 0)
+    return { status: "A vencer", dueDate: nextDate };
+  return { status: "Vencido", dueDate: nextDate };
 };

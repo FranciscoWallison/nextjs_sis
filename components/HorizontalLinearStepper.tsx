@@ -16,7 +16,7 @@ import Step4 from "./Step4";
 
 const steps = [
   "Saudação Inicial",
-  "Informações do Prédio",
+  "Informações do Condomínio",
   "Cadastrando as Manutenções",
   "Confirmação e Conclusão",
 ];

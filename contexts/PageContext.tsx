@@ -3,11 +3,13 @@ import { SvgIconComponent } from "@mui/icons-material";
 import HomeIcon from "@mui/icons-material/Home";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import NotificationImportantIcon from '@mui/icons-material/NotificationImportant';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PeopleIcon from "@mui/icons-material/People";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/Layers";
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import BusinessIcon from '@mui/icons-material/Business';
+import ViewModuleIcon from "@mui/icons-material/ViewModule"; // Adicionei o ícone
 
 interface Page {
   title: string;
@@ -27,12 +29,11 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [pages, setPages] = useState<Page[]>([
-    // { title: "Home", url: "/", icon: HomeIcon },
     { title: "Dashboard", url: "/", icon: DashboardIcon },
     { title: "Manutenções", url: "/ManutencoesDashboard", icon: EngineeringIcon },
+    { title: "Calendário", url: "/calendario", icon: CalendarMonthIcon },
     { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
-    // { title: "Periodicidades", url: "/periodicidades", icon: BusinessIcon },
-    // { title: "Integrations", url: "/integrations", icon: LayersIcon },
+    { title: "Gestão de Blocos", url: "/gestaoblocos", icon: ViewModuleIcon }, // Adicionado aqui
   ]);
 
   const addPage = (page: Page) => {

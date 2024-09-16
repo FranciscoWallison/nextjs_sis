@@ -27,12 +27,8 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   const router = useRouter();
 
   const handleRedirect = async () => {
-    console.log("====================================");
-    console.log(formData);
-    console.log("====================================");
-
     if (await salvarNovo(formData)) {
-      router.push("/");
+      router.push("/ManutencoesDashboard");
     } else {
       // modal de aviso de erro
     }
@@ -41,8 +37,7 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   return (
     <Box>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        Parabéns! Você cadastrou o seu prédio, e todas as manutenções
-        obrigatórias já estão cadastradas.
+        Parabéns! Você cadastrou o seu condomínio, e todas as manutenções selecionadas já estão cadastradas.
       </Typography>
       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
         <Button variant="contained" onClick={handleBack}>

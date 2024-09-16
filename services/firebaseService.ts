@@ -18,6 +18,10 @@ import {
   deleteDoc,
   setDoc,
   getFirestore,
+  Timestamp,
+  query,
+  where, 
+  orderBy,
   // "@firebase/firestore";
 } from "firebase/firestore";
 
@@ -105,6 +109,13 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
   return false;
 };
 
+// Interface para o tipo Block
+export interface Block {
+  id: string;
+  name: string;
+  userId: string;
+}
+
 export interface ResponsibleInfo {
   nome: string;
   telefone: string;
@@ -124,6 +135,9 @@ export interface Activity {
   id_name: string;
   id: number;
   category_id?: number;
+  blocoIDs?: string[]; // Adicionando blocoIDs ao tipo, permitindo que seja opcional
+  activityRegular?: boolean; // Adicionando activityRegular como opcional
+
 }
 
 export interface CategoryData {
@@ -139,13 +153,14 @@ export interface CategoryData {
   id_name: string;
   id: number;
   category_id?: number;
+  blocoIDs?: string[];  // Adicione a propriedade blocoIDs aqui se ela deveria existir
+
 }
 
 export interface PeriodicidadeResponse {
   questions: CategoryData[];
 }
 
-// Your pegarUsuarioPeriodicidades function
 export const pegarUsuarioPeriodicidades =
   async (): Promise<PeriodicidadeResponse | null> => {
     try {
@@ -180,10 +195,9 @@ export const usuarioPeriodicidadesAtualizar = async (
     if (data === null) {
       return false;
     }
-    console.log("======usuarioPeriodicidadesAtualizar===========");
-    console.log(updatedActivity, data.questions);
-    console.log("====================================");
-
+    console.log('====================================');
+    console.log(updatedActivity);
+    console.log('====================================');
     // Atualizar a atividade correspondente
     const updatedData = data.questions.map((activity: Activity) =>
       activity.id === updatedActivity.id
@@ -196,6 +210,7 @@ export const usuarioPeriodicidadesAtualizar = async (
 
     // Salvar os dados atualizados no servidor
     await salvarNovo(data);
+    await registrarHistoricoAlteracao(updatedActivity);
 
     return true;
   } catch (error) {
@@ -256,4 +271,152 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
     console.log("====================================");
   }
   return false;
+};
+
+
+// Função para buscar blocos do usuário autenticado
+export const fetchBlocks = async (): Promise<Block[] | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
+  const db = getFirestore(app);
+  const blocksCollection = collection(db, "bloco");
+  // Busca apenas os blocos do usuário autenticado
+  const blocksQuery = query(blocksCollection, where("userId", "==", user.uid));
+  const blocksSnapshot = await getDocs(blocksQuery);
+  const blocksList = blocksSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Block[];
+  return blocksList;
+};
+
+// Função para adicionar um novo bloco ao Firestore com o id do usuário
+export const addBlock = async (blockName: string): Promise<Block | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
+  const db = getFirestore(app);
+  const newBlockRef = await addDoc(collection(db, "bloco"), {
+    name: blockName,
+    userId: user.uid,  // Adiciona o ID do usuário ao bloco
+  });
+  return { id: newBlockRef.id, name: blockName, userId: user.uid };
+};
+
+// Função para atualizar um bloco existente no Firestore associado ao usuário
+export const updateBlock = async (blockId: string, blockName: string): Promise<void | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
+  const db = getFirestore(app);
+  const blockRef = doc(db, "bloco", blockId);
+  await updateDoc(blockRef, { name: blockName, userId: user.uid });  // Atualiza o ID do usuário no bloco
+};
+
+// Função para remover um bloco do Firestore associado ao usuário
+export const deleteBlock = async (blockId: string): Promise<void | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
+  const db = getFirestore(app);
+  const blockRef = doc(db, "bloco", blockId);
+  await deleteDoc(blockRef);
+};
+
+// Função para buscar o único registro da coleção "bloco" no Firestore
+export const fetchSingleBlock = async (): Promise<Block | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    return null;
+  }
+
+  const db = getFirestore(app);
+  const blocksCollection = collection(db, "bloco");
+
+  // Filtra os blocos pelo userId do usuário autenticado
+  const blocksQuery = query(blocksCollection, where("userId", "==", user.uid));
+  const blocksSnapshot = await getDocs(blocksQuery);
+
+  if (blocksSnapshot.empty) {
+    return null; // Retorna null se não houver registros
+  }
+
+  // Retorna o primeiro registro encontrado
+  return blocksSnapshot.docs[0].data() as Block;
+};
+
+// Função para buscar um bloco pelo ID
+export const fetchBlockById = async (blocoID: string): Promise<{ name: string } | null> => {
+  try {
+    const db = getFirestore(app);
+    const blocoRef = doc(db, "bloco", blocoID);
+    const blocoSnapshot = await getDoc(blocoRef);
+    if (blocoSnapshot.exists()) {
+      return { name: blocoSnapshot.data().name };
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Erro ao buscar bloco pelo ID:", error);
+    return null;
+  }
+};
+
+// Função para registrar o histórico de alteração no Firestore
+const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
+  try {
+    const db = getFirestore(app);
+    const historicoCollectionRef = collection(db, "historico_manutencao");
+    
+    // Dados para o log de alteração
+    const historicoData = {
+      activityId: updatedActivity.id,
+      updatedFields: updatedActivity, // Salvar todos os campos atualizados
+      timestamp: Timestamp.now(), // Registrar a data/hora da alteração
+    };
+
+    await addDoc(historicoCollectionRef, historicoData);
+  } catch (error) {
+    console.error("Erro ao registrar histórico de alteração:", error);
+  }
+};
+
+export const getActivityHistory = async (activityId: number) => {
+  try {
+    const db = getFirestore(app);
+    const historicoCollectionRef = collection(db, "historico_manutencao");
+    
+    // Consulta para buscar todas as alterações feitas na atividade especificada, ordenadas por timestamp
+    const q = query(
+      historicoCollectionRef,
+      where("activityId", "==", activityId),
+      orderBy("timestamp", "desc")
+    );
+
+    const querySnapshot = await getDocs(q);
+    const historicoList = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return historicoList;
+  } catch (error) {
+    console.error("Erro ao buscar histórico de atividade:", error);
+    return [];
+  }
 };

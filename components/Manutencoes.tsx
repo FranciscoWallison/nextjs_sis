@@ -10,17 +10,20 @@ import {
   TextField,
   Grid,
   Button,
+  FormControl,
+  Select,
+  MenuItem,
+  InputLabel,
+  SelectChangeEvent 
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
-import ActivityModal from "./ActivityModal";
 import {
   pegarUsuarioPeriodicidades,
-  PeriodicidadeResponse,
   Activity,
   usuarioPeriodicidadesAtualizar,
   salvarNovo,
-  usuarioPeriodicidadesAdicionar
+  fetchBlockById,
 } from "@/services/firebaseService";
 import HelpQuestions from "@/utils/HelpQuestions";
 import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
@@ -34,7 +37,9 @@ const Manutencoes: React.FC = () => {
     titulo: "",
     responsavel: "",
     data: "",
+    blocos: [] as string[], // Novo estado para blocos selecionados
   });
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos carregados
   const [statusFilters, setStatusFilters] = useState({
     regular: false,
     aVencer: false,
@@ -47,13 +52,61 @@ const Manutencoes: React.FC = () => {
 
     if (responseP === null) {
       setLoading(false);
-      // Lidar com o caso onde responseP é null, por exemplo, exibir uma mensagem de erro
       return;
     }
 
-    const sortedData = sortActivities(responseP.questions);
+    const activitiesWithBlocks = await Promise.all(
+      responseP.questions.map(async (activity) => {
+        if (activity.blocoIDs && activity.blocoIDs.length > 0) {
+          try {
+            const blocosPromises = activity.blocoIDs.map((blocoID) =>
+              fetchBlockById(blocoID)
+            );
+            const blocosDocs = await Promise.all(blocosPromises);
+
+            const blocos = blocosDocs.filter((blocoDoc) => blocoDoc !== null);
+
+            if (blocos.length > 0) {
+              return {
+                ...activity,
+                blocos: blocos.map((bloco, index) => ({
+                  id: `generated-id-${index}`, // Gera um id se não existir
+                  name: bloco.name,
+                })),
+              };
+            }
+          } catch (error) {
+            console.error(
+              `Erro ao buscar blocos para activity com IDs: ${activity.blocoIDs}:`,
+              error
+            );
+          }
+        }
+
+        return activity;
+      })
+    );
+
+    const sortedData = sortActivities(activitiesWithBlocks);
     setData(sortedData);
     setLoading(false);
+
+    // Carregar blocos únicos para o filtro
+    const uniqueBlocks = Array.from(
+      new Set(
+        activitiesWithBlocks.flatMap((activity) => {
+          if ("blocos" in activity) {
+            return activity.blocos?.map((bloco) => ({
+              id: bloco.id,
+              name: bloco.name,
+            }));
+          }
+          return [];
+        })
+      )
+    );
+
+    setBlocks(uniqueBlocks);
   }, []);
 
   useEffect(() => {
@@ -65,12 +118,10 @@ const Manutencoes: React.FC = () => {
       return [];
     }
 
-    // Ordena as atividades com base na presença do campo 'data'
     return activities.sort((a, b) => {
-      const aDone = !!a.data; // Verifica se 'a.data' está preenchido
-      const bDone = !!b.data; // Verifica se 'b.data' está preenchido
+      const aDone = !!a.data;
+      const bDone = !!b.data;
 
-      // Ordena com base na presença do campo 'data'
       return aDone === bDone ? 0 : aDone ? 1 : -1;
     });
   };
@@ -128,6 +179,13 @@ const Manutencoes: React.FC = () => {
     });
   };
 
+  const handleBlockFilterChange = (event: SelectChangeEvent<string[]>) => {
+    setFilters({
+      ...filters,
+      blocos: event.target.value as string[],
+    });
+  };
+
   const handleStatusFilterChange = (status: keyof typeof statusFilters) => {
     setStatusFilters((prevFilters) => ({
       ...prevFilters,
@@ -147,79 +205,38 @@ const Manutencoes: React.FC = () => {
         !filters.data ||
         (activity.data && activity.data.includes(filters.data));
 
-      const status = getStatus(activity); // Supondo que a função getStatus existe
+      const dataStatus = getStatus(activity);
 
       const matchStatus =
-        (statusFilters.regular && status === "Regular") ||
-        (statusFilters.aVencer && status === "A vencer") ||
-        (statusFilters.vencido && status === "Vencido");
+        (statusFilters.regular && dataStatus.status === "Regular") ||
+        (statusFilters.aVencer && dataStatus.status === "A vencer") ||
+        (statusFilters.vencido && dataStatus.status === "Vencido");
+
+      // Filtrar por blocos selecionados
+      const matchBlock =
+        filters.blocos.length === 0 ||
+        (activity.blocoIDs &&
+          activity.blocoIDs.some((blocoID) =>
+            blocks.some(
+              (block) =>
+                block.id === blocoID && filters.blocos.includes(block.name)
+            )
+          ));
 
       return (
         matchTitle &&
         matchResponsavel &&
         matchData &&
-        (!statusFilters.regular &&
+        matchBlock &&
+        ((!statusFilters.regular &&
           !statusFilters.aVencer &&
-          !statusFilters.vencido ||
+          !statusFilters.vencido) ||
           matchStatus)
       );
     });
   };
 
   const progress = calculateProgress();
-
-  const initialActivity: Activity = {
-    id: 0,
-    titulo: "",
-    atividade: "",
-    responsavel: "",
-    Periodicidade: "",
-    obrigatorio: "",
-    data: "",
-    id_name: "",
-    responsavel_info: {
-      nome: "",
-      telefone: "",
-      email: ""
-    }
-  };
-
-  const [modalOpen, setModalOpen] = useState(false);
-
-  const handleOpenModal = () => {
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
-
-  const onSave = async (item: Activity) => {
-    try {
-      const new_object = [...data];
-      item.id = (new_object.length + 200);
-
-      item.responsavel_info = {
-        "nome": "",
-        "telefone": "",
-        "email": ""
-      };
-
-      item.id_name = "hasElevator";
-      item.category_id = 0;
-
-      new_object.push(item);
-      console.log(new_object);
-
-      await usuarioPeriodicidadesAdicionar(new_object);
-      fetchData();
-      setSnackbarOpen(true);
-
-    } catch (error) {
-      console.error(error)
-    }
-
-  }
 
   return (
     <>
@@ -266,10 +283,31 @@ const Manutencoes: React.FC = () => {
                 onChange={handleFilterChange}
               />
             </Grid>
+            <Grid item xs={12} sm={12}>
+              {blocks.length > 0 && (
+                <FormControl fullWidth>
+                  <InputLabel>Filtrar por Bloco</InputLabel>
+                  <Select
+                    multiple
+                    value={filters.blocos}
+                    onChange={handleBlockFilterChange} // Função corrigida
+                    renderValue={(selected) =>
+                      (selected as string[]).join(", ")
+                    } // Casting para string[]
+                  >
+                    {blocks.map((block) => (
+                      <MenuItem key={block.id} value={block.name}>
+                        {block.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            </Grid>
           </Grid>
-            
+
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid  item xs={12} sm={4}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.regular ? "contained" : "outlined"}
@@ -279,7 +317,7 @@ const Manutencoes: React.FC = () => {
                 Regular
               </Button>
             </Grid>
-            <Grid  item xs={12} sm={4}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.aVencer ? "contained" : "outlined"}
@@ -289,7 +327,7 @@ const Manutencoes: React.FC = () => {
                 A vencer
               </Button>
             </Grid>
-            <Grid  item xs={12} sm={4}>
+            <Grid item xs={12} sm={4}>
               <Button
                 fullWidth={true}
                 variant={statusFilters.vencido ? "contained" : "outlined"}
@@ -299,25 +337,6 @@ const Manutencoes: React.FC = () => {
                 Vencido
               </Button>
             </Grid>
-          </Grid>
-
-          <Grid
-            container
-            spacing={2}
-            sx={{ mb: 2, justifyContent: "flex-start", alignItems: "center" }}
-          >
-            <Grid item xs={12} sm={4}>
-              <Button variant="contained" onClick={handleOpenModal}>
-                Adicionar
-              </Button>
-            </Grid>
-            <ActivityModal
-              open={modalOpen}
-              onClose={handleCloseModal}
-              activity={initialActivity}
-              onSave={onSave}
-              disabled={false}
-            />
           </Grid>
 
           <MaintenanceCategory

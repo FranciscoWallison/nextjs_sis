@@ -16,7 +16,7 @@
     },
     {
         "id": 1,
-        "id_name": "grupo_gerador",
+        "id_name": "grupo_gerador_verificacoes",
         "titulo": "Grupo Gerador",
         "atividade": "Verificar após o uso do equipamento o nível de óleo combustível e se há obstrução nas entradas e saídas de ventilação",
         "responsavel": "Equipe de manutenção local",
@@ -30,7 +30,7 @@
         "category_id": 0
     },
     {
-        "id_name": "grupo_gerador",
+        "id_name": "grupo_gerador_testes",
         "titulo": "Grupo Gerador",
         "atividade": "Efetuar teste de funcionamento dos sistemas conforme instruções do fornecedor",
         "responsavel": "Equipe de manutenção local",
@@ -55,7 +55,7 @@
             "telefone": "",
             "email": ""
         },
-        "id_name": "iluminacao_de_emergencia",
+        "id_name": "iluminacao_de_emergencia_testes",
         "id": 3,
         "category_id": 0
     },
@@ -70,7 +70,7 @@
             "telefone": "",
             "email": ""
         },
-        "id_name": "iluminacao_de_emergencia",
+        "id_name": "iluminacao_de_emergencia_verificacoes",
         "id": 4,
         "category_id": 0
     },
@@ -105,8 +105,8 @@
         "category_id": 0
     },
     {
-        "id_name": "banheira_hidromassagem",
-        "titulo": "Banheira de hidromassagem/spa",
+        "id_name": "banheira_hidromassagem_coletivo",
+        "titulo": "Banheira de hidromassagem/spa de uso coletivo",
         "atividade": "Fazer teste de funcionamento conforme instruções do fornecedor",
         "responsavel": "Equipe de manutenção local",
         "Periodicidade": "A cada mês",
@@ -121,7 +121,7 @@
     },
     {
         "titulo": "Ar condicionado",
-        "atividade": "Manutenção recomendada pelo fabricante e atendimento à legislação vigente",
+        "atividade": "Manutenção recomendada pelo fabricante e atendimento à legislação vigente: limpeza dos filtros, verificação da funcionalidade das máquinas",
         "responsavel": "Empresa especializada",
         "Periodicidade": "A cada mês",
         "obrigatorio": "Não",
@@ -135,8 +135,8 @@
         "category_id": 0
     },
     {
-        "id_name": "gerador_agua_quente",
-        "titulo": "Gerador de água quente",
+        "id_name": "gerador_agua_quente_industrial",
+        "titulo": "Gerador industrial para água quente",
         "atividade": "Limpar e regular os sistemas de queimadores e filtros de água conforme instruções do fabricante",
         "responsavel": "Empresa capacitada",
         "Periodicidade": "A cada dois meses",
@@ -165,7 +165,7 @@
         "category_id": 0
     },
     {
-        "id_name": "porta_corta_fogo",
+        "id_name": "porta_corta_fogo_lubrificacao",
         "titulo": "Porta corta-fogo",
         "atividade": "Aplicar óleo lubrificante nas dobradiças e maçanetas",
         "responsavel": "Equipe de manutenção local",
@@ -180,7 +180,7 @@
         "category_id": 0
     },
     {
-        "id_name": "porta_corta_fogo",
+        "id_name": "porta_corta_fogo_verificacoes",
         "titulo": "Porta corta-fogo",
         "atividade": "Verificar a abertura e o fechamento a 45º. Se for necessário fazer regulagem, chamar empresa especializada",
         "responsavel": "Equipe de manutenção local",
@@ -195,7 +195,7 @@
         "category_id": 0
     },
     {
-        "id_name": "banheira_hidromassagem",
+        "id_name": "banheira_hidromassagem_limpar_tubulacao",
         "titulo": "Banheira de hidromassagem/spa",
         "atividade": "Limpar a tubulação",
         "responsavel": "Equipe de manutenção local",
@@ -255,7 +255,7 @@
         "category_id": 0
     },
     {
-        "id_name": "banheira_hidromassagem",
+        "id_name": "banheira_hidromassagem_manter_sistema",
         "titulo": "Banheira de hidromassagem/spa",
         "atividade": "Limpar e manter o sistema conforme instruções do fornecedor",
         "responsavel": "Empresa capacitada",
@@ -271,7 +271,7 @@
     },
     {
         "id_name": "spda",
-        "titulo": "Sistema de proteção contra descargas atmosféricas",
+        "titulo": "Sistema de proteção contra descargas atmosféricas (Para raios)",
         "atividade": "Inspecionar sua integridade e reconstituir o sistema de medição de resistência conforme legislação vigente",
         "responsavel": "Empresa especializada",
         "Periodicidade": "A cada ano",
@@ -315,7 +315,7 @@
         "category_id": 0
     },
     {
-        "titulo": "Elevadores",
+        "titulo": "Elevador(es)",
         "atividade": "Manutenção conforme indicação dos fornecedores",
         "responsavel": "Empresa especializada",
         "Periodicidade": "Conforme indicação dos fornecedores",
@@ -435,7 +435,7 @@
         "category_id": 1
     },
     {
-        "titulo": "Tubulações",
+        "titulo": "Tubulações de água fria e pluviais",
         "atividade": "Verificar as tubulações de água potável e servida, para detectar obstruções, falhas ou entupimentos, e fixação e reconstituir a sua integridade, onde necessário",
         "responsavel": "Equipe de manutenção local/ empresa especializada",
         "Periodicidade": "A cada ano",
@@ -450,7 +450,7 @@
         "category_id": 1
     },
     {
-        "titulo": "Metais, acessórios e registros",
+        "titulo": "Metais, acessórios e registros das áreas comuns",
         "atividade": "Verificar os elementos de vedação dos metais, acessórios e registros",
         "responsavel": "Equipe de manutenção local",
         "Periodicidade": "A cada ano",
@@ -466,7 +466,7 @@
     },
     {
         "id_name": "portao_automatico",
-        "titulo": "Automação de portões",
+        "titulo": "Portão eletrônico",
         "atividade": "Fazer a manutenção geral dos sistemas conforme instruções do fornecedor",
         "responsavel": "Empresa especializada",
         "Periodicidade": "A cada mês",
@@ -480,7 +480,7 @@
         "category_id": 2
     },
     {
-        "titulo": "Dados, informática, voz, telefonia, vídeo, TV, CFTV e segurança perimetral",
+        "titulo": "Sistema de telefonia, CFTV e/ou câmeras de segurança perimetral",
         "atividade": "Verificar o funcionamento conforme instruções do fornecedor",
         "responsavel": "Equipe de manutenção local/empresa capacitada",
         "Periodicidade": "A cada mês",
@@ -510,7 +510,7 @@
         "category_id": 3
     },
     {
-        "titulo": "Paredes externas/fachadas e muros",
+        "titulo": "Paredes externas e muros",
         "atividade": "Verificar a integridade e reconstituir, onde necessário",
         "responsavel": "Equipe de manutenção local/empresa especializada",
         "Periodicidade": "A cada ano",
@@ -630,7 +630,7 @@
         "category_id": 4
     },
     {
-        "titulo": "Vidros e seus sistemas de fixação",
+        "titulo": "Vidros",
         "atividade": "Verificar a presença de fissuras, falhas na vedação e fixação nos caixilhos e reconstituir sua integridade, onde necessário",
         "responsavel": "Equipe de manutenção local/ empresa especializada",
         "Periodicidade": "A cada ano",
@@ -750,7 +750,7 @@
         "category_id": 7
     },
     {
-        "titulo": "Impermeabilização",
+        "titulo": "Impermeabilizações",
         "atividade": "Áreas molhadas internas e externas, piscinas, reservatórios, coberturas, jardins, espelhos d'água. Verificar sua integridade e reconstituir a proteção mecânica, sinais de infiltração ou falhas da impermeabilização exposta",
         "responsavel": "Equipe de manutenção local",
         "Periodicidade": "A cada ano",
@@ -780,7 +780,7 @@
         "category_id": 7
     },
     {
-        "titulo": "Estrutural",
+        "titulo": "Estrutura (Pilares, vigas e lajes)",
         "atividade": "Verificar a integridade estrutural conforme ABNT NBR 15575",
         "responsavel": "Empresa especializada",
         "Periodicidade": "A cada ano",
@@ -810,18 +810,153 @@
         "category_id": 7
     },
     {
-        "titulo": "Possui Elevadores?",
-        "atividade": "Validar os Elevadores",
-        "responsavel": "Equipe de manutenção local",
-        "Periodicidade": "A cada mês",
-        "obrigatorio": "Não",
+        "titulo": "Playground",
+        "atividade": "Verificar condições e segurança dos brinquedos",
+        "responsavel": "Equipe de manutenção local/ empresa especializada",
+        "Periodicidade": "A cada 6 meses",
+        "obrigatorio": "Sim",
         "responsavel_info": {
             "nome": "",
             "telefone": "",
             "email": ""
         },
-        "id_name": "hasElevator",
-        "id": 54,
-        "category_id": 0
-    }
+        "id_name": "playground",
+        "id": 1,
+        "category_id": 7
+    },
+    {
+        "titulo": "Seguro do condomínio",
+        "atividade": "Renovar a cada ano",
+        "responsavel": "Síndico",
+        "Periodicidade": "A cada ano",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "seguro_condominio",
+        "id": 2,
+        "category_id": 7
+    },
+    {
+        "titulo": "Sistema de energia solar (placas fotovoltáicas)",
+        "atividade": "Verificar funcionalidade e integridade do sistema, inversor e placas",
+        "responsavel": "Empresa especializada",
+        "Periodicidade": "A cada ano",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "energia_solar",
+        "id": 3,
+        "category_id": 7
+    },
+    {
+        "titulo": "Exaustão de churrasqueira",
+        "atividade": "Verificar funcionalidade e eficiência do motor e exaustor",
+        "responsavel": "Empresa especializada",
+        "Periodicidade": "A cada 6 meses",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "exaustao_churrasqueira",
+        "id": 4,
+        "category_id": 7
+    },
+    {
+        "titulo": "Fachada com pintura",
+        "atividade": "Pintura com empresa especializada com cadeirinha e equipamentos de segurança",
+        "responsavel": "Empresa especializada",
+        "Periodicidade": "A cada 5 anos",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "fachada_pintura",
+        "id": 5,
+        "category_id": 7
+    },
+    {
+        "titulo": "Fachada com pastilha",
+        "atividade": "Teste de percussão para verificar se há necessidade de substituição de pastilhas e/ou rejuntes",
+        "responsavel": "Empresa especializada",
+        "Periodicidade": "A cada 5 anos",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "fachada_pastilha",
+        "id": 6,
+        "category_id": 7
+    },
+    {
+        "titulo": "Piscina",
+        "atividade": "Verificar integridade do rejunte, vazamentos, sistema de aquecimento, filtro, areia, iluminação e outras irregularidades",
+        "responsavel": "Empresa especializada",
+        "Periodicidade": "A cada 1 ano",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "piscina",
+        "id": 7,
+        "category_id": 7
+    },
+    {
+        "titulo": "Sistema de gás",
+        "atividade": "Troca de componentes, válvulas, mangueiras e medidores",
+        "responsavel": "Empresa especializada",
+        "Periodicidade": "A cada 5 anos",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "sistema_gas",
+        "id": 8,
+        "category_id": 7
+    },
+    {
+        "titulo": "Cerca elétrica",
+        "atividade": "Verificação da funcionalidade do sistema, bateria e possíveis irregularidades",
+        "responsavel": "Empresa especializada",
+        "Periodicidade": "A cada ano",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "cerca_eletrica",
+        "id": 9,
+        "category_id": 7
+    },
+    {
+        "titulo": "Jardim",
+        "atividade": "Manutenção geral",
+        "responsavel": "Equipe de manutenção local/Empresa especializada",
+        "Periodicidade": "A cada mês",
+        "obrigatorio": "Sim",
+        "responsavel_info": {
+            "nome": "",
+            "telefone": "",
+            "email": ""
+        },
+        "id_name": "jardim",
+        "id": 10,
+        "category_id": 7
+    }    
 ]
