@@ -113,6 +113,7 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
 export interface Block {
   id: string;
   name: string;
+  userId: string;
 }
 
 export interface ResponsibleInfo {
@@ -134,6 +135,9 @@ export interface Activity {
   id_name: string;
   id: number;
   category_id?: number;
+  blocoIDs?: string[]; // Adicionando blocoIDs ao tipo, permitindo que seja opcional
+  activityRegular?: boolean; // Adicionando activityRegular como opcional
+
 }
 
 export interface CategoryData {
@@ -149,6 +153,8 @@ export interface CategoryData {
   id_name: string;
   id: number;
   category_id?: number;
+  blocoIDs?: string[];  // Adicione a propriedade blocoIDs aqui se ela deveria existir
+
 }
 
 export interface PeriodicidadeResponse {

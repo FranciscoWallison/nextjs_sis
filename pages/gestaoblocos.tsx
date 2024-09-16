@@ -24,7 +24,7 @@ import {
   addBlock,
   updateBlock,
   deleteBlock,
-  Block
+  Block,
 } from "@/services/firebaseService"; // Importar funções de serviço
 
 const BlockManagementPage: React.FC = () => {
@@ -40,7 +40,7 @@ const BlockManagementPage: React.FC = () => {
     const loadBlocks = async () => {
       try {
         const blocksList = await fetchBlocks();
-        setBlocks(blocksList);
+        setBlocks(blocksList || []);
       } catch (error) {
         console.error("Erro ao buscar blocos:", error);
         setSnackbarMessage("Erro ao buscar blocos.");
@@ -82,10 +82,20 @@ const BlockManagementPage: React.FC = () => {
     try {
       if (isEditing && currentBlock) {
         await updateBlock(currentBlock.id, blockName);
-        setBlocks(blocks.map((block) => (block.id === currentBlock.id ? { ...block, name: blockName } : block)));
+        setBlocks(
+          blocks.map((block) =>
+            block.id === currentBlock.id ? { ...block, name: blockName } : block
+          )
+        );
       } else {
         const newBlock = await addBlock(blockName);
-        setBlocks([...blocks, newBlock]);
+        if (newBlock) {
+          // Verifica se o newBlock não é null
+          setBlocks([...blocks, newBlock]);
+        } else {
+          setSnackbarMessage("Erro ao adicionar novo bloco.");
+          setSnackbarOpen(true);
+        }
       }
 
       setOpen(false);
@@ -222,7 +232,11 @@ const BlockDialog: React.FC<BlockDialogProps> = ({
 }) => (
   <Dialog open={open} onClose={onClose}>
     <DialogTitle>
-      {isEditing ? "Editar Bloco" : isViewing ? "Visualizar Bloco" : "Adicionar Bloco"}
+      {isEditing
+        ? "Editar Bloco"
+        : isViewing
+        ? "Visualizar Bloco"
+        : "Adicionar Bloco"}
     </DialogTitle>
     <DialogContent>
       <TextField

@@ -1,5 +1,12 @@
 import React, { useContext, useState, useCallback } from "react";
-import { Box, Button, TextField, Typography, Grid, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Grid,
+  CircularProgress,
+} from "@mui/material";
 import InputMask from "react-input-mask";
 import { FormContext } from "../contexts/FormContext";
 
@@ -30,36 +37,39 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleCEPBlur = useCallback(async (e: React.FocusEvent<HTMLInputElement>) => {
-    const cep = e.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
-    if (cep.length === 8) {
-      setLoadingCEP(true);
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await response.json();
+  const handleCEPBlur = useCallback(
+    async (e: React.FocusEvent<HTMLInputElement>) => {
+      const cep = e.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+      if (cep.length === 8) {
+        setLoadingCEP(true);
+        try {
+          const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+          const data = await response.json();
 
-        if (!data.erro) {
-          setFormData({
-            ...formData,
-            cep: data.cep,
-            address: data.logradouro,
-            bairro: data.bairro,
-            cidade: data.localidade,
-            uf: data.uf,
-          });
-          setErrors((prev) => ({ ...prev, cep: false }));
-        } else {
-          alert("CEP não encontrado.");
+          if (!data.erro) {
+            setFormData({
+              ...formData,
+              cep: data.cep,
+              address: data.logradouro,
+              bairro: data.bairro,
+              cidade: data.localidade,
+              uf: data.uf,
+            });
+            setErrors((prev) => ({ ...prev, cep: false }));
+          } else {
+            alert("CEP não encontrado.");
+            setErrors((prev) => ({ ...prev, cep: true }));
+          }
+        } catch (error) {
+          console.error("Erro ao buscar o CEP:", error);
           setErrors((prev) => ({ ...prev, cep: true }));
+        } finally {
+          setLoadingCEP(false);
         }
-      } catch (error) {
-        console.error("Erro ao buscar o CEP:", error);
-        setErrors((prev) => ({ ...prev, cep: true }));
-      } finally {
-        setLoadingCEP(false);
       }
-    }
-  }, [formData, setFormData]);
+    },
+    [formData, setFormData]
+  );
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDate = e.target.value;
@@ -100,7 +110,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   return (
     <Box>
       <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        Olá, {formData.lastName}! Precisamos que você preencha as informações iniciais referentes ao condomínio.
+        Olá, {formData.lastName}! Precisamos que você preencha as informações
+        iniciais referentes ao condomínio.
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
@@ -112,7 +123,9 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             fullWidth
             required
             error={errors.buildingName}
-            helperText={errors.buildingName ? "Nome do condomínio é obrigatório" : ""}
+            helperText={
+              errors.buildingName ? "Nome do condomínio é obrigatório" : ""
+            }
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -134,7 +147,9 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             required
             error={errors.buildingAge}
             helperText={
-              errors.buildingAge ? "Data de entrega é obrigatória e não pode ser no futuro" : ""
+              errors.buildingAge
+                ? "Data de entrega é obrigatória e não pode ser no futuro"
+                : ""
             }
             sx={{ mt: 2 }}
           />
@@ -144,19 +159,24 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             mask="99.999.999/9999-99"
             value={formData.cnpj || ""}
             onChange={handleChange}
-            disabled={loadingCEP} // Opcional: Ajuste conforme necessário
+            disabled={loadingCEP}
           >
-            {(inputProps: any) => (
+            {/* @ts-ignore */}
+            {(inputProps) => (
               <TextField
                 {...inputProps}
                 label="CNPJ"
                 name="cnpj"
                 fullWidth
                 sx={{ mt: 2 }}
+                inputProps={{
+                  ...inputProps.inputProps,
+                }}
               />
             )}
           </InputMask>
         </Grid>
+
         <Grid item xs={12} sm={6}>
           <InputMask
             mask="99999-999"
@@ -165,7 +185,8 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
             onBlur={handleCEPBlur}
             disabled={loadingCEP}
           >
-            {(inputProps: any) => (
+            {/* @ts-ignore */}
+            {(inputProps) => (
               <TextField
                 {...inputProps}
                 label="CEP"
@@ -176,12 +197,16 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
                 helperText={errors.cep ? "CEP é obrigatório" : ""}
                 sx={{ mt: 2 }}
                 InputProps={{
-                  endAdornment: loadingCEP ? <CircularProgress size={20} /> : null,
+                  endAdornment: loadingCEP ? (
+                    <CircularProgress size={20} />
+                  ) : null,
+                  ...inputProps.inputProps,
                 }}
               />
             )}
           </InputMask>
         </Grid>
+
         <Grid item xs={12} sm={6}>
           <TextField
             label="Rua/Endereço"

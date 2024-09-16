@@ -6,8 +6,6 @@ import {
   Typography,
   Grid,
   CircularProgress,
-  FormControlLabel,
-  Checkbox,
   Container,
 } from "@mui/material";
 import DoneIcon from "@mui/icons-material/Done";
@@ -40,17 +38,21 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   handleBack,
 }) => {
   const context = useContext(FormContext);
+
+  // Declarar estados incondicionalmente
   const [formItems, setFormItems] = useState<FormItem[]>([]);
   const [allItems, setAllItems] = useState<Item[]>([]);
   const [selectAllChecked, setSelectAllChecked] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Tratar o caso de context ser nulo diretamente no return
   if (!context) {
     return <div>Erro: FormContext não está disponível</div>;
   }
 
   const { formData, setFormData } = context;
 
+  // useCallback deve ser chamado incondicionalmente
   const fetchFormItems = useCallback(async () => {
     setLoading(true);
     try {
@@ -81,10 +83,12 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     }
   }, []);
 
+  // useEffect deve ser chamado incondicionalmente
   useEffect(() => {
     fetchFormItems();
   }, [fetchFormItems]);
 
+  // Outro useEffect incondicional
   useEffect(() => {
     const allChecked = formItems.every((item) => formData[item.name]);
     setSelectAllChecked(allChecked);
@@ -94,7 +98,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, [e.target.name]: e.target.checked });
   };
 
-  // Função de "Selecionar Todos" agora com Chip
+  // Função de "Selecionar Todos"
   const handleSelectAll = () => {
     const checked = !selectAllChecked; // Inverte o estado atual
     setSelectAllChecked(checked);
@@ -108,7 +112,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   };
 
   const handleChipClick = (name: string) => {
-    setFormData((prevFormData) => ({
+    setFormData((prevFormData: Record<string, any>) => ({
       ...prevFormData,
       [name]: !prevFormData[name], // Alterna entre true e false
     }));
@@ -141,7 +145,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     ];
 
     // Filtrar objetos com base nas atividades
-    const objetosFiltrados = items_all.filter((objeto) =>
+    const objetosFiltrados = items_all.filter((objeto: Item) =>
       atividadesParaAdicionar.includes(objeto.atividade)
     );
 

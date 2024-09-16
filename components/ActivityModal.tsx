@@ -53,7 +53,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
     const loadBlocks = async () => {
       try {
         const fetchedBlocks = await fetchBlocks();
-        setBlocks(fetchedBlocks);
+        setBlocks(fetchedBlocks || []);
         // Preenche os blocos selecionados a partir da atividade (se houver)
         setSelectedBlocks(activity.blocoIDs || []);
       } catch (error) {

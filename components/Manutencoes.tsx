@@ -14,6 +14,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  SelectChangeEvent 
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
@@ -68,8 +69,8 @@ const Manutencoes: React.FC = () => {
             if (blocos.length > 0) {
               return {
                 ...activity,
-                blocos: blocos.map((bloco) => ({
-                  id: bloco.id,
+                blocos: blocos.map((bloco, index) => ({
+                  id: `generated-id-${index}`, // Gera um id se não existir
                   name: bloco.name,
                 })),
               };
@@ -93,11 +94,18 @@ const Manutencoes: React.FC = () => {
     // Carregar blocos únicos para o filtro
     const uniqueBlocks = Array.from(
       new Set(
-        activitiesWithBlocks.flatMap((activity) =>
-          activity.blocos?.map((bloco) => ({ id: bloco.id, name: bloco.name }))
-        )
+        activitiesWithBlocks.flatMap((activity) => {
+          if ("blocos" in activity) {
+            return activity.blocos?.map((bloco) => ({
+              id: bloco.id,
+              name: bloco.name,
+            }));
+          }
+          return [];
+        })
       )
     );
+
     setBlocks(uniqueBlocks);
   }, []);
 
@@ -171,12 +179,10 @@ const Manutencoes: React.FC = () => {
     });
   };
 
-  const handleBlockFilterChange = (
-    e: React.ChangeEvent<{ value: unknown }>
-  ) => {
+  const handleBlockFilterChange = (event: SelectChangeEvent<string[]>) => {
     setFilters({
       ...filters,
-      blocos: e.target.value as string[],
+      blocos: event.target.value as string[],
     });
   };
 
@@ -209,8 +215,13 @@ const Manutencoes: React.FC = () => {
       // Filtrar por blocos selecionados
       const matchBlock =
         filters.blocos.length === 0 ||
-        (activity.blocos &&
-          activity.blocos.some((bloco) => filters.blocos.includes(bloco.name)));
+        (activity.blocoIDs &&
+          activity.blocoIDs.some((blocoID) =>
+            blocks.some(
+              (block) =>
+                block.id === blocoID && filters.blocos.includes(block.name)
+            )
+          ));
 
       return (
         matchTitle &&
@@ -279,16 +290,16 @@ const Manutencoes: React.FC = () => {
                   <Select
                     multiple
                     value={filters.blocos}
-                    onChange={handleBlockFilterChange}
-                    renderValue={(selected) => selected.join(", ")}
+                    onChange={handleBlockFilterChange} // Função corrigida
+                    renderValue={(selected) =>
+                      (selected as string[]).join(", ")
+                    } // Casting para string[]
                   >
-                    {blocks
-                      .filter((block) => block) // Filtra os blocos não definidos
-                      .map((block) => (
-                        <MenuItem key={block.id} value={block.name}>
-                          {block.name}
-                        </MenuItem>
-                      ))}
+                    {blocks.map((block) => (
+                      <MenuItem key={block.id} value={block.name}>
+                        {block.name}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               )}

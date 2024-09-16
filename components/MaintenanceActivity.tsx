@@ -62,7 +62,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   useEffect(() => {
     const loadBlocks = async () => {
       const fetchedBlocks = await fetchBlocks();
-      setBlocks(fetchedBlocks);
+      setBlocks(fetchedBlocks || []);
     };
 
     loadBlocks();
@@ -176,15 +176,16 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <strong>Periodicidade:</strong> {activity.Periodicidade}
           </Typography>
 
-          {activity.blocos && activity.blocos.length > 0 && (
+          {selectedBlocks.length > 0 && (
             <Typography variant="body2">
               <strong>Blocos:</strong>{" "}
-              {activity.blocos.map((bloco, index) => (
-                <span key={index}>
-                  {bloco.name}
-                  {index < activity.blocos.length - 1 && ", "}
-                </span>
-              ))}
+              {selectedBlocks
+                .map(
+                  (blockId) =>
+                    blocks.find((block) => block.id === blockId)?.name
+                )
+                .filter((name) => name)
+                .join(", ")}
             </Typography>
           )}
 
@@ -270,7 +271,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <Select
               label="Periodicidade"
               name="Periodicidade"
-              value={editedActivity?.Periodicidade || ""}
+              value={Array.isArray(editedActivity?.Periodicidade) ? editedActivity?.Periodicidade : []}
               onChange={handleSelectChange}
               disabled={true}
             >
