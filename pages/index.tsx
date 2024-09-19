@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import withAuth from '../hoc/withAuth';
+import Image from 'next/image';
 
 const Validador: React.FC = () => {
   const [loadingDots, setLoadingDots] = useState('');
@@ -23,8 +24,10 @@ const Validador: React.FC = () => {
         flexDirection: 'column', // Para alinhar a imagem e o texto verticalmente
       }}
     >
-      {/* Exibe a imagem */}
-      <img src="/gmp.png" alt="Imagem GMP" style={{ maxWidth: '200px', marginBottom: '20px' }} />
+      {/* Exibe a imagem utilizando next/image */}
+      <Box sx={{ maxWidth: '200px', marginBottom: '20px' }}>
+        <Image src="/gmp.png" alt="Imagem GMP" width={200} height={200} layout="responsive" />
+      </Box>
       
       {/* Exibe o texto de carregamento com animação de "..." */}
       <Typography variant="h6" component="div">

@@ -6,4 +6,6 @@ export interface  BlockDialogProps {
     onSave: () => void;
     setBlockName: (name: string) => void;
     isViewing: boolean;
+    loading: boolean; // Adicione a propriedade loading aqui
+
   }

@@ -232,7 +232,7 @@ export const usuarioPeriodicidadesAdicionar = async (
     // Filtra os objetos que estão em updatedActivity, mas não em questions
     const idsInQuestions = new Set(questions.map((q) => q.id));    
     const uniqueInUpdatedActivity = updatedActivity.filter(
-      (activity) => !idsInQuestions.has(activity.id)
+      (activity: any) => !idsInQuestions.has(activity.id)
     );
 
     console.log('====================================');

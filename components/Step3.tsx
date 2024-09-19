@@ -50,24 +50,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const { formData, setFormData } = context;
 
-  // Função para agrupar os itens por título
-  const groupItemsByTitle = (items: Item[]) => {
-    const groupedItems: Record<string, FormItem[]> = {};
-    items.forEach((item) => {
-      if (!groupedItems[item.titulo]) {
-        groupedItems[item.titulo] = [];
-      }
-      groupedItems[item.titulo].push({
-        name: item.id_name,
-        label: item.titulo,
-      });
-    });
-    return Object.keys(groupedItems).map((title) => ({
-      title,
-      items: groupedItems[title],
-    }));
-  };
-
+  // Função para transformar os itens recebidos em FormItems
   const fetchFormItems = useCallback(async () => {
     setLoading(true);
     try {
@@ -89,10 +72,15 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         (item: Item) => !atividadesParaRemover.includes(item.atividade)
       );
 
-      const groupedItems = groupItemsByTitle(filteredItems);
+      // Atualiza o estado formItems diretamente com os itens
+      setFormItems(
+        filteredItems.map((item: any) => ({
+          name: item.id_name,
+          label: item.titulo,
+        }))
+      );
 
-      setFormItems(groupedItems);
-      setAllItems(items);
+      setAllItems(items); // Armazena todos os itens para uso posterior
     } catch (error) {
       console.error("Erro ao buscar ou processar os itens:", error);
       alert("Não foi possível carregar os itens. Tente novamente mais tarde.");
@@ -105,44 +93,29 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     fetchFormItems();
   }, [fetchFormItems]);
 
-  // Marcar todos os itens com o mesmo título como selecionados/deselecionados
-  const handleChipClick = (title: string) => {
-    const relatedItems = formItems.find((item) => item.title === title)?.items;
-
-    if (relatedItems) {
-      const allSelected = relatedItems.every(
-        (item) => formData[item.name] === true
-      );
-
-      const updatedFormData = relatedItems.reduce((acc, item) => {
-        acc[item.name] = !allSelected; // Alterna entre true e false para todos os itens do título
-        return acc;
-      }, {} as Record<string, boolean>);
-
-      setFormData((prevFormData: Record<string, any>) => ({
-        ...prevFormData,
-        ...updatedFormData,
-      }));
-    }
-  };
-
-  // Função para "Selecionar Todos"
+  // Função para alternar a seleção de todos os itens
   const handleSelectAll = () => {
     const checked = !selectAllChecked;
     setSelectAllChecked(checked);
 
-    const updatedFormData = formItems.reduce((acc, group) => {
-      group.items.forEach((item) => {
-        acc[item.name] = checked;
-      });
+    const updatedFormData = formItems.reduce((acc, item) => {
+      acc[item.name] = checked;
       return acc;
     }, {} as Record<string, boolean>);
 
     setFormData({ ...formData, ...updatedFormData });
   };
 
+  // Função para alternar a seleção de um grupo de itens
+  const handleChipClick = (name: string) => {
+    const isSelected = formData[name] === true;
+    setFormData((prevFormData: Record<string, any>) => ({
+      ...prevFormData,
+      [name]: !isSelected,
+    }));
+  };
+
   const addNext = async () => {
-    // Obter todos os itens selecionados
     const trueAttributes = Object.keys(formData).filter(
       (key) => formData[key] === true
     );
@@ -203,21 +176,13 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         </Grid>
 
         <Grid container spacing={2}>
-          {formItems.map((group) => (
-            <Grid item xs={12} sm={6} key={group.title}>
+          {formItems.map((item) => (
+            <Grid item xs={12} sm={6} key={item.name}>
               <Chip
-                icon={
-                  group.items.every((item) => formData[item.name])
-                    ? <DoneIcon />
-                    : undefined
-                }
-                label={group.title}
-                onClick={() => handleChipClick(group.title)}
-                color={
-                  group.items.every((item) => formData[item.name])
-                    ? "primary"
-                    : "default"
-                }
+                icon={formData[item.name] ? <DoneIcon /> : undefined}
+                label={item.label}
+                onClick={() => handleChipClick(item.name)}
+                color={formData[item.name] ? "primary" : "default"}
                 sx={{ mt: 1, mb: 1 }}
               />
             </Grid>

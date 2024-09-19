@@ -1,11 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  Container,
-  CircularProgress,
-  Box,
-  Grid,
-  Button,
-} from "@mui/material";
+import { Container, CircularProgress, Box, Grid, Button } from "@mui/material";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/pt-br"; // Importa a localização para Português (Brasil)
@@ -23,19 +17,19 @@ const localizer = momentLocalizer(moment);
 
 // Mensagens traduzidas para o calendário
 const messages = {
-  allDay: 'Dia todo',
-  previous: 'Anterior',
-  next: 'Próximo',
-  today: 'Hoje',
-  month: 'Mês',
-  week: 'Semana',
-  day: 'Dia',
-  agenda: 'Agenda',
-  date: 'Data',
-  time: 'Hora',
-  event: 'Evento',
-  noEventsInRange: 'Nenhum evento neste período.',
-  showMore: total => `+ Ver mais (${total})`,
+  allDay: "Dia todo",
+  previous: "Anterior",
+  next: "Próximo",
+  today: "Hoje",
+  month: "Mês",
+  week: "Semana",
+  day: "Dia",
+  agenda: "Agenda",
+  date: "Data",
+  time: "Hora",
+  event: "Evento",
+  noEventsInRange: "Nenhum evento neste período.",
+  showMore: (total: number) => `+ Ver mais (${total})`,
 };
 
 // Formatos de exibição para dias e meses usando moment.js

@@ -4,11 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/router";
 
 const LogoffButton: React.FC = () => {
-  const { logoff } = useAuth(); // Função de logoff do seu contexto de autenticação
   const router = useRouter();
 
   const handleLogoff = () => {
-    logoff(); // Realiza o logoff
+    localStorage.clear(); 
     router.push("/login"); // Redireciona para a página de login
   };
 
