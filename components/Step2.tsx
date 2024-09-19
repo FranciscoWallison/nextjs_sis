@@ -71,14 +71,26 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     [formData, setFormData]
   );
 
+  // Função para converter de YYYY-MM-DD para DD/MM/YYYY
+  const formatDateToDisplay = (date: string) => {
+    const [year, month, day] = date.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  // Função para converter de DD/MM/YYYY para YYYY-MM-DD
+  const formatDateToISO = (date: string) => {
+    const [day, month, year] = date.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedDate = e.target.value;
+    const selectedDate = e.target.value; // Formato YYYY-MM-DD
     const today = new Date().toISOString().split("T")[0]; // Data atual no formato YYYY-MM-DD
 
     if (selectedDate > today) {
       setErrors((prev) => ({ ...prev, buildingAge: true }));
     } else {
-      setFormData({ ...formData, [e.target.name]: selectedDate });
+      setFormData({ ...formData, buildingAge: selectedDate });
       setErrors((prev) => ({ ...prev, buildingAge: false }));
     }
   };

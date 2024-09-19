@@ -8,6 +8,9 @@ const calculateNextDate = (startDate: string, periodicity: string) => {
   }
 
   const date = parseISO(startDate);
+  console.log('====================================');
+  console.log(startDate);
+  console.log('====================================');
   if (!isValid(date)) {
     return null; // Retorna null se a data não for válida
   }

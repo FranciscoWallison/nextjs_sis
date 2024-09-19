@@ -14,7 +14,9 @@ import {
   DialogActions,
   TextField,
   Snackbar,
+  CircularProgress,
 } from "@mui/material";
+import { BlockDialogProps } from "@/interface/BlockDialog";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -25,16 +27,17 @@ import {
   updateBlock,
   deleteBlock,
   Block,
-} from "@/services/firebaseService"; // Importar funções de serviço
+} from "@/services/firebaseService";
 
 const BlockManagementPage: React.FC = () => {
-  const [blocks, setBlocks] = useState<Block[]>([]); // Estado para armazenar a lista de blocos
-  const [open, setOpen] = useState(false); // Estado para controle do modal
-  const [currentBlock, setCurrentBlock] = useState<Block | null>(null); // Estado para o bloco atual que está sendo editado ou visualizado
-  const [isEditing, setIsEditing] = useState(false); // Estado para diferenciar entre adição e edição
-  const [blockName, setBlockName] = useState<string>(""); // Estado para o nome do bloco
-  const [snackbarOpen, setSnackbarOpen] = useState(false); // Estado para controle do Snackbar
-  const [snackbarMessage, setSnackbarMessage] = useState(""); // Mensagem do Snackbar
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [open, setOpen] = useState(false);
+  const [currentBlock, setCurrentBlock] = useState<Block | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [blockName, setBlockName] = useState<string>("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state for save operation
 
   useEffect(() => {
     const loadBlocks = async () => {
@@ -79,30 +82,35 @@ const BlockManagementPage: React.FC = () => {
       return;
     }
 
+    // Verificar se já existe um bloco com o mesmo nome
+    const blockExists = blocks.some(
+      (block) => block.name.toLowerCase() === blockName.trim().toLowerCase() && (!isEditing || block.id !== currentBlock?.id)
+    );
+
+    if (blockExists) {
+      setSnackbarMessage("Já existe um bloco com este nome.");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setLoading(true);
+
     try {
       if (isEditing && currentBlock) {
         await updateBlock(currentBlock.id, blockName);
-        setBlocks(
-          blocks.map((block) =>
-            block.id === currentBlock.id ? { ...block, name: blockName } : block
-          )
-        );
       } else {
-        const newBlock = await addBlock(blockName);
-        if (newBlock) {
-          // Verifica se o newBlock não é null
-          setBlocks([...blocks, newBlock]);
-        } else {
-          setSnackbarMessage("Erro ao adicionar novo bloco.");
-          setSnackbarOpen(true);
-        }
+        await addBlock(blockName);
       }
 
+      const updatedBlocks = await fetchBlocks();
+      setBlocks(updatedBlocks || []);
       setOpen(false);
     } catch (error) {
       console.error("Erro ao salvar bloco:", error);
       setSnackbarMessage("Erro ao salvar bloco.");
       setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,7 +155,7 @@ const BlockManagementPage: React.FC = () => {
           <List
             sx={{
               width: "100%",
-              maxWidth: 360,
+              maxWidth: 480, // Altere o tamanho máximo para melhorar a responsividade
               bgcolor: "background.paper",
               marginTop: 2,
             }}
@@ -187,7 +195,6 @@ const BlockManagementPage: React.FC = () => {
           </List>
         </Box>
 
-        {/* Modal para adicionar/editar/ver blocos */}
         <BlockDialog
           open={open}
           isEditing={isEditing}
@@ -196,9 +203,9 @@ const BlockManagementPage: React.FC = () => {
           onSave={handleSaveBlock}
           setBlockName={setBlockName}
           isViewing={currentBlock !== null && !isEditing}
+          loading={loading} // Pass loading state to dialog
         />
 
-        {/* Snackbar para feedback do usuário */}
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
@@ -210,17 +217,6 @@ const BlockManagementPage: React.FC = () => {
   );
 };
 
-interface BlockDialogProps {
-  open: boolean;
-  isEditing: boolean;
-  blockName: string;
-  onClose: () => void;
-  onSave: () => void;
-  setBlockName: (name: string) => void;
-  isViewing: boolean;
-}
-
-// Componentização do Dialog para reutilização e clareza
 const BlockDialog: React.FC<BlockDialogProps> = ({
   open,
   isEditing,
@@ -229,6 +225,7 @@ const BlockDialog: React.FC<BlockDialogProps> = ({
   onSave,
   setBlockName,
   isViewing,
+  loading, // Recebe o estado de carregamento
 }) => (
   <Dialog open={open} onClose={onClose}>
     <DialogTitle>
@@ -248,7 +245,7 @@ const BlockDialog: React.FC<BlockDialogProps> = ({
         fullWidth
         value={blockName}
         onChange={(e) => setBlockName(e.target.value)}
-        disabled={isViewing} // Desabilita o campo se estiver visualizando
+        disabled={isViewing || loading} // Desabilita se estiver visualizando ou carregando
       />
     </DialogContent>
     <DialogActions>
@@ -256,8 +253,8 @@ const BlockDialog: React.FC<BlockDialogProps> = ({
         {isEditing || !isViewing ? "Cancelar" : "Fechar"}
       </Button>
       {(isEditing || !isViewing) && (
-        <Button onClick={onSave} color="primary">
-          Salvar
+        <Button onClick={onSave} color="primary" disabled={loading}>
+          {loading ? <CircularProgress size={20} /> : "Salvar"}
         </Button>
       )}
     </DialogActions>

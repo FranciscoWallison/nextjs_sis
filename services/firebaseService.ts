@@ -20,7 +20,7 @@ import {
   getFirestore,
   Timestamp,
   query,
-  where, 
+  where,
   orderBy,
   // "@firebase/firestore";
 } from "firebase/firestore";
@@ -137,7 +137,6 @@ export interface Activity {
   category_id?: number;
   blocoIDs?: string[]; // Adicionando blocoIDs ao tipo, permitindo que seja opcional
   activityRegular?: boolean; // Adicionando activityRegular como opcional
-
 }
 
 export interface CategoryData {
@@ -153,8 +152,7 @@ export interface CategoryData {
   id_name: string;
   id: number;
   category_id?: number;
-  blocoIDs?: string[];  // Adicione a propriedade blocoIDs aqui se ela deveria existir
-
+  blocoIDs?: string[]; // Adicione a propriedade blocoIDs aqui se ela deveria existir
 }
 
 export interface PeriodicidadeResponse {
@@ -167,7 +165,7 @@ export const pegarUsuarioPeriodicidades =
       const user: FirebaseUser | null = AuthStorage.getUser();
       if (!user || !user.uid) {
         // throw new Error("User not authenticated");
-        return null
+        return null;
       }
       const db = getFirestore(app);
       const docRef = doc(db, "cliente", user.uid);
@@ -195,9 +193,9 @@ export const usuarioPeriodicidadesAtualizar = async (
     if (data === null) {
       return false;
     }
-    console.log('====================================');
+    console.log("====================================");
     console.log(updatedActivity);
-    console.log('====================================');
+    console.log("====================================");
     // Atualizar a atividade correspondente
     const updatedData = data.questions.map((activity: Activity) =>
       activity.id === updatedActivity.id
@@ -229,14 +227,22 @@ export const usuarioPeriodicidadesAdicionar = async (
       return false;
     }
 
-    console.log("======usuarioPeriodicidadesAdicionar===========");
-    console.log(updatedActivity, data.questions);
-    console.log("====================================");
+    const questions = data.questions;
 
-    console.log(updatedActivity);
+    // Filtra os objetos que estão em updatedActivity, mas não em questions
+    const idsInQuestions = new Set(questions.map((q) => q.id));    
+    const uniqueInUpdatedActivity = updatedActivity.filter(
+      (activity: any) => !idsInQuestions.has(activity.id)
+    );
+
+    console.log('====================================');
+    console.log(uniqueInUpdatedActivity, updatedActivity, data.questions);
+    console.log('====================================');
+
     data.questions = updatedActivity;
 
     await salvarNovo(data);
+    await registrarHistoricoAlteracao(uniqueInUpdatedActivity[0]);
     return true;
   } catch (error) {
     console.log("====================================");
@@ -273,7 +279,6 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
   return false;
 };
 
-
 // Função para buscar blocos do usuário autenticado
 export const fetchBlocks = async (): Promise<Block[] | null> => {
   const user: FirebaseUser | null = AuthStorage.getUser();
@@ -305,13 +310,16 @@ export const addBlock = async (blockName: string): Promise<Block | null> => {
   const db = getFirestore(app);
   const newBlockRef = await addDoc(collection(db, "bloco"), {
     name: blockName,
-    userId: user.uid,  // Adiciona o ID do usuário ao bloco
+    userId: user.uid, // Adiciona o ID do usuário ao bloco
   });
   return { id: newBlockRef.id, name: blockName, userId: user.uid };
 };
 
 // Função para atualizar um bloco existente no Firestore associado ao usuário
-export const updateBlock = async (blockId: string, blockName: string): Promise<void | null> => {
+export const updateBlock = async (
+  blockId: string,
+  blockName: string
+): Promise<void | null> => {
   const user: FirebaseUser | null = AuthStorage.getUser();
   if (!user || !user.uid) {
     // Usuário não autenticado
@@ -320,20 +328,29 @@ export const updateBlock = async (blockId: string, blockName: string): Promise<v
 
   const db = getFirestore(app);
   const blockRef = doc(db, "bloco", blockId);
-  await updateDoc(blockRef, { name: blockName, userId: user.uid });  // Atualiza o ID do usuário no bloco
+
+  // Atualiza apenas o nome do bloco, sem modificar o userId
+  await updateDoc(blockRef, { name: blockName });
 };
 
 // Função para remover um bloco do Firestore associado ao usuário
 export const deleteBlock = async (blockId: string): Promise<void | null> => {
   const user: FirebaseUser | null = AuthStorage.getUser();
   if (!user || !user.uid) {
-    // Usuário não autenticado
     return null;
   }
 
   const db = getFirestore(app);
   const blockRef = doc(db, "bloco", blockId);
-  await deleteDoc(blockRef);
+  const blockSnapshot = await getDoc(blockRef);
+
+  // Verifica se o bloco pertence ao usuário autenticado antes de deletar
+  if (blockSnapshot.exists() && blockSnapshot.data().userId === user.uid) {
+    await deleteDoc(blockRef);
+  } else {
+    console.error("Bloco não encontrado ou não pertence ao usuário.");
+    return null;
+  }
 };
 
 // Função para buscar o único registro da coleção "bloco" no Firestore
@@ -361,14 +378,24 @@ export const fetchSingleBlock = async (): Promise<Block | null> => {
 };
 
 // Função para buscar um bloco pelo ID
-export const fetchBlockById = async (blocoID: string): Promise<{ name: string } | null> => {
+export const fetchBlockById = async (
+  blocoID: string
+): Promise<{ name: string } | null> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    return null;
+  }
+
   try {
     const db = getFirestore(app);
     const blocoRef = doc(db, "bloco", blocoID);
     const blocoSnapshot = await getDoc(blocoRef);
-    if (blocoSnapshot.exists()) {
+
+    // Verifica se o bloco existe e se pertence ao usuário autenticado
+    if (blocoSnapshot.exists() && blocoSnapshot.data().userId === user.uid) {
       return { name: blocoSnapshot.data().name };
     } else {
+      console.error("Bloco não encontrado ou não pertence ao usuário.");
       return null;
     }
   } catch (error) {
@@ -377,17 +404,25 @@ export const fetchBlockById = async (blocoID: string): Promise<{ name: string } 
   }
 };
 
-// Função para registrar o histórico de alteração no Firestore
+// Função para registrar o histórico de alteração no Firestore, vinculando ao usuário autenticado
 const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    console.error("Usuário não autenticado.");
+    return null;
+  }
+
   try {
     const db = getFirestore(app);
     const historicoCollectionRef = collection(db, "historico_manutencao");
-    
+
     // Dados para o log de alteração
     const historicoData = {
       activityId: updatedActivity.id,
       updatedFields: updatedActivity, // Salvar todos os campos atualizados
       timestamp: Timestamp.now(), // Registrar a data/hora da alteração
+      userId: user.uid, // Adicionar o ID do usuário que fez a alteração
     };
 
     await addDoc(historicoCollectionRef, historicoData);
@@ -396,15 +431,24 @@ const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
   }
 };
 
+// Função para buscar o histórico de alterações de uma atividade específica, filtrado pelo usuário autenticado
 export const getActivityHistory = async (activityId: number) => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    // Usuário não autenticado
+    console.error("Usuário não autenticado.");
+    return [];
+  }
+
   try {
     const db = getFirestore(app);
     const historicoCollectionRef = collection(db, "historico_manutencao");
-    
-    // Consulta para buscar todas as alterações feitas na atividade especificada, ordenadas por timestamp
+
+    // Consulta para buscar todas as alterações feitas na atividade especificada, ordenadas por timestamp, e filtradas pelo userId
     const q = query(
       historicoCollectionRef,
       where("activityId", "==", activityId),
+      where("userId", "==", user.uid), // Filtra pelo ID do usuário autenticado
       orderBy("timestamp", "desc")
     );
 

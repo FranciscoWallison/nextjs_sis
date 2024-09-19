@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TextField, Button, Box, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import Link from "@mui/material/Link";
 import { useAuth } from "@/contexts/AuthContext";
+import NextLink from 'next/link';
 
 const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -10,6 +11,17 @@ const LoginForm: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // Controle de hidratação
+
+  // Garante que o componente só renderize no cliente
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null; // Evita problemas de hidratação
+  }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -23,10 +35,8 @@ const LoginForm: React.FC = () => {
 
   const mensagem = (response: boolean) => {
     if (response) {
-      // setSuccess("Informações invalidas!");
       setEmail("");
       setPassword("");
-
       setError("");
     } else {
       setError("Login ou senha inválidos!");
@@ -45,7 +55,7 @@ const LoginForm: React.FC = () => {
         }}
       >
         {error && <Typography color="error">{error}</Typography>}
-        {success && <Typography color="green">{success}</Typography>}
+        {success && <Typography color="success.main">{success}</Typography>}
       </Box>
       <TextField
         margin="normal"
@@ -71,14 +81,20 @@ const LoginForm: React.FC = () => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-        ENTRAR
+      <Button
+        type="submit"
+        fullWidth
+        variant="contained"
+        sx={{ mt: 3, mb: 2 }}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Aguarde..." : "ENTRAR"}
       </Button>
       <Grid container justifyContent="flex-end">
         <Grid item>
-          <Link href="/signup" variant="body2">
-            Cadastrar
-          </Link>
+          <NextLink href="/signup" passHref>
+            <Link variant="body2">Cadastrar</Link>
+          </NextLink>
         </Grid>
       </Grid>
     </Box>

@@ -39,25 +39,25 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 }) => {
   const context = useContext(FormContext);
 
-  // Declarar estados incondicionalmente
-  const [formItems, setFormItems] = useState<FormItem[]>([]);
+  const [formItems, setFormItems] = useState<{ label: string; names: string[] }[]>([]);
   const [allItems, setAllItems] = useState<Item[]>([]);
   const [selectAllChecked, setSelectAllChecked] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Tratar o caso de context ser nulo diretamente no return
   if (!context) {
     return <div>Erro: FormContext não está disponível</div>;
   }
 
   const { formData, setFormData } = context;
 
-  // useCallback deve ser chamado incondicionalmente
   const fetchFormItems = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch("/items/items.json");
-      const items = await response.json();
+      if (!response.ok) {
+        throw new Error("Erro ao buscar os itens");
+      }
+      const items: Item[] = await response.json();
 
       const atividadesParaRemover = [
         "Fazer teste de funcionamento do sistema de ventilação conforme instruções do fornecedor e projeto",
@@ -67,54 +67,66 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         "Efetuar a inspeção total de todos os elementos da edificação conforme ABNT NBR 16747",
       ];
 
-      const mappedItems: FormItem[] = items
-        .filter((item: Item) => !atividadesParaRemover.includes(item.atividade))
-        .map((item: Item) => ({
-          name: item.id_name,
-          label: item.titulo,
-        }));
+      const filteredItems = items.filter(
+        (item) => !atividadesParaRemover.includes(item.atividade)
+      );
 
-      setFormItems(mappedItems);
-      setAllItems(items);
+      // Agrupando por título e removendo duplicações de títulos
+      const groupedItems = filteredItems.reduce((acc, item) => {
+        const existingGroup = acc.find((group) => group.label === item.titulo);
+        if (existingGroup) {
+          existingGroup.names.push(item.id_name);
+        } else {
+          acc.push({
+            label: item.titulo,
+            names: [item.id_name],
+          });
+        }
+        return acc;
+      }, [] as { label: string; names: string[] }[]);
+
+      setFormItems(groupedItems);
+      setAllItems(items); // Armazena todos os itens para uso posterior
     } catch (error) {
       console.error("Erro ao buscar ou processar os itens:", error);
+      alert("Não foi possível carregar os itens. Tente novamente mais tarde.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // useEffect deve ser chamado incondicionalmente
   useEffect(() => {
     fetchFormItems();
   }, [fetchFormItems]);
 
-  // Outro useEffect incondicional
-  useEffect(() => {
-    const allChecked = formItems.every((item) => formData[item.name]);
-    setSelectAllChecked(allChecked);
-  }, [formItems, formData]);
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.checked });
-  };
-
-  // Função de "Selecionar Todos"
+  // Função para alternar a seleção de todos os itens
   const handleSelectAll = () => {
-    const checked = !selectAllChecked; // Inverte o estado atual
+    const checked = !selectAllChecked;
     setSelectAllChecked(checked);
 
-    const updatedFormData = formItems.reduce((acc, item) => {
-      acc[item.name] = checked;
+    const updatedFormData = formItems.reduce((acc, itemGroup) => {
+      itemGroup.names.forEach((name) => {
+        acc[name] = checked;
+      });
       return acc;
     }, {} as Record<string, boolean>);
 
     setFormData({ ...formData, ...updatedFormData });
   };
 
-  const handleChipClick = (name: string) => {
+  // Função para alternar a seleção de um grupo de itens baseado no título
+  const handleChipClick = (names: string[]) => {
+    if (!names) return; // Garantindo que names não seja undefined
+    const allSelected = names.every((name) => formData[name] === true);
+
+    const updatedFormData = names.reduce((acc, name) => {
+      acc[name] = !allSelected; // Alterna entre selecionar/deselecionar todos os itens com o mesmo título
+      return acc;
+    }, {} as Record<string, boolean>);
+
     setFormData((prevFormData: Record<string, any>) => ({
       ...prevFormData,
-      [name]: !prevFormData[name], // Alterna entre true e false
+      ...updatedFormData,
     }));
   };
 
@@ -144,7 +156,6 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
       "Efetuar a inspeção total de todos os elementos da edificação conforme ABNT NBR 16747",
     ];
 
-    // Filtrar objetos com base nas atividades
     const objetosFiltrados = items_all.filter((objeto: Item) =>
       atividadesParaAdicionar.includes(objeto.atividade)
     );
@@ -170,30 +181,28 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
       </Typography>
       <Container>
         <Grid container spacing={2}>
-          {/* Chip substituindo o Checkbox para Selecionar Todos */}
           <Chip
             icon={selectAllChecked ? <DoneIcon /> : undefined}
             label={selectAllChecked ? "Todos Selecionados" : "Selecionar Todos"}
-            onClick={handleSelectAll} // Alterna o estado ao clicar
-            color={selectAllChecked ? "primary" : "default"} // Muda a cor do Chip
+            onClick={handleSelectAll}
+            color={selectAllChecked ? "primary" : "default"}
             sx={{ mt: 2, mb: 2 }}
           />
         </Grid>
 
         <Grid container spacing={2}>
-          <Grid container spacing={2}>
-            {formItems.map((item) => (
-              <Grid item xs={12} sm={6} key={item.name}>
-                <Chip
-                  icon={formData[item.name] ? <DoneIcon /> : undefined} // Mostra o ícone apenas se o item estiver selecionado
-                  label={item.label}
-                  onClick={() => handleChipClick(item.name)} // Função para alternar o estado do Chip
-                  color={formData[item.name] ? "primary" : "default"} // Muda a cor do Chip com base no estado
-                  sx={{ mt: 1, mb: 1 }}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          {formItems.map((group) => (
+            <Grid item xs={12} sm={6} key={group.label}>
+              {/* Verificação de segurança para garantir que 'names' exista */}
+              <Chip
+                icon={group.names && group.names.every((name) => formData[name]) ? <DoneIcon /> : undefined}
+                label={group.label}
+                onClick={() => handleChipClick(group.names)}
+                color={group.names && group.names.every((name) => formData[name]) ? "primary" : "default"}
+                sx={{ mt: 1, mb: 1 }}
+              />
+            </Grid>
+          ))}
         </Grid>
 
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>

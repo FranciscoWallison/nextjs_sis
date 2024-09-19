@@ -93,18 +93,15 @@ const Manutencoes: React.FC = () => {
 
     // Carregar blocos únicos para o filtro
     const uniqueBlocks = Array.from(
-      new Set(
+      new Map(
         activitiesWithBlocks.flatMap((activity) => {
           if ("blocos" in activity) {
-            return activity.blocos?.map((bloco) => ({
-              id: bloco.id,
-              name: bloco.name,
-            }));
+            return activity.blocos?.map((bloco) => [bloco.id, bloco]); // Cria um array de pares [id, bloco]
           }
           return [];
         })
-      )
-    );
+      ).values() // Retorna apenas os blocos (sem os IDs) como valores únicos
+    );    
 
     setBlocks(uniqueBlocks);
   }, []);

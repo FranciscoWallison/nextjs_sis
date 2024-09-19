@@ -13,12 +13,18 @@ const withAuth = (WrappedComponent: React.FC) => {
         const user = AuthStorage.getUser();
         if (!user || !(await interceptAuth())) {
           router.push("/login");
+          return;
         }
         if (!(await validaUsuarioForm())) {
           router.push("/form");
+          return;
         }
 
       };
+
+      if (router.pathname === "/") {
+        router.push("/Dashboard");
+      }
 
       checkAuth();
     }, [router]);

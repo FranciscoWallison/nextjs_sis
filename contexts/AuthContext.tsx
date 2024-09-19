@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         // setToken(response.token);
         // AuthStorage.setToken(response.token);
 
-        router.push("/");
+        router.push("/Dashboard");
         return true;
       }
     } catch (error) {

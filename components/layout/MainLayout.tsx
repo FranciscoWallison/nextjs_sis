@@ -4,7 +4,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import Copyright from "@/components/layout/Copyright";
 import { useAuth } from "@/contexts/AuthContext";
-
+import LogoffButton from "@/components/layout/LogoffButton";
 const drawerWidth: number = 240;
 
 interface MainLayoutProps {
@@ -49,7 +49,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, title }) => {
           {children}
           <Copyright sx={{ pt: 4 }} />
         </Container>
+        
       </Box>
+      
     </Box>
   );
 };

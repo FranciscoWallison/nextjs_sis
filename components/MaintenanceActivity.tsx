@@ -200,7 +200,15 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             </>
           )}
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              mt: 2,
+              flexDirection: { xs: "column", sm: "row" }, // Flex direção para mobile
+              gap: 2, // Adiciona espaçamento entre os botões
+            }}
+          >
             <Button variant="contained" color="primary" onClick={handleOpen}>
               {titleUpdate}
             </Button>
@@ -271,7 +279,11 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <Select
               label="Periodicidade"
               name="Periodicidade"
-              value={Array.isArray(editedActivity?.Periodicidade) ? editedActivity?.Periodicidade : []}
+              value={
+                Array.isArray(editedActivity?.Periodicidade)
+                  ? editedActivity?.Periodicidade
+                  : []
+              }
               onChange={handleSelectChange}
               disabled={true}
             >
