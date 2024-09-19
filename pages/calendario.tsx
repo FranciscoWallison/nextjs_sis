@@ -1,21 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Container,
-  Typography,
   CircularProgress,
   Box,
   Grid,
   Button,
-  Snackbar,
-  Alert,
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel,
 } from "@mui/material";
-import { Calendar, dateFnsLocalizer } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import { ptBR } from "date-fns/locale"; // Define a localização para Português (Brasil)
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "moment/locale/pt-br"; // Importa a localização para Português (Brasil)
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import MainLayout from "../components/layout/MainLayout";
 import {
@@ -25,18 +18,32 @@ import {
 } from "@/services/firebaseService";
 import { getStatus } from "@/utils/statusHelper";
 
-// Configuração do Localizer para date-fns no react-big-calendar
-const locales = {
-  "pt-BR": ptBR,
+// Configuração do Localizer para moment no react-big-calendar
+const localizer = momentLocalizer(moment);
+
+// Mensagens traduzidas para o calendário
+const messages = {
+  allDay: 'Dia todo',
+  previous: 'Anterior',
+  next: 'Próximo',
+  today: 'Hoje',
+  month: 'Mês',
+  week: 'Semana',
+  day: 'Dia',
+  agenda: 'Agenda',
+  date: 'Data',
+  time: 'Hora',
+  event: 'Evento',
+  noEventsInRange: 'Nenhum evento neste período.',
+  showMore: total => `+ Ver mais (${total})`,
 };
 
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-});
+// Formatos de exibição para dias e meses usando moment.js
+const formats = {
+  agendaDateFormat: "DD/MM ddd", // Formato de data na agenda
+  weekdayFormat: "dddd", // Dias da semana completos
+  monthHeaderFormat: "MMMM YYYY", // Título do mês e ano
+};
 
 const CalendarioManutencoes: React.FC = () => {
   const [data, setData] = useState<Activity[]>([]);
@@ -196,6 +203,8 @@ const CalendarioManutencoes: React.FC = () => {
             <Box sx={{ height: 600 }}>
               <Calendar
                 localizer={localizer}
+                messages={messages} // Passa as mensagens traduzidas
+                formats={formats} // Define a formatação para dias e meses
                 events={applyFilters(events)} // Aplicar filtros nos eventos
                 startAccessor="start"
                 endAccessor="end"
