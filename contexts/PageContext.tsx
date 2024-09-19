@@ -29,7 +29,7 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [pages, setPages] = useState<Page[]>([
-    { title: "Dashboard", url: "/", icon: DashboardIcon },
+    { title: "Dashboard", url: "/Dashboard", icon: DashboardIcon },
     { title: "Manutenções", url: "/ManutencoesDashboard", icon: EngineeringIcon },
     { title: "Calendário", url: "/calendario", icon: CalendarMonthIcon },
     { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
