@@ -20,6 +20,10 @@ const withAuth = (WrappedComponent: React.FC) => {
 
       };
 
+      if (router.pathname === "/") {
+        router.push("/Dashboard");
+      }
+      
       checkAuth();
     }, [router]);
 

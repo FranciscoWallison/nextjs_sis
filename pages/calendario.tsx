@@ -158,10 +158,7 @@ const CalendarioManutencoes: React.FC = () => {
           <CircularProgress />
         ) : (
           <>
-            {/* <Typography variant="h5" gutterBottom>
-              Calendário de Manutenções
-            </Typography> */}
-
+            {/* Cabeçalho do calendário */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={4}>
                 <Button
@@ -195,6 +192,7 @@ const CalendarioManutencoes: React.FC = () => {
               </Grid>
             </Grid>
 
+            {/* Calendário */}
             <Box sx={{ height: 600 }}>
               <Calendar
                 localizer={localizer}
