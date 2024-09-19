@@ -11,6 +11,7 @@ import {
   Button,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Ícone para o botão de sair
 import { MainListItems, secondaryListItems } from "./listItems";
 import { styled } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
@@ -88,14 +89,20 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Botão de Logoff no rodapé do menu lateral */}
       <Box sx={{ mt: "auto", p: 2 }}>
-        <Button
-          variant="contained"
-          color="secondary"
-          fullWidth
-          onClick={handleLogoff}
-        >
-          Sair
-        </Button>
+        {open ? (
+          <Button
+            variant="contained"
+            color="secondary"
+            fullWidth
+            onClick={handleLogoff}
+          >
+            Sair
+          </Button>
+        ) : (
+          <IconButton color="secondary" onClick={handleLogoff}>
+            <ExitToAppIcon />
+          </IconButton>
+        )}
       </Box>
     </Drawer>
   );

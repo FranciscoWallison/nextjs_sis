@@ -39,7 +39,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 }) => {
   const context = useContext(FormContext);
 
-  const [formItems, setFormItems] = useState<FormItem[]>([]);
+  const [formItems, setFormItems] = useState<{ label: string; names: string[] }[]>([]);
   const [allItems, setAllItems] = useState<Item[]>([]);
   const [selectAllChecked, setSelectAllChecked] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,6 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   const { formData, setFormData } = context;
 
-  // Função para transformar os itens recebidos em FormItems
   const fetchFormItems = useCallback(async () => {
     setLoading(true);
     try {
@@ -58,7 +57,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
       if (!response.ok) {
         throw new Error("Erro ao buscar os itens");
       }
-      const items = await response.json();
+      const items: Item[] = await response.json();
 
       const atividadesParaRemover = [
         "Fazer teste de funcionamento do sistema de ventilação conforme instruções do fornecedor e projeto",
@@ -69,17 +68,24 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
       ];
 
       const filteredItems = items.filter(
-        (item: Item) => !atividadesParaRemover.includes(item.atividade)
+        (item) => !atividadesParaRemover.includes(item.atividade)
       );
 
-      // Atualiza o estado formItems diretamente com os itens
-      setFormItems(
-        filteredItems.map((item: any) => ({
-          name: item.id_name,
-          label: item.titulo,
-        }))
-      );
+      // Agrupando por título e removendo duplicações de títulos
+      const groupedItems = filteredItems.reduce((acc, item) => {
+        const existingGroup = acc.find((group) => group.label === item.titulo);
+        if (existingGroup) {
+          existingGroup.names.push(item.id_name);
+        } else {
+          acc.push({
+            label: item.titulo,
+            names: [item.id_name],
+          });
+        }
+        return acc;
+      }, [] as { label: string; names: string[] }[]);
 
+      setFormItems(groupedItems);
       setAllItems(items); // Armazena todos os itens para uso posterior
     } catch (error) {
       console.error("Erro ao buscar ou processar os itens:", error);
@@ -98,20 +104,29 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     const checked = !selectAllChecked;
     setSelectAllChecked(checked);
 
-    const updatedFormData = formItems.reduce((acc, item) => {
-      acc[item.name] = checked;
+    const updatedFormData = formItems.reduce((acc, itemGroup) => {
+      itemGroup.names.forEach((name) => {
+        acc[name] = checked;
+      });
       return acc;
     }, {} as Record<string, boolean>);
 
     setFormData({ ...formData, ...updatedFormData });
   };
 
-  // Função para alternar a seleção de um grupo de itens
-  const handleChipClick = (name: string) => {
-    const isSelected = formData[name] === true;
+  // Função para alternar a seleção de um grupo de itens baseado no título
+  const handleChipClick = (names: string[]) => {
+    if (!names) return; // Garantindo que names não seja undefined
+    const allSelected = names.every((name) => formData[name] === true);
+
+    const updatedFormData = names.reduce((acc, name) => {
+      acc[name] = !allSelected; // Alterna entre selecionar/deselecionar todos os itens com o mesmo título
+      return acc;
+    }, {} as Record<string, boolean>);
+
     setFormData((prevFormData: Record<string, any>) => ({
       ...prevFormData,
-      [name]: !isSelected,
+      ...updatedFormData,
     }));
   };
 
@@ -176,13 +191,14 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         </Grid>
 
         <Grid container spacing={2}>
-          {formItems.map((item) => (
-            <Grid item xs={12} sm={6} key={item.name}>
+          {formItems.map((group) => (
+            <Grid item xs={12} sm={6} key={group.label}>
+              {/* Verificação de segurança para garantir que 'names' exista */}
               <Chip
-                icon={formData[item.name] ? <DoneIcon /> : undefined}
-                label={item.label}
-                onClick={() => handleChipClick(item.name)}
-                color={formData[item.name] ? "primary" : "default"}
+                icon={group.names && group.names.every((name) => formData[name]) ? <DoneIcon /> : undefined}
+                label={group.label}
+                onClick={() => handleChipClick(group.names)}
+                color={group.names && group.names.every((name) => formData[name]) ? "primary" : "default"}
                 sx={{ mt: 1, mb: 1 }}
               />
             </Grid>
