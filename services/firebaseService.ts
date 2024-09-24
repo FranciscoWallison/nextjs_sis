@@ -59,19 +59,33 @@ export const CriarUsuario = async (data: LoginData): Promise<boolean> => {
 export const Login = async (data: LoginData): Promise<boolean> => {
   const auth = getAuth(app);
 
-  return await signInWithEmailAndPassword(auth, data.email, data.password)
-    .then((userCredential) => {
-      // Signed in
-      const user = userCredential.user;
-      AuthStorage.setUser(user);
-      return true;
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
+  try {
+    // Faz o login do usuário
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      data.email,
+      data.password
+    );
 
-      return false;
-    });
+    const user = userCredential.user;
+
+    // Obtenha os dados de periodicidade do usuário
+    const dataUser = await pegarUsuarioPeriodicidades(user.uid);
+
+    // Adicione o campo data_user ao objeto user
+    const userWithFullData = {
+      ...user, // Mantém os dados existentes
+      data_user: dataUser, // Adiciona o campo data_user
+    };
+
+    // Armazena o objeto completo no AuthStorage (localStorage)
+    AuthStorage.setUser(userWithFullData);
+
+    return true;
+  } catch (error) {
+    console.error("Erro no login:", error.message);
+    return false;
+  }
 };
 
 export const ObservadorEstado = async (): Promise<boolean> => {
@@ -159,30 +173,35 @@ export interface PeriodicidadeResponse {
   questions: CategoryData[];
 }
 
-export const pegarUsuarioPeriodicidades =
-  async (): Promise<PeriodicidadeResponse | null> => {
-    try {
+export const pegarUsuarioPeriodicidades = async (
+  uid?: string // uid é opcional
+): Promise<PeriodicidadeResponse | null> => {
+  try {
+    // Se o uid não for passado como parâmetro, obtém o usuário do AuthStorage
+    if (!uid) {
       const user: FirebaseUser | null = AuthStorage.getUser();
       if (!user || !user.uid) {
-        // throw new Error("User not authenticated");
-        return null;
+        return null; // Se não encontrar o usuário ou uid, retorna null
       }
-      const db = getFirestore(app);
-      const docRef = doc(db, "cliente", user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        // throw new Error("No such document!");
-        return null;
-      }
-
-      const data = docSnap.data() as PeriodicidadeResponse;
-      return data;
-    } catch (error) {
-      console.error("pegarUsuarioPeriodicidades error", error);
-      throw error;
+      uid = user.uid; // Usa o uid do usuário autenticado
     }
-  };
+
+    // Conexão com o Firestore
+    const db = getFirestore(app);
+    const docRef = doc(db, "cliente", uid); // Usa o uid fornecido ou do AuthStorage
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return null; // Se o documento não existir, retorna null
+    }
+
+    const data = docSnap.data() as PeriodicidadeResponse;
+    return data;
+  } catch (error) {
+    console.error("pegarUsuarioPeriodicidades error", error);
+    throw error;
+  }
+};
 
 export const usuarioPeriodicidadesAtualizar = async (
   updatedActivity: Activity
@@ -230,14 +249,14 @@ export const usuarioPeriodicidadesAdicionar = async (
     const questions = data.questions;
 
     // Filtra os objetos que estão em updatedActivity, mas não em questions
-    const idsInQuestions = new Set(questions.map((q) => q.id));    
+    const idsInQuestions = new Set(questions.map((q) => q.id));
     const uniqueInUpdatedActivity = updatedActivity.filter(
       (activity: any) => !idsInQuestions.has(activity.id)
     );
 
-    console.log('====================================');
+    console.log("====================================");
     console.log(uniqueInUpdatedActivity, updatedActivity, data.questions);
-    console.log('====================================');
+    console.log("====================================");
 
     data.questions = updatedActivity;
 

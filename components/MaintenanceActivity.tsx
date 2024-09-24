@@ -29,20 +29,6 @@ interface MaintenanceActivityProps {
   titleUpdate: string;
 }
 
-const periodicityOptions = [
-  "Não aplicável",
-  "A cada semana",
-  "A cada duas semanas",
-  "A cada mês",
-  "A cada dois meses",
-  "A cada três meses",
-  "A cada seis meses",
-  "A cada ano",
-  "A cada dois anos",
-  "A cada três anos",
-  "A cada cinco anos",
-];
-
 const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   activity,
   onUpdate,
@@ -58,13 +44,14 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]); // Estado para blocos selecionados
   const [history, setHistory] = useState<any[]>([]);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
+  const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
 
   useEffect(() => {
     const loadBlocks = async () => {
       const fetchedBlocks = await fetchBlocks();
       setBlocks(fetchedBlocks || []);
     };
-
+    fetchPeriodicityOptions();
     loadBlocks();
   }, []);
 
@@ -94,11 +81,37 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
   const handleSelectChange = useCallback(
     (event: SelectChangeEvent<string[]>) => {
-      const value = event.target.value as string[];
+      const value = Array.isArray(event.target.value) ? event.target.value : []; // Verifica se o valor é um array
       setSelectedBlocks(value); // Atualiza os blocos selecionados
     },
     []
   );
+
+  const handleSelectChangePeriodicidade = useCallback(
+    (event: SelectChangeEvent<string>) => {
+      const value = event.target.value;
+      setEditedActivity((prevActivity) =>
+        prevActivity ? { ...prevActivity, Periodicidade: value } : null
+      );
+    },
+    []
+  );
+
+  // Função para buscar as opções de periodicidade
+  const fetchPeriodicityOptions = async () => {
+    try {
+      const response = await fetch("/periodicidades/periodicidade.json");
+      const result = await response.json();
+
+      // Mapeia o resultado para pegar apenas o campo 'descricao'
+      const options = result.map(
+        (item: { descricao: string }) => item.descricao
+      );
+      setPeriodicityOptions(options); // Atualiza o estado com as opções
+    } catch (error) {
+      console.error("Erro ao buscar as opções de periodicidade:", error);
+    }
+  };
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -176,7 +189,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <strong>Periodicidade:</strong> {activity.Periodicidade}
           </Typography>
 
-          {selectedBlocks.length > 0 && (
+          {Array.isArray(selectedBlocks) && selectedBlocks.length > 0 && (
             <Typography variant="body2">
               <strong>Blocos:</strong>{" "}
               {selectedBlocks
@@ -274,24 +287,33 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             onChange={handleChange}
             disabled={true}
           />
-          <FormControl fullWidth margin="normal">
+          <FormControl
+            fullWidth
+            margin="normal"
+            required={
+              editedActivity?.Periodicidade ===
+              "Conforme indicação dos fornecedores"
+            }
+          >
             <InputLabel>Periodicidade</InputLabel>
             <Select
               label="Periodicidade"
               name="Periodicidade"
-              value={
-                Array.isArray(editedActivity?.Periodicidade)
-                  ? editedActivity?.Periodicidade
-                  : []
-              }
-              onChange={handleSelectChange}
-              disabled={true}
+              value={editedActivity?.Periodicidade || ""} // Use o valor de `editedActivity?.Periodicidade`
+              onChange={handleSelectChangePeriodicidade} // Corrige para lidar com strings
             >
-              {periodicityOptions.map((option, index) => (
-                <MenuItem key={index} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
+              {periodicityOptions
+                .filter(
+                  (option) =>
+                    option !== "Conforme indicação dos fornecedores" &&
+                    option !==
+                      "A cada 5 anos para edifícios de até 10 anos de entrega, A cada 3 anos para edifícios entre 11 a 30 anos de entrega, A cada ano para edifícios com mais de 30 anos de entrega"
+                )
+                .map((option, index) => (
+                  <MenuItem key={index} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
 
@@ -301,15 +323,18 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               <Select
                 multiple
                 label="Bloco"
-                value={selectedBlocks}
+                value={Array.isArray(selectedBlocks) ? selectedBlocks : []} // Verifica se é um array
                 onChange={handleSelectChange}
                 renderValue={(selected) =>
-                  selected
-                    .map(
-                      (selectedId) =>
-                        blocks.find((block) => block.id === selectedId)?.name
-                    )
-                    .join(", ")
+                  Array.isArray(selected) // Verifica se 'selected' é um array
+                    ? selected
+                        .map(
+                          (selectedId) =>
+                            blocks.find((block) => block.id === selectedId)
+                              ?.name
+                        )
+                        .join(", ")
+                    : ""
                 }
               >
                 {blocks.map((block) => (
