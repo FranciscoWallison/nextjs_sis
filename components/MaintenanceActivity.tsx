@@ -19,7 +19,7 @@ import {
   getActivityHistory,
 } from "@/services/firebaseService";
 import ActivityStatus from "@/components/layout/ActivityStatus";
-import { getStatus } from "@/utils/statusHelper";
+import HelpActivity from "@/utils/HelpActivity";
 
 interface MaintenanceActivityProps {
   activity: Activity;
@@ -149,22 +149,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     const [year, month, day] = input.split("-");
     return `${day}/${month}/${year}`;
   };
-
-  const formatDateToDDMMYYYY = (activity: Activity): string => {
-    const dataStatus = getStatus(activity);
-
-    if (!dataStatus.dueDate) {
-      return "";
-    }
-    const date = new Date(dataStatus.dueDate);
-    if (isNaN(date.getTime())) {
-      throw new Error("Data inválida");
-    }
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear().toString();
-    return `${day}/${month}/${year}`;
-  };
+  
   return (
     <>
       <Card sx={{ mb: 2 }}>
@@ -208,7 +193,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                 Última manutenção: {formatDate(activity.data)}
               </Typography>
               <Typography variant="body2">
-                Vencimento: {formatDateToDDMMYYYY(activity)}
+                Vencimento: {HelpActivity.formatDateToDDMMYYYY(activity)}
               </Typography>
             </>
           )}
@@ -301,6 +286,10 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               name="Periodicidade"
               value={editedActivity?.Periodicidade || ""} // Use o valor de `editedActivity?.Periodicidade`
               onChange={handleSelectChangePeriodicidade} // Corrige para lidar com strings
+               disabled={
+                editedActivity?.Periodicidade !==
+                "Conforme indicação dos fornecedores"
+              }
             >
               {periodicityOptions
                 .filter(
