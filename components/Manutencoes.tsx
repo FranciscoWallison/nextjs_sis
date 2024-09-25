@@ -14,7 +14,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
-  SelectChangeEvent 
+  SelectChangeEvent,
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
@@ -26,20 +26,22 @@ import {
   fetchBlockById,
 } from "@/services/firebaseService";
 import HelpQuestions from "@/utils/HelpQuestions";
-import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
+import { getStatus } from "@/utils/statusHelper";
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<Activity[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]); // Novo estado para armazenar as atividades filtradas
   const [loading, setLoading] = useState<boolean>(true);
   const [titleUpdate, setTitleUpdate] = useState<string>("Última Manutenção");
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  
   const [filters, setFilters] = useState({
     titulo: "",
     responsavel: "",
     data: "",
-    blocos: [] as string[], // Novo estado para blocos selecionados
+    blocos: [] as string[],
   });
-  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos carregados
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
   const [statusFilters, setStatusFilters] = useState({
     regular: false,
     aVencer: false,
@@ -70,7 +72,7 @@ const Manutencoes: React.FC = () => {
               return {
                 ...activity,
                 blocos: blocos.map((bloco, index) => ({
-                  id: `generated-id-${index}`, // Gera um id se não existir
+                  id: `generated-id-${index}`,
                   name: bloco.name,
                 })),
               };
@@ -91,17 +93,16 @@ const Manutencoes: React.FC = () => {
     setData(sortedData);
     setLoading(false);
 
-    // Carregar blocos únicos para o filtro
     const uniqueBlocks = Array.from(
       new Map(
         activitiesWithBlocks.flatMap((activity) => {
           if ("blocos" in activity) {
-            return activity.blocos?.map((bloco) => [bloco.id, bloco]); // Cria um array de pares [id, bloco]
+            return activity.blocos?.map((bloco) => [bloco.id, bloco]);
           }
           return [];
         })
-      ).values() // Retorna apenas os blocos (sem os IDs) como valores únicos
-    );    
+      ).values()
+    );
 
     setBlocks(uniqueBlocks);
   }, []);
@@ -109,6 +110,16 @@ const Manutencoes: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // UseEffect para aplicar os filtros e atualizar as atividades filtradas
+  useEffect(() => {
+    const filterData = async () => {
+      const filteredData = await applyFilters(data);
+      setFilteredActivities(filteredData); // Armazena o resultado das atividades filtradas
+    };
+
+    filterData();
+  }, [data, filters, statusFilters]);
 
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
@@ -190,47 +201,50 @@ const Manutencoes: React.FC = () => {
     }));
   };
 
-  const applyFilters = (activities: Activity[]): Activity[] => {
-    return activities.filter((activity) => {
-      const matchTitle = activity.titulo
-        .toLowerCase()
-        .includes(filters.titulo.toLowerCase());
-      const matchResponsavel = activity.responsavel
-        .toLowerCase()
-        .includes(filters.responsavel.toLowerCase());
-      const matchData =
-        !filters.data ||
-        (activity.data && activity.data.includes(filters.data));
+  const applyFilters = async (activities: Activity[]): Promise<Activity[]> => {
+    const filteredActivities = await Promise.all(
+      activities.map(async (activity) => {
+        const dataStatus = await getStatus(activity);
 
-      const dataStatus = getStatus(activity);
+        const matchTitle = activity.titulo
+          .toLowerCase()
+          .includes(filters.titulo.toLowerCase());
+        const matchResponsavel = activity.responsavel
+          .toLowerCase()
+          .includes(filters.responsavel.toLowerCase());
+        const matchData =
+          !filters.data ||
+          (activity.data && activity.data.includes(filters.data));
 
-      const matchStatus =
-        (statusFilters.regular && dataStatus.status === "Regular") ||
-        (statusFilters.aVencer && dataStatus.status === "A vencer") ||
-        (statusFilters.vencido && dataStatus.status === "Vencido");
+        const matchStatus =
+          (statusFilters.regular && dataStatus.status === "Regular") ||
+          (statusFilters.aVencer && dataStatus.status === "A vencer") ||
+          (statusFilters.vencido && dataStatus.status === "Vencido");
 
-      // Filtrar por blocos selecionados
-      const matchBlock =
-        filters.blocos.length === 0 ||
-        (activity.blocoIDs &&
-          activity.blocoIDs.some((blocoID) =>
-            blocks.some(
-              (block) =>
-                block.id === blocoID && filters.blocos.includes(block.name)
-            )
-          ));
+        const matchBlock =
+          filters.blocos.length === 0 ||
+          (activity.blocoIDs &&
+            activity.blocoIDs.some((blocoID) =>
+              blocks.some(
+                (block) =>
+                  block.id === blocoID && filters.blocos.includes(block.name)
+              )
+            ));
 
-      return (
-        matchTitle &&
-        matchResponsavel &&
-        matchData &&
-        matchBlock &&
-        ((!statusFilters.regular &&
-          !statusFilters.aVencer &&
-          !statusFilters.vencido) ||
-          matchStatus)
-      );
-    });
+        return (
+          matchTitle &&
+          matchResponsavel &&
+          matchData &&
+          matchBlock &&
+          ((!statusFilters.regular &&
+            !statusFilters.aVencer &&
+            !statusFilters.vencido) ||
+            matchStatus)
+        );
+      })
+    );
+
+    return activities.filter((_, index) => filteredActivities[index]);
   };
 
   const progress = calculateProgress();
@@ -287,10 +301,10 @@ const Manutencoes: React.FC = () => {
                   <Select
                     multiple
                     value={filters.blocos}
-                    onChange={handleBlockFilterChange} // Função corrigida
+                    onChange={handleBlockFilterChange}
                     renderValue={(selected) =>
                       (selected as string[]).join(", ")
-                    } // Casting para string[]
+                    }
                   >
                     {blocks.map((block) => (
                       <MenuItem key={block.id} value={block.name}>
@@ -338,7 +352,7 @@ const Manutencoes: React.FC = () => {
 
           <MaintenanceCategory
             category="Manutenção"
-            activities={applyFilters(data)}
+            activities={filteredActivities} // Passa as atividades filtradas
             onUpdate={handleUpdate}
             onRemove={handleRemove}
             removeValid={true}

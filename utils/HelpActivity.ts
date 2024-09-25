@@ -1,4 +1,5 @@
 import { getStatus } from "@/utils/statusHelper";
+import { Activity } from "@/services/firebaseService";
 class HelpActivity {
   static formatDateToDDMMYYYY = (activity: Activity): string => {
     const dataStatus = getStatus(activity);

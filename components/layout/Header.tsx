@@ -1,12 +1,25 @@
 import React, { useState } from "react";
 import { styled } from "@mui/material/styles";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
-import { Toolbar, Typography, IconButton, Badge, Modal, Box, List, ListItem, ListItemText } from "@mui/material";
+import {
+  Toolbar,
+  Typography,
+  IconButton,
+  Badge,
+  Modal,
+  Box,
+  List,
+  ListItem,
+  Alert,
+  AlertTitle,
+  Snackbar,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useNotification } from "@/contexts/NotificationContext"; // Importa o hook do contexto
 import HelpActivity from "@/utils/HelpActivity";
 import EditActivityModal from "@/components/EditActivityModal"; // Importa o novo modal
+import { Activity } from "@/services/firebaseService"; // Certifique-se de importar o tipo `Activity`
 
 interface HeaderProps {
   open: boolean;
@@ -25,10 +38,11 @@ const Header: React.FC<HeaderProps> = ({
   title,
   drawerWidth,
 }) => {
-  const { notificationCount, alerts } = useNotification(); // Usa o contexto para obter o número de notificações e as atividades
+  const { notificationCount, alerts, fetchNotifications } = useNotification(); // Usa o contexto e adiciona a função de recarregar notificações
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState(null); // Atividade selecionada para editar
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null); // Atividade selecionada para editar
   const [localAlerts, setLocalAlerts] = useState<Activity[]>([]); // Renomeando para localAlerts
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const AppBar = styled(MuiAppBar, {
     shouldForwardProp: (prop) => prop !== "open",
@@ -56,12 +70,21 @@ const Header: React.FC<HeaderProps> = ({
     setNotificationsOpen(false); // Fecha o modal de notificações
   };
 
-  const handleEditActivity = (activity) => {
+  const handleEditActivity = (activity: Activity) => {
     setSelectedActivity(activity); // Define a atividade para ser editada
   };
 
   const handleCloseEditActivity = () => {
     setSelectedActivity(null); // Fecha o modal de edição de atividade
+  };
+
+  const onActivityUpdated = async () => {
+    setSnackbarOpen(true);
+    await fetchNotifications(); // Recarrega as notificações após a atualização da atividade
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -96,19 +119,29 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* Modal de Notificações */}
       <Modal open={isNotificationsOpen} onClose={handleCloseNotifications}>
-        <Box sx={{ width: 400, bgcolor: "background.paper", p: 4, margin: "auto", mt: 8 }}>
+        <Box
+          sx={{
+            width: 400,
+            bgcolor: "background.paper",
+            p: 4,
+            margin: "auto",
+            mt: 8,
+          }}
+        >
           <Typography variant="h6">Notificações</Typography>
           <List>
-            {alerts.map((activity) => (
+            {alerts.map((activity: Activity) => (
               <ListItem
                 button
                 key={activity.id}
                 onClick={() => handleEditActivity(activity)} // Abre o modal de edição ao clicar
               >
-                <ListItemText
-                  primary={activity.titulo}
-                  secondary={`Vencimento: ${HelpActivity.formatDateToDDMMYYYY(activity)}`} // Usa o helper para formatar a data
-                />
+                <Alert
+                  severity={activity.status === "Vencido" ? "error" : "warning"}
+                >
+                  <AlertTitle>{activity.titulo} </AlertTitle>
+                  Status: {activity.status} - Vencimento: {activity.dueDate}
+                </Alert>
               </ListItem>
             ))}
           </List>
@@ -121,15 +154,21 @@ const Header: React.FC<HeaderProps> = ({
           open={!!selectedActivity}
           activity={selectedActivity}
           onClose={handleCloseEditActivity}
-          onSave={(updatedActivity) => {
-            // Atualiza a atividade após salvar
-            setLocalAlerts((prev) =>
-              prev.map((act) => (act.id === updatedActivity.id ? updatedActivity : act))
-            );
-            handleCloseEditActivity();
-          }}
+          onActivityUpdated={onActivityUpdated}
         />
       )}
+
+      {/* Snackbar para feedback */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert onClose={handleSnackbarClose} severity="success">
+          Atividade atualizada com sucesso!
+        </Alert>
+      </Snackbar>
     </>
   );
 };

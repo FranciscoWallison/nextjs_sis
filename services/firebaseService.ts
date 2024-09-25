@@ -83,7 +83,7 @@ export const Login = async (data: LoginData): Promise<boolean> => {
 
     return true;
   } catch (error) {
-    console.error("Erro no login:", error.message);
+    console.error("Erro no login:", error);
     return false;
   }
 };
@@ -151,6 +151,8 @@ export interface Activity {
   category_id?: number;
   blocoIDs?: string[]; // Adicionando blocoIDs ao tipo, permitindo que seja opcional
   activityRegular?: boolean; // Adicionando activityRegular como opcional
+  status?: string;
+  dueDate?: string;
 }
 
 export interface CategoryData {
