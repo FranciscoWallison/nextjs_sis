@@ -23,6 +23,7 @@ const calculateNextDate = (
   if (!isValid(date)) {
     return null; // Retorna null se a data não for válida
   }
+
   // Caso de periodicidade dependente da idade do edifício
   if (
     periodicity.includes(
@@ -31,17 +32,14 @@ const calculateNextDate = (
   ) {
     if (buildingAge !== null) {
       if (buildingAge <= 10) {
-        periodicity = "A cada cinco anos";
-        // return add(date, { years: 5 });
+        return add(date, { years: 5 }); // Retorna a data após 5 anos
       } else if (buildingAge >= 11 && buildingAge <= 30) {
-        periodicity = "A cada três anos";
-        // return add(date, { years: 3 });
+        return add(date, { years: 3 }); // Retorna a data após 3 anos
       } else if (buildingAge > 30) {
-        periodicity = "A cada ano";
-        // return add(date, { years: 1 });
+        return add(date, { years: 1 }); // Retorna a data após 1 ano
       }
     }
-    // return null;
+    return null;
   }
 
   // Outras periodicidades
@@ -74,11 +72,23 @@ const calculateNextDate = (
 };
 
 // Função para determinar o status e a data de vencimento
-export const getStatus = (
+export const getStatus = async (
   activity: Activity
 ): Promise<{ status: string; dueDate: Date | null }> => {
   const user: FirebaseUser | null = AuthStorage.getUser();
-  const responseP = user.data_user;
+
+  // Verifica se o usuário existe e se os dados do usuário estão disponíveis
+  let responseP = user ? user.data_user : null;
+
+  if (!responseP) {
+    // Se responseP for null, tenta buscar os dados do usuário com o uid
+    responseP = await pegarUsuarioPeriodicidades(user?.uid);
+
+    // Se ainda assim não encontrar os dados, retorna um status apropriado
+    if (!responseP) {
+      return { status: "Dados do usuário não encontrados", dueDate: null };
+    }
+  }
 
   // Verifica a idade do edifício
   const buildingDeliveryDate = parseISO(responseP.buildingAge);

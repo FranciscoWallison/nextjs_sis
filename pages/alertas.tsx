@@ -42,7 +42,7 @@ const AlertsPage: React.FC = () => {
     const alertsToShow = await Promise.all(
       activities.questions.map(async (activity: Activity) => {
         const dataStatus = await getStatus(activity);
-        const dueDate = HelpActivity.formatDateToDDMMYYYY(activity);
+        const dueDate = await HelpActivity.formatDateToDDMMYYYY(activity); // Usa await para lidar com função assíncrona
         if (
           dataStatus.status === "Vencido" ||
           dataStatus.status === "A vencer"
@@ -65,7 +65,7 @@ const AlertsPage: React.FC = () => {
 
   const onActivityUpdated = () => {
     setSnackbarOpen(true);
-    fetchActivities();
+    fetchActivities(); // Atualiza as atividades após edição
   };
 
   const handleSnackbarClose = () => {
@@ -92,7 +92,7 @@ const AlertsPage: React.FC = () => {
                       activity.status === "Vencido" ? "error" : "warning"
                     }
                   >
-                    <AlertTitle>{activity.titulo} </AlertTitle>
+                    <AlertTitle>{activity.titulo}</AlertTitle>
                     Status: {activity.status} - Vencimento: {activity.dueDate}
                   </Alert>
                 </ListItem>

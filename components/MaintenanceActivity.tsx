@@ -45,6 +45,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const [history, setHistory] = useState<any[]>([]);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
   const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
+  const [formattedDueDate, setFormattedDueDate] = useState<string>("");
 
   useEffect(() => {
     const loadBlocks = async () => {
@@ -54,6 +55,17 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     fetchPeriodicityOptions();
     loadBlocks();
   }, []);
+
+  useEffect(() => {
+    const fetchFormattedDate = async () => {
+      const date = await HelpActivity.formatDateToDDMMYYYY(activity);
+      setFormattedDueDate(date); // Atualiza o estado com a data formatada
+    };
+
+    if (activity) {
+      fetchFormattedDate(); // Chama a função assíncrona para obter a data formatada
+    }
+  }, [activity]);
 
   const handleOpen = () => {
     setEditedActivity(activity);
@@ -193,7 +205,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                 Última manutenção: {formatDate(activity.data)}
               </Typography>
               <Typography variant="body2">
-                Vencimento: {HelpActivity.formatDateToDDMMYYYY(activity)}
+                Vencimento: {formattedDueDate || "Carregando..."}
               </Typography>
             </>
           )}
@@ -286,7 +298,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               name="Periodicidade"
               value={editedActivity?.Periodicidade || ""} // Use o valor de `editedActivity?.Periodicidade`
               onChange={handleSelectChangePeriodicidade} // Corrige para lidar com strings
-               disabled={
+              disabled={
                 editedActivity?.Periodicidade !==
                 "Conforme indicação dos fornecedores"
               }
