@@ -19,6 +19,7 @@ interface ActivityModalProps {
   activity: Activity;
   onSave: (updatedActivity: Activity) => void;
   disabled: boolean;
+  title?: string; // Prop opcional para o título
 }
 
 const ActivityModal: React.FC<ActivityModalProps> = ({
@@ -27,6 +28,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
   activity,
   onSave,
   disabled,
+  title = "Nova Manutenção", // Título padrão caso não seja passado
 }) => {
   const [editedActivity, setEditedActivity] = useState<Activity>(activity);
   const [periodicityOptions, setPeriodicityOptions] = useState<{ id: number; descricao: string }[]>([]);
@@ -112,8 +114,9 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           p: 4,
         }}
       >
+        {/* Aqui o título é dinâmico */}
         <Typography variant="h6" component="h2">
-          Nova Manutenção
+          {title}
         </Typography>
         <TextField
           fullWidth
@@ -157,7 +160,6 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           </Select>
         </FormControl>
 
-        {/* Adicionar seleção de blocos */}
         {blocks.length > 0 && (
           <FormControl fullWidth margin="normal">
             <InputLabel>Blocos</InputLabel>

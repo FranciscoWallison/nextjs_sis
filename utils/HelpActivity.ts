@@ -19,6 +19,12 @@ class HelpActivity {
     const year = date.getFullYear().toString();
     return `${day}/${month}/${year}`;
   };
+
+  static formatDate = (input: string | undefined) => {
+    if (!input) return "";
+    const [year, month, day] = input.split("-");
+    return `${day}/${month}/${year}`;
+  };
 }
 
 export default HelpActivity;

@@ -200,6 +200,10 @@ export const pegarUsuarioPeriodicidades = async (
     const data = docSnap.data() as PeriodicidadeResponse;
     return data;
   } catch (error) {
+    if (error.message.includes("permissions")) {
+      return null;
+    }
+
     console.error("pegarUsuarioPeriodicidades error", error);
     throw error;
   }
@@ -426,10 +430,9 @@ export const fetchBlockById = async (
 };
 
 // Função para registrar o histórico de alteração no Firestore, vinculando ao usuário autenticado
-const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
+const registrarHistoricoManutencao = async (updatedActivity: Activity) => {
   const user: FirebaseUser | null = AuthStorage.getUser();
   if (!user || !user.uid) {
-    // Usuário não autenticado
     console.error("Usuário não autenticado.");
     return null;
   }
@@ -438,15 +441,15 @@ const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
     const db = getFirestore(app);
     const historicoCollectionRef = collection(db, "historico_manutencao");
 
-    // Dados para o log de alteração
     const historicoData = {
       activityId: updatedActivity.id,
       updatedFields: updatedActivity, // Salvar todos os campos atualizados
-      timestamp: Timestamp.now(), // Registrar a data/hora da alteração
+      timestamp: Timestamp.now(),
       userId: user.uid, // Adicionar o ID do usuário que fez a alteração
     };
 
     await addDoc(historicoCollectionRef, historicoData);
+    console.log("Histórico registrado com sucesso.");
   } catch (error) {
     console.error("Erro ao registrar histórico de alteração:", error);
   }
@@ -455,21 +458,28 @@ const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
 // Função para buscar o histórico de alterações de uma atividade específica, filtrado pelo usuário autenticado
 export const getActivityHistory = async (activityId: number) => {
   const user: FirebaseUser | null = AuthStorage.getUser();
+
   if (!user || !user.uid) {
-    // Usuário não autenticado
     console.error("Usuário não autenticado.");
     return [];
   }
+
+  if (!activityId) {
+    console.error("ID da atividade indefinido.");
+    return [];
+  }
+
+  console.log("activityId:", activityId);
+  console.log("user.userId:", user.uid);
 
   try {
     const db = getFirestore(app);
     const historicoCollectionRef = collection(db, "historico_manutencao");
 
-    // Consulta para buscar todas as alterações feitas na atividade especificada, ordenadas por timestamp, e filtradas pelo userId
     const q = query(
       historicoCollectionRef,
       where("activityId", "==", activityId),
-      where("userId", "==", user.uid), // Filtra pelo ID do usuário autenticado
+      where("userId", "==", user.uid),
       orderBy("timestamp", "desc")
     );
 

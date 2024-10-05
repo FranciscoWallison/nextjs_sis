@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import InputMask from "react-input-mask";
 import {
   Modal,
   Box,
@@ -224,16 +225,22 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
           )}
 
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Data"
-              name="data"
-              type="date"
-              InputLabelProps={{ shrink: true }}
+            <InputMask
+              mask="99/99/9999" // Máscara para o formato dd/mm/yyyy
               value={editedActivity?.data || ""}
               onChange={handleChange}
-            />
+            >
+              {() => (
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  label="Data"
+                  name="data"
+                  placeholder="dd/mm/yyyy" // Exibe o placeholder com o formato desejado
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            </InputMask>
           ) : (
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
               <Button

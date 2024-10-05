@@ -73,13 +73,13 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   // Função para converter de YYYY-MM-DD para DD/MM/YYYY
   const formatDateToDisplay = (date: string) => {
-    const [year, month, day] = date.split('-');
+    const [year, month, day] = date.split("-");
     return `${day}/${month}/${year}`;
   };
 
   // Função para converter de DD/MM/YYYY para YYYY-MM-DD
   const formatDateToISO = (date: string) => {
-    const [day, month, year] = date.split('/');
+    const [day, month, year] = date.split("/");
     return `${year}-${month}-${day}`;
   };
 
@@ -142,29 +142,35 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Data de Entrega"
-            name="buildingAge"
-            type="date"
+          <InputMask
+            mask="99/99/9999" // Máscara para o formato dd/mm/yyyy
             value={formData.buildingAge || ""}
             onChange={handleDateChange}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            inputProps={{
-              max: new Date().toISOString().split("T")[0], // Define a data máxima como hoje
-            }}
-            required
-            error={errors.buildingAge}
-            helperText={
-              errors.buildingAge
-                ? "Data de entrega é obrigatória e não pode ser no futuro"
-                : ""
-            }
-            sx={{ mt: 2 }}
-          />
+          >
+            {() => (
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Data de Entrega"
+                name="buildingAge"
+                placeholder="dd/mm/yyyy" // Placeholder para o campo
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                inputProps={{
+                  max: new Date().toISOString().split("T")[0], // Define a data máxima como hoje
+                }}
+                required
+                error={errors.buildingAge}
+                helperText={
+                  errors.buildingAge
+                    ? "Data de entrega é obrigatória e não pode ser no futuro"
+                    : ""
+                }
+                sx={{ mt: 2 }}
+              />
+            )}
+          </InputMask>
         </Grid>
         <Grid item xs={12} sm={6}>
           <InputMask

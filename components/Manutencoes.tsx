@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import InputMask from "react-input-mask";
 import {
   Container,
   Typography,
@@ -34,7 +35,7 @@ const Manutencoes: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [titleUpdate, setTitleUpdate] = useState<string>("Última Manutenção");
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  
+
   const [filters, setFilters] = useState({
     titulo: "",
     responsavel: "",
@@ -284,15 +285,21 @@ const Manutencoes: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Filtrar por Data"
-                name="data"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={filters.data}
+              <InputMask
+                mask="99/99/9999" // Máscara para o formato dd/mm/yyyy
+                value={filters.data || ""}
                 onChange={handleFilterChange}
-              />
+              >
+                {() => (
+                  <TextField
+                    fullWidth
+                    label="Filtrar por Data"
+                    name="data"
+                    placeholder="dd/mm/yyyy" // Exibe o placeholder com o formato desejado
+                    InputLabelProps={{ shrink: true }}
+                  />
+                )}
+              </InputMask>
             </Grid>
             <Grid item xs={12} sm={12}>
               {blocks.length > 0 && (

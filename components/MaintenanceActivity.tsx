@@ -13,6 +13,8 @@ import {
   InputLabel,
 } from "@mui/material";
 import { SelectChangeEvent } from "@mui/material/Select";
+import { useRouter } from "next/router";
+import InputMask from "react-input-mask";
 import {
   Activity,
   fetchBlocks,
@@ -41,11 +43,13 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
-  const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]); // Estado para blocos selecionados
+  const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
   const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
   const [formattedDueDate, setFormattedDueDate] = useState<string>("");
+
+  const router = useRouter();
 
   useEffect(() => {
     const loadBlocks = async () => {
@@ -59,42 +63,40 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   useEffect(() => {
     const fetchFormattedDate = async () => {
       const date = await HelpActivity.formatDateToDDMMYYYY(activity);
-      setFormattedDueDate(date); // Atualiza o estado com a data formatada
+      setFormattedDueDate(date);
     };
 
     if (activity) {
-      fetchFormattedDate(); // Chama a função assíncrona para obter a data formatada
+      fetchFormattedDate();
     }
   }, [activity]);
 
   const handleOpen = () => {
     setEditedActivity(activity);
     setActivityRegular(activity.activityRegular || false);
-    setSelectedBlocks(activity.blocoIDs || []); // Preenche com os blocos atuais da atividade (se houver)
+    setSelectedBlocks(activity.blocoIDs || []);
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
     setEditedActivity(null);
-    setSelectedBlocks([]); // Reseta os blocos selecionados ao fechar
+    setSelectedBlocks([]);
   };
 
   const handleRemoveOpen = () => setRemoveOpen(true);
   const handleRemoveClose = () => setRemoveOpen(false);
 
-  const handleHistoryOpen = async () => {
-    const fetchedHistory = await getActivityHistory(activity.id);
-    setHistory(fetchedHistory);
-    setHistoryOpen(true);
+  const handleHistoryOpen = () => {
+    router.push(`/activity/${activity.id}`);
   };
 
   const handleHistoryClose = () => setHistoryOpen(false);
 
   const handleSelectChange = useCallback(
     (event: SelectChangeEvent<string[]>) => {
-      const value = Array.isArray(event.target.value) ? event.target.value : []; // Verifica se o valor é um array
-      setSelectedBlocks(value); // Atualiza os blocos selecionados
+      const value = Array.isArray(event.target.value) ? event.target.value : [];
+      setSelectedBlocks(value);
     },
     []
   );
@@ -109,17 +111,15 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     []
   );
 
-  // Função para buscar as opções de periodicidade
   const fetchPeriodicityOptions = async () => {
     try {
       const response = await fetch("/periodicidades/periodicidade.json");
       const result = await response.json();
 
-      // Mapeia o resultado para pegar apenas o campo 'descricao'
       const options = result.map(
         (item: { descricao: string }) => item.descricao
       );
-      setPeriodicityOptions(options); // Atualiza o estado com as opções
+      setPeriodicityOptions(options);
     } catch (error) {
       console.error("Erro ao buscar as opções de periodicidade:", error);
     }
@@ -136,11 +136,9 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
   const handleSave = () => {
     if (editedActivity) {
-      // Se nenhum bloco for selecionado, aplica a todos os blocos
       const finalBlocks =
         selectedBlocks.length === 0 ? blocks.map((b) => b.id) : selectedBlocks;
 
-      // Atualiza a atividade com os blocos finais
       const updatedActivity = {
         ...editedActivity,
         blocoIDs: finalBlocks,
@@ -156,12 +154,6 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
     handleRemoveClose();
   };
 
-  const formatDate = (input: string | undefined) => {
-    if (!input) return "";
-    const [year, month, day] = input.split("-");
-    return `${day}/${month}/${year}`;
-  };
-  
   return (
     <>
       <Card sx={{ mb: 2 }}>
@@ -202,7 +194,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           {activity.data && (
             <>
               <Typography variant="body2">
-                Última manutenção: {formatDate(activity.data)}
+                Última manutenção: {formattedDueDate || "Carregando..."}
               </Typography>
               <Typography variant="body2">
                 Vencimento: {formattedDueDate || "Carregando..."}
@@ -215,8 +207,8 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               display: "flex",
               justifyContent: "space-between",
               mt: 2,
-              flexDirection: { xs: "column", sm: "row" }, // Flex direção para mobile
-              gap: 2, // Adiciona espaçamento entre os botões
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
             }}
           >
             <Button variant="contained" color="primary" onClick={handleOpen}>
@@ -296,8 +288,8 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <Select
               label="Periodicidade"
               name="Periodicidade"
-              value={editedActivity?.Periodicidade || ""} // Use o valor de `editedActivity?.Periodicidade`
-              onChange={handleSelectChangePeriodicidade} // Corrige para lidar com strings
+              value={editedActivity?.Periodicidade || ""}
+              onChange={handleSelectChangePeriodicidade}
               disabled={
                 editedActivity?.Periodicidade !==
                 "Conforme indicação dos fornecedores"
@@ -324,10 +316,10 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               <Select
                 multiple
                 label="Bloco"
-                value={Array.isArray(selectedBlocks) ? selectedBlocks : []} // Verifica se é um array
+                value={Array.isArray(selectedBlocks) ? selectedBlocks : []}
                 onChange={handleSelectChange}
                 renderValue={(selected) =>
-                  Array.isArray(selected) // Verifica se 'selected' é um array
+                  Array.isArray(selected)
                     ? selected
                         .map(
                           (selectedId) =>
@@ -348,16 +340,22 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           )}
 
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
-            <TextField
-              fullWidth
-              margin="normal"
-              label="Data"
-              name="data"
-              type="date"
-              InputLabelProps={{ shrink: true }}
+            <InputMask
+              mask="99/99/9999" // Define a máscara para o formato dd/mm/yyyy
               value={editedActivity?.data || ""}
               onChange={handleChange}
-            />
+            >
+              {() => (
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  label="Data"
+                  name="data"
+                  placeholder="dd/mm/yyyy"
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            </InputMask>
           ) : (
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
               <Button
