@@ -352,8 +352,14 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
             <InputMask
               mask="99/99/9999" // Define a máscara para o formato dd/mm/yyyy
-              value={formattedLastMaintenance || ""}
-              onChange={handleChange}
+              value={editedActivity?.data || ""} // Usando o estado editedActivity para manter o valor
+              onChange={(e) =>
+                setEditedActivity((prevActivity) =>
+                  prevActivity
+                    ? { ...prevActivity, data: e.target.value }
+                    : null
+                )
+              } // Atualizando diretamente o valor da data no estado
             >
               {() => (
                 <TextField

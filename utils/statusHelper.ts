@@ -9,6 +9,7 @@ import { Activity } from "@/services/firebaseService";
 import AuthStorage from "@/utils/AuthStorage";
 import { FirebaseUser } from "@/interface/FirebaseUser";
 import { pegarUsuarioPeriodicidades } from "@/services/firebaseService";
+import HelpActivity from "@/utils/HelpActivity"; 
 // Função para calcular a próxima data com base na data de início e na periodicidade
 const calculateNextDate = (
   startDate: string,
@@ -18,8 +19,10 @@ const calculateNextDate = (
   if (startDate === "") {
     return null;
   }
+  const dateValid = HelpActivity.formatDateToISO(startDate);
 
-  const date = parseISO(startDate);
+  const date = parseISO(dateValid);
+
   if (!isValid(date)) {
     return null; // Retorna null se a data não for válida
   }

@@ -233,7 +233,7 @@ export const usuarioPeriodicidadesAtualizar = async (
 
     // Salvar os dados atualizados no servidor
     await salvarNovo(data);
-    await registrarHistoricoAlteracao(updatedActivity);
+    await registrarHistoricoManutencao(updatedActivity);
 
     return true;
   } catch (error) {
@@ -267,7 +267,7 @@ export const usuarioPeriodicidadesAdicionar = async (
     data.questions = updatedActivity;
 
     await salvarNovo(data);
-    await registrarHistoricoAlteracao(uniqueInUpdatedActivity[0]);
+    await registrarHistoricoManutencao(uniqueInUpdatedActivity[0]);
     return true;
   } catch (error) {
     console.log("====================================");
