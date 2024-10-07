@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import AuthStorage from "../utils/AuthStorage";
 import { interceptAuth } from "../services/authService";
-import { validaUsuarioForm } from "@/services/firebaseService";
+import { validaUsuarioForm, pegarUsuarioPeriodicidades } from "@/services/firebaseService";
 
 const withAuth = (WrappedComponent: React.FC) => {
   const Wrapper: React.FC = (props) => {
@@ -11,11 +11,21 @@ const withAuth = (WrappedComponent: React.FC) => {
     useEffect(() => {
       const checkAuth = async () => {
         const user = AuthStorage.getUser();
-        
-        // Verifica se o usuário está autenticado
+
+        // Verifica se o usuário está autenticado antes de continuar
         if (!user || !(await interceptAuth())) {
           router.replace("/login");
           return;
+        }
+
+        // Se data_user for nulo, busca os dados completos e atualiza o storage
+        if (user?.data_user === null) {
+          const dataUser = await pegarUsuarioPeriodicidades(user.uid);
+          const userWithFullData = {
+            ...user,
+            data_user: dataUser,
+          };
+          AuthStorage.setUser(userWithFullData);
         }
 
         // Verifica se o formulário foi preenchido
@@ -31,7 +41,7 @@ const withAuth = (WrappedComponent: React.FC) => {
       };
 
       checkAuth();
-    }, []); // Dependência vazia, pois `router` não precisa ser incluído aqui
+    }, [router.pathname]); // Verifica a cada mudança de rota
 
     return <WrappedComponent {...props} />;
   };

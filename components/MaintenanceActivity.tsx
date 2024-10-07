@@ -47,7 +47,10 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const [history, setHistory] = useState<any[]>([]);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
   const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
-  const [formattedDueDate, setFormattedDueDate] = useState<string>("");
+  const [formattedLastMaintenance, setFormattedLastMaintenance] = useState<
+    string | null
+  >(null);
+  const [formattedDueDate, setFormattedDueDate] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -61,14 +64,19 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   }, []);
 
   useEffect(() => {
-    const fetchFormattedDate = async () => {
-      const date = await HelpActivity.formatDateToDDMMYYYY(activity);
-      setFormattedDueDate(date);
+    const fetchFormattedDates = async () => {
+      if (activity.data) {
+        const lastMaintenanceDate = await HelpActivity.formatDate(
+          activity.data
+        );
+        setFormattedLastMaintenance(lastMaintenanceDate);
+      }
+
+      const dueDate = await HelpActivity.formatDateToDDMMYYYY(activity);
+      setFormattedDueDate(dueDate);
     };
 
-    if (activity) {
-      fetchFormattedDate();
-    }
+    fetchFormattedDates();
   }, [activity]);
 
   const handleOpen = () => {
@@ -194,7 +202,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           {activity.data && (
             <>
               <Typography variant="body2">
-                Última manutenção: {formattedDueDate || "Carregando..."}
+                Última manutenção: {formattedLastMaintenance || "Carregando..."}
               </Typography>
               <Typography variant="body2">
                 Vencimento: {formattedDueDate || "Carregando..."}
@@ -214,13 +222,15 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             <Button variant="contained" color="primary" onClick={handleOpen}>
               {titleUpdate}
             </Button>
-            <Button
-              variant="contained"
-              color="info"
-              onClick={handleHistoryOpen}
-            >
-              Ver Histórico
-            </Button>
+            {activity.data && (
+              <Button
+                variant="contained"
+                color="info"
+                onClick={handleHistoryOpen}
+              >
+                Histórico de Alterações
+              </Button>
+            )}
             {removeValid && (
               <Button
                 variant="contained"
@@ -342,7 +352,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
             <InputMask
               mask="99/99/9999" // Define a máscara para o formato dd/mm/yyyy
-              value={editedActivity?.data || ""}
+              value={formattedLastMaintenance || ""}
               onChange={handleChange}
             >
               {() => (

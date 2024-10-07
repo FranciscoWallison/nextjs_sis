@@ -19,12 +19,15 @@ import {
   fetchBlocks,
   usuarioPeriodicidadesAtualizar,
 } from "@/services/firebaseService";
+import HelpActivity from "@/utils/HelpActivity"; // Importando o utilitário de formatação
 
 interface EditActivityModalProps {
   open: boolean;
   activity: Activity | null;
   onClose: () => void;
-  onActivityUpdated: () => void; // Nova prop para informar o pai sobre a atualização
+  onActivityUpdated: () => void;
+  title?: string; // Novo: Título dinâmico opcional
+  showDateField?: boolean; // Novo: Validador se o campo de data deve ser exibido
 }
 
 const EditActivityModal: React.FC<EditActivityModalProps> = ({
@@ -32,6 +35,8 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   activity,
   onClose,
   onActivityUpdated,
+  title = "Editar Atividade", // Título padrão
+  showDateField = true, // Exibe o campo de data por padrão, pode ser controlado externamente
 }) => {
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
@@ -39,6 +44,8 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [formattedDate, setFormattedDate] = useState<string>("");
+
   useEffect(() => {
     const loadBlocks = async () => {
       const fetchedBlocks = await fetchBlocks();
@@ -63,6 +70,19 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
       setActivityRegular(activity.activityRegular || false);
     }
   }, [activity]);
+
+  useEffect(() => {
+    const formatActivityDate = async () => {
+      if (editedActivity?.data) {
+        const formatted = await HelpActivity.formatDate(editedActivity.data);
+        setFormattedDate(formatted);
+      }
+    };
+
+    if (editedActivity?.data) {
+      formatActivityDate();
+    }
+  }, [editedActivity?.data]);
 
   const handleSelectChange = useCallback(
     (event: SelectChangeEvent<string[]>) => {
@@ -133,8 +153,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             p: 4,
           }}
         >
+          {/* Título Dinâmico */}
           <Typography variant="h6" component="h2">
-            Editar Atividade
+            {title}
           </Typography>
           <TextField
             fullWidth
@@ -224,10 +245,11 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             </FormControl>
           )}
 
-          {editedActivity?.Periodicidade !== "Não aplicável" ? (
+          {/* Validação se deve exibir o campo de data */}
+          {showDateField && (
             <InputMask
               mask="99/99/9999" // Máscara para o formato dd/mm/yyyy
-              value={editedActivity?.data || ""}
+              value={formattedDate} // Usa a data formatada
               onChange={handleChange}
             >
               {() => (
@@ -241,16 +263,6 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 />
               )}
             </InputMask>
-          ) : (
-            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
-              <Button
-                variant="contained"
-                color={activityRegular ? "success" : "primary"}
-                onClick={() => setActivityRegular(!activityRegular)}
-              >
-                {activityRegular ? "Feito" : "Marcar como Feito"}
-              </Button>
-            </Box>
           )}
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>

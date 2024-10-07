@@ -6,20 +6,17 @@ import {
   Typography,
   IconButton,
   Badge,
-  Modal,
-  Box,
-  List,
-  ListItem,
+  Menu,
+  MenuItem,
   Alert,
   AlertTitle,
   Snackbar,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { useNotification } from "@/contexts/NotificationContext"; // Importa o hook do contexto
-import HelpActivity from "@/utils/HelpActivity";
-import EditActivityModal from "@/components/EditActivityModal"; // Importa o novo modal
-import { Activity } from "@/services/firebaseService"; // Certifique-se de importar o tipo `Activity`
+import { useNotification } from "@/contexts/NotificationContext";
+import EditActivityModal from "@/components/EditActivityModal";
+import { Activity } from "@/services/firebaseService";
 
 interface HeaderProps {
   open: boolean;
@@ -38,10 +35,12 @@ const Header: React.FC<HeaderProps> = ({
   title,
   drawerWidth,
 }) => {
-  const { notificationCount, alerts, fetchNotifications } = useNotification(); // Usa o contexto e adiciona a função de recarregar notificações
-  const [isNotificationsOpen, setNotificationsOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null); // Atividade selecionada para editar
-  const [localAlerts, setLocalAlerts] = useState<Activity[]>([]); // Renomeando para localAlerts
+  const { notificationCount, alerts, fetchNotifications } = useNotification();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null); // Estado para ancorar o menu
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+    null
+  );
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const AppBar = styled(MuiAppBar, {
@@ -62,25 +61,25 @@ const Header: React.FC<HeaderProps> = ({
     }),
   }));
 
-  const handleNotificationClick = () => {
-    setNotificationsOpen(true); // Abre o modal de notificações
+  const handleNotificationClick = (event: React.MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setMenuPosition({ top: rect.bottom, left: rect.left });
+    setAnchorEl(event.currentTarget); // Define o ícone como elemento âncora do menu
   };
 
   const handleCloseNotifications = () => {
-    setNotificationsOpen(false); // Fecha o modal de notificações
+    setAnchorEl(null); // Fecha o menu
+    setMenuPosition(null); // Reseta a posição do menu
   };
 
   const handleEditActivity = (activity: Activity) => {
-    setSelectedActivity(activity); // Define a atividade para ser editada
-  };
-
-  const handleCloseEditActivity = () => {
-    setSelectedActivity(null); // Fecha o modal de edição de atividade
+    setSelectedActivity(activity);
+    handleCloseNotifications(); // Fecha o menu ao editar
   };
 
   const onActivityUpdated = async () => {
     setSnackbarOpen(true);
-    await fetchNotifications(); // Recarrega as notificações após a atualização da atividade
+    await fetchNotifications();
   };
 
   const handleSnackbarClose = () => {
@@ -117,43 +116,49 @@ const Header: React.FC<HeaderProps> = ({
         </Toolbar>
       </AppBar>
 
-      {/* Modal de Notificações */}
-      <Modal open={isNotificationsOpen} onClose={handleCloseNotifications}>
-        <Box
-          sx={{
-            width: 400,
-            bgcolor: "background.paper",
-            p: 4,
-            margin: "auto",
-            mt: 8,
-          }}
-        >
-          <Typography variant="h6">Notificações</Typography>
-          <List>
-            {alerts.map((activity: Activity) => (
-              <ListItem
-                button
-                key={activity.id}
-                onClick={() => handleEditActivity(activity)} // Abre o modal de edição ao clicar
+      {/* Menu de Notificações */}
+      <Menu
+        id="notification-menu"
+        anchorEl={anchorEl} // Define o elemento de ancoragem do menu
+        open={Boolean(anchorEl)} // Menu é aberto se houver um âncora definido
+        onClose={handleCloseNotifications} // Fecha o menu ao clicar fora ou selecionar uma notificação
+        anchorReference="anchorPosition" // Usar referência de posição
+        anchorPosition={
+          menuPosition ? { top: menuPosition.top, left: menuPosition.left } : undefined
+        }
+        keepMounted // Mantém o menu montado para evitar problemas de posicionamento
+      >
+        {/* Verifica se há notificações */}
+        {alerts.length > 0 ? (
+          alerts.map((activity: Activity) => (
+            <MenuItem
+              key={activity.id}
+              onClick={() => handleEditActivity(activity)}
+            >
+              <Alert
+                severity={activity.status === "Vencido" ? "error" : "warning"}
+                sx={{ width: "100%" }}
               >
-                <Alert
-                  severity={activity.status === "Vencido" ? "error" : "warning"}
-                >
-                  <AlertTitle>{activity.titulo} </AlertTitle>
-                  Status: {activity.status} - Vencimento: {activity.dueDate}
-                </Alert>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Modal>
+                <AlertTitle>{activity.titulo}</AlertTitle>
+                Status: {activity.status} - Vencimento: {activity.dueDate}
+              </Alert>
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem>
+            <Typography variant="body2" color="textSecondary">
+              Nenhuma notificação disponível
+            </Typography>
+          </MenuItem>
+        )}
+      </Menu>
 
       {/* Modal de Edição de Atividade */}
       {selectedActivity && (
         <EditActivityModal
           open={!!selectedActivity}
           activity={selectedActivity}
-          onClose={handleCloseEditActivity}
+          onClose={() => setSelectedActivity(null)}
           onActivityUpdated={onActivityUpdated}
         />
       )}

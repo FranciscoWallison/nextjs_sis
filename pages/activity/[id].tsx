@@ -21,7 +21,8 @@ import {
   fetchBlocks,
 } from "@/services/firebaseService";
 import MainLayout from "@/components/layout/MainLayout";
-import ActivityModal from "@/components/ActivityModal"; // Importando o modal de atividades
+import EditActivityModal from "@/components/EditActivityModal"; // Importando o modal de atividades
+import HelpActivity from "@/utils/HelpActivity"; // Importando o utilitário para formatação de datas
 
 interface ActivityItem {
   titulo: string;
@@ -52,6 +53,9 @@ const ActivityPage: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [pageTitle, setPageTitle] = useState<string>("");
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Armazena os blocos
+  const [formattedActivityDates, setFormattedActivityDates] = useState<{
+    [key: number]: string;
+  }>({}); // Estado para armazenar as datas formatadas das atividades
 
   useEffect(() => {
     if (id) {
@@ -60,6 +64,23 @@ const ActivityPage: React.FC = () => {
       loadBlocks(); // Carregar blocos disponíveis
     }
   }, [id]);
+
+  useEffect(() => {
+    const formatActivityDates = async () => {
+      const formattedDates: { [key: number]: string } = {};
+
+      for (const activity of activities) {
+        const formattedDate = await HelpActivity.formatDate(activity.updatedFields.data);
+        formattedDates[activity.updatedFields.id] = formattedDate;
+      }
+
+      setFormattedActivityDates(formattedDates);
+    };
+
+    if (activities.length > 0) {
+      formatActivityDates();
+    }
+  }, [activities]);
 
   // Função para buscar o título da página com base no id
   const fetchPageTitle = async (activityId: number) => {
@@ -166,7 +187,7 @@ const ActivityPage: React.FC = () => {
   };
 
   return (
-    <MainLayout title={pageTitle}>
+    <MainLayout title="Histórico de Alterações">
       <Box sx={{ padding: { xs: 2, md: 4 } }}>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -203,7 +224,7 @@ const ActivityPage: React.FC = () => {
             >
               <Typography>
                 {activity.updatedFields.titulo} -{" "}
-                {activity.updatedFields.data}
+                {formattedActivityDates[activity.updatedFields.id] || "Carregando..."}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -249,7 +270,7 @@ const ActivityPage: React.FC = () => {
 
         {/* Modal para Adicionar/Editar Atividade */}
         {modalOpen && (
-          <ActivityModal
+          <EditActivityModal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
             activity={editingActivity || {
