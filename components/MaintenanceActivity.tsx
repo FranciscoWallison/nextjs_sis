@@ -22,6 +22,10 @@ import {
 } from "@/services/firebaseService";
 import ActivityStatus from "@/components/layout/ActivityStatus";
 import HelpActivity from "@/utils/HelpActivity";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker"; // Import do DatePicker
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import do LocalizationProvider
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Adaptador para Day.js
+import dayjs, { Dayjs } from "dayjs"; // Import para trabalhar com datas
 
 interface MaintenanceActivityProps {
   activity: Activity;
@@ -80,6 +84,11 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   }, [activity]);
 
   const handleOpen = () => {
+    if (!activity || Object.keys(activity).length === 0) {
+      console.error("Activity is undefined or empty");
+      return; // Sai da função se 'activity' for indefinido ou vazio
+    }
+    // Verifica se 'activity' está corretamente definido antes de atualizar os estados
     setEditedActivity(activity);
     setActivityRegular(activity.activityRegular || false);
     setSelectedBlocks(activity.blocoIDs || []);
@@ -350,28 +359,23 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           )}
 
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
-            <InputMask
-              mask="99/99/9999" // Define a máscara para o formato dd/mm/yyyy
-              value={editedActivity?.data || ""} // Usando o estado editedActivity para manter o valor
-              onChange={(e) =>
-                setEditedActivity((prevActivity) =>
-                  prevActivity
-                    ? { ...prevActivity, data: e.target.value }
-                    : null
-                )
-              } // Atualizando diretamente o valor da data no estado
-            >
-              {() => (
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Data"
-                  name="data"
-                  placeholder="dd/mm/yyyy"
-                  InputLabelProps={{ shrink: true }}
-                />
-              )}
-            </InputMask>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Data"
+                value={dayjs(editedActivity?.data)} // Converte a string de data para o formato dayjs
+                onChange={(newDate) =>
+                  setEditedActivity((prevActivity) =>
+                    prevActivity
+                      ? { ...prevActivity, data: newDate?.format("DD/MM/YYYY") }
+                      : null
+                  )
+                }
+                slotProps={{
+                  textField: { fullWidth: true }, // Para renderizar o TextField com largura total
+                }}
+                format="DD/MM/YYYY" // Formato desejado
+              />
+            </LocalizationProvider>
           ) : (
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
               <Button

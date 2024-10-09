@@ -64,8 +64,12 @@ export default function PizzaChart() {
           <PieChart
             series={[
               {
-                data: data,
-                colorField: 'color', // Usa o campo 'color' para definir as cores de cada segmento
+                data: data.map(item => ({
+                  id: item.id,
+                  value: item.value,
+                  label: item.label,
+                  color: item.color // As cores já estão aplicadas no próprio dado
+                }))
               },
             ]}
             width={400}

@@ -15,9 +15,9 @@ import { useRouter } from "next/router";
 import {
   getActivityHistory,
   Activity,
-  updateActivity,
-  deleteActivity,
-  addActivity,
+  // updateActivity,
+  // deleteActivity,
+  // addActivity,
   fetchBlocks,
 } from "@/services/firebaseService";
 import MainLayout from "@/components/layout/MainLayout";
@@ -38,6 +38,7 @@ interface ActivityItem {
   id_name: string;
   id: number;
   category_id: number;
+  updatedFields: any;
 }
 
 const ActivityPage: React.FC = () => {
@@ -70,8 +71,8 @@ const ActivityPage: React.FC = () => {
       const formattedDates: { [key: number]: string } = {};
 
       for (const activity of activities) {
-        const formattedDate = await HelpActivity.formatDate(activity.updatedFields.data);
-        formattedDates[activity.updatedFields.id] = formattedDate;
+        const formattedDate = await HelpActivity.formatDate(activity.data); // Aqui acessamos diretamente "data" em "activity"
+        formattedDates[activity.id] = formattedDate; // Acessa o "id" diretamente em "activity"
       }
 
       setFormattedActivityDates(formattedDates);
@@ -147,10 +148,10 @@ const ActivityPage: React.FC = () => {
   const handleSaveActivity = async (updatedActivity: Activity) => {
     try {
       if (isEditing && updatedActivity.id) {
-        await updateActivity(updatedActivity.id, updatedActivity);
+        // await updateActivity(updatedActivity.id, updatedActivity);
         setSnackbarMessage("Atividade atualizada com sucesso!");
       } else {
-        await addActivity(updatedActivity);
+        // await addActivity(updatedActivity);
         setSnackbarMessage("Atividade adicionada com sucesso!");
       }
       setSnackbarOpen(true);
@@ -163,7 +164,7 @@ const ActivityPage: React.FC = () => {
 
   const handleDelete = async (activityId: number) => {
     try {
-      await deleteActivity(activityId);
+      // await deleteActivity(activityId);
       setSnackbarMessage("Atividade removida com sucesso!");
       setSnackbarOpen(true);
       fetchActivityHistory(Number(id));
@@ -211,36 +212,34 @@ const ActivityPage: React.FC = () => {
           Adicionar Atividade
         </Button>
 
-        {activities.map((activity) => (
+        {activities.map((activity, index) => (
           <Accordion
-            key={activity.updatedFields.id}
-            expanded={expanded === `panel${activity.updatedFields.id}`}
-            onChange={handleExpand(`panel${activity.updatedFields.id}`)}
+            key={`${activity.updatedFields.id}-${index}`} // Use o "id" diretamente em "activity"
+            expanded={expanded === `panel${activity.updatedFields.id}-${index}`}
+            onChange={handleExpand(`panel${activity.updatedFields.id}-${index}`)}
             sx={{ marginBottom: 2 }}
           >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
-              aria-controls={`panel${activity.updatedFields.id}-content`}
+              aria-controls={`panel${activity.updatedFields.id}-${index}-content`}
+              id={`panel${activity.updatedFields.id}-${index}-header`}
             >
               <Typography>
-                {activity.updatedFields.titulo} -{" "}
-                {formattedActivityDates[activity.updatedFields.id] || "Carregando..."}
+                {activity.updatedFields.titulo} - {activity.updatedFields.data || "Carregando..."}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Typography>
-                <strong>Responsável:</strong>{" "}
-                {activity.updatedFields.responsavel}
+                <strong>Responsável:</strong> {activity.updatedFields.responsavel}
               </Typography>
               <Typography>
                 <strong>Atividade:</strong> {activity.updatedFields.atividade}
               </Typography>
               <Typography>
-                <strong>Periodicidade:</strong>{" "}
-                {activity.updatedFields.Periodicidade}
+                <strong>Periodicidade:</strong> {activity.updatedFields.Periodicidade}
               </Typography>
               <Typography>
-                <strong>Blocos:</strong>{" "}
+                <strong>Blocos:</strong>
                 {activity.updatedFields.blocoIDs
                   ?.map(
                     (blockId) =>
@@ -259,7 +258,7 @@ const ActivityPage: React.FC = () => {
                 <Button
                   variant="contained"
                   color="secondary"
-                  onClick={() => handleDelete(activity.updatedFields.id)}
+                  onClick={() => handleDelete(activity.updatedFields.id)} // Usando "id" diretamente
                 >
                   Remover
                 </Button>
@@ -273,16 +272,18 @@ const ActivityPage: React.FC = () => {
           <EditActivityModal
             open={modalOpen}
             onClose={() => setModalOpen(false)}
-            activity={editingActivity || {
-              titulo: "",
-              atividade: "",
-              responsavel: "",
-              Periodicidade: "",
-              id: 0,
-              obrigatorio: "Sim",
-              blocoIDs: [],
-              activityRegular: false,
-            }}
+            activity={
+              editingActivity || {
+                titulo: "",
+                atividade: "",
+                responsavel: "",
+                Periodicidade: "",
+                id: 0,
+                obrigatorio: "Sim",
+                blocoIDs: [],
+                activityRegular: false,
+              }
+            }
             onSave={handleSaveActivity}
             disabled={false}
             title={isEditing ? "Editar Atividade" : "Adicionar Atividade"} // Passa o título dinamicamente

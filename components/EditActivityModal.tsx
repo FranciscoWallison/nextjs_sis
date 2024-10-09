@@ -252,16 +252,15 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
               value={formattedDate} // Usa a data formatada
               onChange={handleChange}
             >
-              {() => (
-                <TextField
-                  fullWidth
-                  margin="normal"
-                  label="Data"
-                  name="data"
-                  placeholder="dd/mm/yyyy" // Exibe o placeholder com o formato desejado
-                  InputLabelProps={{ shrink: true }}
-                />
-              )}
+              {/* Remover a função anônima e passar o TextField diretamente */}
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Data"
+                name="data"
+                placeholder="dd/mm/yyyy" // Exibe o placeholder com o formato desejado
+                InputLabelProps={{ shrink: true }}
+              />
             </InputMask>
           )}
 

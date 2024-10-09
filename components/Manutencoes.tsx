@@ -28,6 +28,10 @@ import {
 } from "@/services/firebaseService";
 import HelpQuestions from "@/utils/HelpQuestions";
 import { getStatus } from "@/utils/statusHelper";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import do LocalizationProvider
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Adaptador para Day.js
+import dayjs, { Dayjs } from "dayjs"; // Import para trabalhar com datas
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<Activity[]>([]);
@@ -39,7 +43,7 @@ const Manutencoes: React.FC = () => {
   const [filters, setFilters] = useState({
     titulo: "",
     responsavel: "",
-    data: "",
+    data: null as Dayjs | null, // Use Dayjs como tipo para a data
     blocos: [] as string[],
   });
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
@@ -188,6 +192,13 @@ const Manutencoes: React.FC = () => {
     });
   };
 
+  const handleDateChange = (newDate: Dayjs | null) => {
+    setFilters({
+      ...filters,
+      data: newDate,
+    });
+  };
+
   const handleBlockFilterChange = (event: SelectChangeEvent<string[]>) => {
     setFilters({
       ...filters,
@@ -215,7 +226,7 @@ const Manutencoes: React.FC = () => {
           .includes(filters.responsavel.toLowerCase());
         const matchData =
           !filters.data ||
-          (activity.data && activity.data.includes(filters.data));
+          (activity.data && dayjs(activity.data).isSame(filters.data, "day")); // Verifica se a data da atividade coincide com a data filtrada
 
         const matchStatus =
           (statusFilters.regular && dataStatus.status === "Regular") ||
@@ -251,138 +262,138 @@ const Manutencoes: React.FC = () => {
   const progress = calculateProgress();
 
   return (
-    <>
-      {loading ? (
-        <Container>
-          <CircularProgress />
-        </Container>
-      ) : (
-        <>
-          <Box sx={{ width: "100%", mb: 2 }}>
-            <LinearProgress variant="determinate" value={progress} />
-            <Typography variant="body2" color="text.secondary">{`${Math.round(
-              progress
-            )}% completado`}</Typography>
-          </Box>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <>
+        {loading ? (
+          <Container>
+            <CircularProgress />
+          </Container>
+        ) : (
+          <>
+            <Box sx={{ width: "100%", mb: 2 }}>
+              <LinearProgress variant="determinate" value={progress} />
+              <Typography variant="body2" color="text.secondary">{`${Math.round(
+                progress
+              )}% completado`}</Typography>
+            </Box>
 
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Filtrar por Título"
-                name="titulo"
-                value={filters.titulo}
-                onChange={handleFilterChange}
-              />
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Título"
+                  name="titulo"
+                  value={filters.titulo}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Responsável"
+                  name="responsavel"
+                  value={filters.responsavel}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <DatePicker
+                  sx={{ width: "100%" }}
+                  label="Filtrar por Data"
+                  value={filters.data}
+                  onChange={handleDateChange}
+                  format="DD/MM/YYYY" // Novo formato desejado
+                  slotProps={{
+                    textField: { fullWidth: true }, // Define largura total para o TextField
+                  }}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Filtrar por Responsável"
-                name="responsavel"
-                value={filters.responsavel}
-                onChange={handleFilterChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <InputMask
-                mask="99/99/9999" // Máscara para o formato dd/mm/yyyy
-                value={filters.data || ""}
-                onChange={handleFilterChange}
-              >
-                {() => (
-                  <TextField
-                    fullWidth
-                    label="Filtrar por Data"
-                    name="data"
-                    placeholder="dd/mm/yyyy" // Exibe o placeholder com o formato desejado
-                    InputLabelProps={{ shrink: true }}
-                  />
+
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={12}>
+                {blocks.length > 0 && (
+                  <FormControl fullWidth>
+                    <InputLabel>Filtrar por Bloco</InputLabel>
+                    <Select
+                      multiple
+                      value={filters.blocos}
+                      onChange={handleBlockFilterChange}
+                      renderValue={(selected) =>
+                        (selected as string[]).join(", ")
+                      }
+                    >
+                      {blocks.map((block) => (
+                        <MenuItem key={block.id} value={block.name}>
+                          {block.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 )}
-              </InputMask>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={12}>
-              {blocks.length > 0 && (
-                <FormControl fullWidth>
-                  <InputLabel>Filtrar por Bloco</InputLabel>
-                  <Select
-                    multiple
-                    value={filters.blocos}
-                    onChange={handleBlockFilterChange}
-                    renderValue={(selected) =>
-                      (selected as string[]).join(", ")
-                    }
-                  >
-                    {blocks.map((block) => (
-                      <MenuItem key={block.id} value={block.name}>
-                        {block.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            </Grid>
-          </Grid>
 
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth={true}
-                variant={statusFilters.regular ? "contained" : "outlined"}
-                color="success"
-                onClick={() => handleStatusFilterChange("regular")}
-              >
-                Regular
-              </Button>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth={true}
+                  variant={statusFilters.regular ? "contained" : "outlined"}
+                  color="success"
+                  onClick={() => handleStatusFilterChange("regular")}
+                >
+                  Regular
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth={true}
+                  variant={statusFilters.aVencer ? "contained" : "outlined"}
+                  color="warning"
+                  onClick={() => handleStatusFilterChange("aVencer")}
+                >
+                  A vencer
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth={true}
+                  variant={statusFilters.vencido ? "contained" : "outlined"}
+                  color="error"
+                  onClick={() => handleStatusFilterChange("vencido")}
+                >
+                  Vencido
+                </Button>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth={true}
-                variant={statusFilters.aVencer ? "contained" : "outlined"}
-                color="warning"
-                onClick={() => handleStatusFilterChange("aVencer")}
-              >
-                A vencer
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth={true}
-                variant={statusFilters.vencido ? "contained" : "outlined"}
-                color="error"
-                onClick={() => handleStatusFilterChange("vencido")}
-              >
-                Vencido
-              </Button>
-            </Grid>
-          </Grid>
 
-          <MaintenanceCategory
-            category="Manutenção"
-            activities={filteredActivities} // Passa as atividades filtradas
-            onUpdate={handleUpdate}
-            onRemove={handleRemove}
-            removeValid={true}
-            titleUpdate={titleUpdate}
-          />
+            <MaintenanceCategory
+              category="Manutenção"
+              activities={filteredActivities} // Passa as atividades filtradas
+              onUpdate={handleUpdate}
+              onRemove={handleRemove}
+              removeValid={true}
+              titleUpdate={titleUpdate}
+            />
 
-          <Snackbar
-            open={snackbarOpen}
-            autoHideDuration={6000}
-            onClose={handleSnackbarClose}
-            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          >
-            <Alert
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={6000}
               onClose={handleSnackbarClose}
-              severity="success"
-              sx={{ width: "100%" }}
+              anchorOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              Atividade atualizada com sucesso!
-            </Alert>
-          </Snackbar>
-        </>
-      )}
-    </>
+              <Alert
+                onClose={handleSnackbarClose}
+                severity="success"
+                sx={{ width: "100%" }}
+              >
+                Atividade atualizada com sucesso!
+              </Alert>
+            </Snackbar>
+          </>
+        )}
+      </>
+    </LocalizationProvider>
   );
 };
 

@@ -7,6 +7,10 @@ import {
   Grid,
   CircularProgress,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker"; // Import do DatePicker
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import de LocalizationProvider
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Import do adaptador para Dayjs
+import dayjs, { Dayjs } from "dayjs"; // Utilizando dayjs para formatação de datas
 import InputMask from "react-input-mask";
 import { FormContext } from "../contexts/FormContext";
 
@@ -16,6 +20,7 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 }) => {
   const context = useContext(FormContext);
   const [loadingCEP, setLoadingCEP] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
 
   // Estados de erro para cada campo
   const [errors, setErrors] = useState({
@@ -71,27 +76,18 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     [formData, setFormData]
   );
 
-  // Função para converter de YYYY-MM-DD para DD/MM/YYYY
-  const formatDateToDisplay = (date: string) => {
-    const [year, month, day] = date.split("-");
-    return `${day}/${month}/${year}`;
-  };
+  const handleDateChange = (newDate: Dayjs | null) => {
+    const today = dayjs(); // Data atual
 
-  // Função para converter de DD/MM/YYYY para YYYY-MM-DD
-  const formatDateToISO = (date: string) => {
-    const [day, month, year] = date.split("/");
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedDate = e.target.value; // Formato YYYY-MM-DD
-    const today = new Date().toISOString().split("T")[0]; // Data atual no formato YYYY-MM-DD
-
-    if (selectedDate > today) {
-      setErrors((prev) => ({ ...prev, buildingAge: true }));
+    if (newDate && newDate.isAfter(today)) {
+      setErrors((prev) => ({ ...prev, buildingAge: true })); // Definir erro se a data for no futuro
     } else {
-      setFormData({ ...formData, buildingAge: selectedDate });
-      setErrors((prev) => ({ ...prev, buildingAge: false }));
+      setSelectedDate(newDate);
+      setErrors((prev) => ({ ...prev, buildingAge: false })); // Remover erro se a data for válida
+
+      if (newDate) {
+        setFormData({ ...formData, buildingAge: newDate.format("YYYY-MM-DD") });
+      }
     }
   };
 
@@ -120,95 +116,80 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   };
 
   return (
-    <Box>
-      <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        Olá, {formData.lastName}! Precisamos que você preencha as informações
-        iniciais referentes ao condomínio.
-      </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Nome do Condomínio"
-            name="buildingName"
-            value={formData.buildingName || ""}
-            onChange={handleChange}
-            fullWidth
-            required
-            error={errors.buildingName}
-            helperText={
-              errors.buildingName ? "Nome do condomínio é obrigatório" : ""
-            }
-            sx={{ mt: 2 }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <InputMask
-            mask="99/99/9999" // Máscara para o formato dd/mm/yyyy
-            value={formData.buildingAge || ""}
-            onChange={handleDateChange}
-          >
-            {() => (
-              <TextField
-                fullWidth
-                margin="normal"
-                label="Data de Entrega"
-                name="buildingAge"
-                placeholder="dd/mm/yyyy" // Placeholder para o campo
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                inputProps={{
-                  max: new Date().toISOString().split("T")[0], // Define a data máxima como hoje
-                }}
-                required
-                error={errors.buildingAge}
-                helperText={
-                  errors.buildingAge
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      {" "}
+      {/* Adicionando LocalizationProvider */}
+      <Box>
+        <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
+          Olá, {formData.lastName}! Precisamos que você preencha as informações
+          iniciais referentes ao condomínio.
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Nome do Condomínio"
+              name="buildingName"
+              value={formData.buildingName || ""}
+              onChange={handleChange}
+              fullWidth
+              required
+              error={errors.buildingName}
+              helperText={
+                errors.buildingName ? "Nome do condomínio é obrigatório" : ""
+              }
+              sx={{ mt: 2 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <DatePicker
+              label="Data de Entrega"
+              value={selectedDate}
+              onChange={handleDateChange}
+              format="DD/MM/YYYY"
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: errors.buildingAge,
+                  helperText: errors.buildingAge
                     ? "Data de entrega é obrigatória e não pode ser no futuro"
-                    : ""
-                }
-                sx={{ mt: 2 }}
-              />
-            )}
-          </InputMask>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <InputMask
-            mask="99.999.999/9999-99"
-            value={formData.cnpj || ""}
-            onChange={handleChange}
-            disabled={loadingCEP}
-          >
-            {/* @ts-ignore */}
-            {(inputProps) => (
+                    : "",
+                },
+              }}
+              sx={{ mt: 2 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <InputMask
+              mask="99.999.999/9999-99"
+              value={formData.cnpj || ""}
+              onChange={handleChange}
+              disabled={loadingCEP}
+            >
               <TextField
-                {...inputProps}
                 label="CNPJ"
                 name="cnpj"
+                value={formData.cnpj || ""}
+                onChange={handleChange}
                 fullWidth
                 sx={{ mt: 2 }}
-                inputProps={{
-                  ...inputProps.inputProps,
-                }}
+                disabled={loadingCEP}
               />
-            )}
-          </InputMask>
-        </Grid>
+            </InputMask>
+          </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <InputMask
-            mask="99999-999"
-            value={formData.cep || ""}
-            onChange={handleChange}
-            onBlur={handleCEPBlur}
-            disabled={loadingCEP}
-          >
-            {/* @ts-ignore */}
-            {(inputProps) => (
+          <Grid item xs={12} sm={6}>
+            <InputMask
+              mask="99999-999"
+              value={formData.cep || ""}
+              onChange={handleChange}
+              onBlur={handleCEPBlur}
+              disabled={loadingCEP}
+            >
               <TextField
-                {...inputProps}
                 label="CEP"
                 name="cep"
+                value={formData.cep || ""}
+                onChange={handleChange}
                 fullWidth
                 required
                 error={errors.cep}
@@ -218,62 +199,62 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
                   endAdornment: loadingCEP ? (
                     <CircularProgress size={20} />
                   ) : null,
-                  ...inputProps.inputProps,
                 }}
+                disabled={loadingCEP}
               />
-            )}
-          </InputMask>
-        </Grid>
+            </InputMask>
+          </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Rua/Endereço"
-            name="address"
-            value={formData.address || ""}
-            onChange={handleChange}
-            fullWidth
-            required
-            error={errors.address}
-            helperText={errors.address ? "Endereço é obrigatório" : ""}
-            sx={{ mt: 2 }}
-          />
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Rua/Endereço"
+              name="address"
+              value={formData.address || ""}
+              onChange={handleChange}
+              fullWidth
+              required
+              error={errors.address}
+              helperText={errors.address ? "Endereço é obrigatório" : ""}
+              sx={{ mt: 2 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Bairro"
+              name="bairro"
+              value={formData.bairro || ""}
+              onChange={handleChange}
+              fullWidth
+              required
+              error={errors.bairro}
+              helperText={errors.bairro ? "Bairro é obrigatório" : ""}
+              sx={{ mt: 2 }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Cidade"
+              name="cidade"
+              value={formData.cidade || ""}
+              onChange={handleChange}
+              fullWidth
+              required
+              error={errors.cidade}
+              helperText={errors.cidade ? "Cidade é obrigatória" : ""}
+              sx={{ mt: 2 }}
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Bairro"
-            name="bairro"
-            value={formData.bairro || ""}
-            onChange={handleChange}
-            fullWidth
-            required
-            error={errors.bairro}
-            helperText={errors.bairro ? "Bairro é obrigatório" : ""}
-            sx={{ mt: 2 }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Cidade"
-            name="cidade"
-            value={formData.cidade || ""}
-            onChange={handleChange}
-            fullWidth
-            required
-            error={errors.cidade}
-            helperText={errors.cidade ? "Cidade é obrigatória" : ""}
-            sx={{ mt: 2 }}
-          />
-        </Grid>
-      </Grid>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-        <Button variant="contained" onClick={handleBack}>
-          Voltar
-        </Button>
-        <Button variant="contained" onClick={handleNextStep}>
-          Continuar
-        </Button>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+          <Button variant="contained" onClick={handleBack}>
+            Voltar
+          </Button>
+          <Button variant="contained" onClick={handleNextStep}>
+            Continuar
+          </Button>
+        </Box>
       </Box>
-    </Box>
+    </LocalizationProvider>
   );
 };
 
