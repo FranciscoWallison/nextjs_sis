@@ -12,6 +12,7 @@ import {
   Typography,
   List,
   ListItem,
+  ListItemButton,
   Modal,
   Container,
   Snackbar,
@@ -82,19 +83,15 @@ const AlertsPage: React.FC = () => {
             </Typography>
             <List>
               {alerts.map((activity) => (
-                <ListItem
-                  key={activity.id}
-                  button
-                  onClick={() => handleEditActivity(activity)}
-                >
-                  <Alert
-                    severity={
-                      activity.status === "Vencido" ? "error" : "warning"
-                    }
-                  >
-                    <AlertTitle>{activity.titulo}</AlertTitle>
-                    Status: {activity.status} - Vencimento: {activity.dueDate}
-                  </Alert>
+                <ListItem key={activity.id}>
+                  <ListItemButton onClick={() => handleEditActivity(activity)}>
+                    <Alert
+                      severity={activity.status === "Vencido" ? "error" : "warning"}
+                    >
+                      <AlertTitle>{activity.titulo}</AlertTitle>
+                      Status: {activity.status} - Vencimento: {activity.dueDate}
+                    </Alert>
+                  </ListItemButton>
                 </ListItem>
               ))}
             </List>

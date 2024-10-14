@@ -1,9 +1,12 @@
 import * as React from "react";
 import { useEffect, useState, useCallback } from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
-import { useTheme } from '@mui/material/styles';
+import { useTheme } from "@mui/material/styles";
 import Title from "./Title";
-import { Activity, pegarUsuarioPeriodicidades } from "@/services/firebaseService";
+import {
+  Activity,
+  pegarUsuarioPeriodicidades,
+} from "@/services/firebaseService";
 import { getStatus } from "@/utils/statusHelper";
 
 export default function PizzaChart() {
@@ -26,7 +29,7 @@ export default function PizzaChart() {
     }
 
     const activitiesWithStatus = await Promise.all(
-      responseP.questions.map(async (activity) => {
+      responseP.questions.map(async (activity: Activity) => {
         const dataStatus = await getStatus(activity);
         return { ...activity, status: dataStatus.status };
       })
@@ -42,17 +45,43 @@ export default function PizzaChart() {
 
   useEffect(() => {
     if (activities.length > 0) {
-      const vencidoCount = activities.filter(a => a.status === "Vencido").length;
-      const regularCount = activities.filter(a => a.status === "Regular").length;
-      const aVencerCount = activities.filter(a => a.status === "A vencer").length;
+      const vencidoCount = activities.filter(
+        (a) => a.status === "Vencido"
+      ).length;
+      const regularCount = activities.filter(
+        (a) => a.status === "Regular"
+      ).length;
+      const aVencerCount = activities.filter(
+        (a) => a.status === "A vencer"
+      ).length;
 
       setData([
-        { id: 0, value: vencidoCount, label: "Vencido", color: theme.palette.error.main },
-        { id: 1, value: regularCount, label: "Regular", color: theme.palette.success.main },
-        { id: 2, value: aVencerCount, label: "A vencer", color: theme.palette.warning.main },
+        {
+          id: 0,
+          value: vencidoCount,
+          label: "Vencido",
+          color: theme.palette.error.main,
+        },
+        {
+          id: 1,
+          value: regularCount,
+          label: "Regular",
+          color: theme.palette.success.main,
+        },
+        {
+          id: 2,
+          value: aVencerCount,
+          label: "A vencer",
+          color: theme.palette.warning.main,
+        },
       ]);
     }
-  }, [activities, theme.palette.error.main, theme.palette.success.main, theme.palette.warning.main]);
+  }, [
+    activities,
+    theme.palette.error.main,
+    theme.palette.success.main,
+    theme.palette.warning.main,
+  ]);
 
   return (
     <React.Fragment>
@@ -64,12 +93,12 @@ export default function PizzaChart() {
           <PieChart
             series={[
               {
-                data: data.map(item => ({
+                data: data.map((item) => ({
                   id: item.id,
                   value: item.value,
                   label: item.label,
-                  color: item.color // As cores já estão aplicadas no próprio dado
-                }))
+                  color: item.color, // As cores já estão aplicadas no próprio dado
+                })),
               },
             ]}
             width={400}

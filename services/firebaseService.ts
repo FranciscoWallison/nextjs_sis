@@ -153,6 +153,8 @@ export interface Activity {
   activityRegular?: boolean; // Adicionando activityRegular como opcional
   status?: string;
   dueDate?: string;
+  updatedFields?: any;
+  blocos?: any[];
 }
 
 export interface CategoryData {
@@ -172,7 +174,9 @@ export interface CategoryData {
 }
 
 export interface PeriodicidadeResponse {
-  questions: CategoryData[];
+  userId: string; // O ID do usuário associado a esta resposta
+  questions: Activity[]; // Array de atividades do tipo 'Activity'
+  lastUpdate?: string; // Opcional: Data da última atualização
 }
 
 export const pegarUsuarioPeriodicidades = async (
@@ -200,11 +204,14 @@ export const pegarUsuarioPeriodicidades = async (
     const data = docSnap.data() as PeriodicidadeResponse;
     return data;
   } catch (error) {
-    if (error.message.includes("permissions")) {
-      return null;
+    if (error instanceof Error) {
+      if (error.message.includes("permissions")) {
+        return null;
+      }
+      console.error("pegarUsuarioPeriodicidades error", error);
+    } else {
+      console.error("Erro desconhecido", error);
     }
-
-    console.error("pegarUsuarioPeriodicidades error", error);
     throw error;
   }
 };
@@ -493,5 +500,83 @@ export const getActivityHistory = async (activityId: number) => {
   } catch (error) {
     console.error("Erro ao buscar histórico de atividade:", error);
     return [];
+  }
+};
+
+export const addActivity = async (newActivity: Activity): Promise<boolean> => {
+  try {
+    const user: FirebaseUser | null = AuthStorage.getUser();
+    if (!user || !user.uid) {
+      console.error("Usuário não autenticado.");
+      return false;
+    }
+
+    const db = getFirestore(app);
+    const activityRef = collection(db, "atividades");
+
+    // Adiciona a nova atividade ao Firestore
+    await addDoc(activityRef, {
+      ...newActivity,
+      userId: user.uid, // Relaciona a atividade ao usuário
+      createdAt: Timestamp.now(),
+    });
+
+    console.log("Atividade adicionada com sucesso.");
+    return true;
+  } catch (error) {
+    console.error("Erro ao adicionar atividade:", error);
+    return false;
+  }
+};
+
+export const updateActivity = async (
+  activityId: string | number,
+  updatedActivity: Activity
+): Promise<boolean> => {
+  try {
+    const user: FirebaseUser | null = AuthStorage.getUser();
+    if (!user || !user.uid) {
+      console.error("Usuário não autenticado.");
+      return false;
+    }
+
+    const db = getFirestore(app);
+    const activityRef = doc(db, "atividades", activityId.toString());
+
+    // Atualiza os campos da atividade no Firestore
+    await updateDoc(activityRef, {
+      ...updatedActivity,
+      updatedAt: Timestamp.now(), // Marca a data da última atualização
+    });
+
+    console.log("Atividade atualizada com sucesso.");
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar atividade:", error);
+    return false;
+  }
+};
+
+export const deleteActivity = async (
+  activityId: string | number
+): Promise<boolean> => {
+  try {
+    const user: FirebaseUser | null = AuthStorage.getUser();
+    if (!user || !user.uid) {
+      console.error("Usuário não autenticado.");
+      return false;
+    }
+
+    const db = getFirestore(app);
+    const activityRef = doc(db, "atividades", activityId.toString());
+
+    // Remove a atividade do Firestore
+    await deleteDoc(activityRef);
+
+    console.log("Atividade removida com sucesso.");
+    return true;
+  } catch (error) {
+    console.error("Erro ao remover atividade:", error);
+    return false;
   }
 };

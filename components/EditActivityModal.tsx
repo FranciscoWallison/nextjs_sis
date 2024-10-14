@@ -25,9 +25,11 @@ interface EditActivityModalProps {
   open: boolean;
   activity: Activity | null;
   onClose: () => void;
-  onActivityUpdated: () => void;
+  onActivityUpdated?: () => void;
   title?: string; // Novo: Título dinâmico opcional
   showDateField?: boolean; // Novo: Validador se o campo de data deve ser exibido
+  onSave?: (updatedActivity: Activity) => Promise<void>;
+  disabled?: boolean;
 }
 
 const EditActivityModal: React.FC<EditActivityModalProps> = ({
@@ -125,7 +127,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
       try {
         await usuarioPeriodicidadesAtualizar(finalActivity); // Atualiza a atividade
         setSnackbarOpen(true); // Mostra o Snackbar de sucesso
-        onActivityUpdated(); // Chama a função do pai para atualizar os dados
+        if (onActivityUpdated) {
+          onActivityUpdated(); // Chama a função do pai para atualizar os dados, se estiver definida
+        }
         onClose(); // Fecha o modal
       } catch (error) {
         console.error("Erro ao salvar a atividade:", error);

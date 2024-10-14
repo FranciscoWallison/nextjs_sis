@@ -9,7 +9,30 @@ import { Activity } from "@/services/firebaseService";
 import AuthStorage from "@/utils/AuthStorage";
 import { FirebaseUser } from "@/interface/FirebaseUser";
 import { pegarUsuarioPeriodicidades } from "@/services/firebaseService";
-import HelpActivity from "@/utils/HelpActivity"; 
+import HelpActivity from "@/utils/HelpActivity";
+
+// Defina as interfaces
+interface PeriodicidadeResponse {
+  questions: Activity[];
+  buildingAge?: string;
+}
+
+interface BuildingData {
+  buildingAge: string;
+  buildingName: string;
+  bairro: string;
+  address: string;
+  firstName: string;
+  cidade: string;
+  lastName: string;
+  spda: string;
+  spda_para_raios: string;
+  uf: string;
+}
+
+// Tipo combinado que unifica PeriodicidadeResponse e BuildingData
+type CombinedData = PeriodicidadeResponse & BuildingData;
+
 // Função para calcular a próxima data com base na data de início e na periodicidade
 const calculateNextDate = (
   startDate: string,
@@ -81,7 +104,12 @@ export const getStatus = async (
   const user: FirebaseUser | null = AuthStorage.getUser();
 
   // Verifica se o usuário existe e se os dados do usuário estão disponíveis
-  let responseP = user ? user.data_user : null;
+  let responseP: PeriodicidadeResponse | null = null;
+
+  if (user?.data_user && 'questions' in user.data_user) {
+    // Verifica se user.data_user contém a propriedade questions
+    responseP = user.data_user as PeriodicidadeResponse;
+  }
 
   if (!responseP) {
     // Se responseP for null, tenta buscar os dados do usuário com o uid
@@ -93,8 +121,22 @@ export const getStatus = async (
     }
   }
 
-  // Verifica a idade do edifício
-  const buildingDeliveryDate = parseISO(responseP.buildingAge);
+  // Verifica a idade do edifício e combina dados do edifício se necessário
+  const combinedData: CombinedData = {
+    ...responseP,
+    buildingAge: responseP.buildingAge || "2020-01-01", // Ajuste se necessário
+    buildingName: "Edifício Exemplo", // Valores padrão ou obtidos de outra fonte
+    bairro: "Centro",
+    address: "Rua Exemplo, 123",
+    firstName: "Nome",
+    lastName: "Sobrenome",
+    cidade: "Cidade",
+    spda: "Sim",
+    spda_para_raios: "Sim",
+    uf: "UF",
+  };
+
+  const buildingDeliveryDate = parseISO(combinedData.buildingAge);
   const today = new Date();
 
   const buildingAge = isValid(buildingDeliveryDate)

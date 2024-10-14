@@ -32,6 +32,10 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import do LocalizationProvider
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Adaptador para Day.js
 import dayjs, { Dayjs } from "dayjs"; // Import para trabalhar com datas
+interface Bloco {
+  id: string;
+  name: string;
+}
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<Activity[]>([]);
@@ -63,7 +67,7 @@ const Manutencoes: React.FC = () => {
     }
 
     const activitiesWithBlocks = await Promise.all(
-      responseP.questions.map(async (activity) => {
+      responseP.questions.map(async (activity: Activity) => {
         if (activity.blocoIDs && activity.blocoIDs.length > 0) {
           try {
             const blocosPromises = activity.blocoIDs.map((blocoID) =>
@@ -100,14 +104,14 @@ const Manutencoes: React.FC = () => {
 
     const uniqueBlocks = Array.from(
       new Map(
-        activitiesWithBlocks.flatMap((activity) => {
-          if ("blocos" in activity) {
-            return activity.blocos?.map((bloco) => [bloco.id, bloco]);
+        activitiesWithBlocks.flatMap((activity: Activity) => {
+          if (Array.isArray(activity.blocos)) {
+            return activity.blocos.map((bloco) => [bloco.id, bloco]);
           }
           return [];
         })
       ).values()
-    );
+    ).map((bloco) => bloco as Bloco); // Converta `bloco` explicitamente para o tipo `Bloco`
 
     setBlocks(uniqueBlocks);
   }, []);

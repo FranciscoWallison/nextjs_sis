@@ -15,9 +15,9 @@ import { useRouter } from "next/router";
 import {
   getActivityHistory,
   Activity,
-  // updateActivity,
-  // deleteActivity,
-  // addActivity,
+  updateActivity,
+  deleteActivity,
+  addActivity,
   fetchBlocks,
 } from "@/services/firebaseService";
 import MainLayout from "@/components/layout/MainLayout";
@@ -108,7 +108,25 @@ const ActivityPage: React.FC = () => {
   const fetchActivityHistory = async (activityId: number) => {
     try {
       const response = await getActivityHistory(activityId);
-      setActivities(response);
+      // Transforme o retorno para corresponder à interface Activity
+      const transformedActivities: Activity[] = response.map((item: any) => ({
+        id: item.id,
+        titulo: item.titulo || "Título Padrão", // Adicione um valor padrão, se necessário
+        atividade: item.atividade || "Atividade Padrão",
+        responsavel: item.responsavel || "Responsável Padrão",
+        Periodicidade: item.Periodicidade || "Sem Periodicidade",
+        obrigatorio: item.obrigatorio || "Sim",
+        responsavel_info: item.responsavel_info || {
+          nome: "",
+          telefone: "",
+          email: "",
+        },
+        id_name: item.id_name || "ID Padrão",
+        category_id: item.category_id || 0,
+        updatedFields: item.updatedFields || {}, // Caso você esteja usando updatedFields
+      }));
+
+      setActivities(transformedActivities);
     } catch (error) {
       console.error("Erro ao buscar atividades:", error);
     }
@@ -140,6 +158,14 @@ const ActivityPage: React.FC = () => {
       obrigatorio: "Sim",
       blocoIDs: [], // Novo campo para blocos selecionados
       activityRegular: false,
+      responsavel_info: {
+        nome: "", // Adicione um valor padrão
+        telefone: "", // Adicione um valor padrão
+        email: "", // Adicione um valor padrão
+      },
+      id_name: "", // Adicione um valor padrão
+      category_id: 0, // Valor padrão, se necessário
+      updatedFields: {}, // Valor padrão, se necessário
     });
     setIsEditing(false); // Definir como criação
     setModalOpen(true);
@@ -148,10 +174,10 @@ const ActivityPage: React.FC = () => {
   const handleSaveActivity = async (updatedActivity: Activity) => {
     try {
       if (isEditing && updatedActivity.id) {
-        // await updateActivity(updatedActivity.id, updatedActivity);
+        await updateActivity(updatedActivity.id, updatedActivity);
         setSnackbarMessage("Atividade atualizada com sucesso!");
       } else {
-        // await addActivity(updatedActivity);
+        await addActivity(updatedActivity);
         setSnackbarMessage("Atividade adicionada com sucesso!");
       }
       setSnackbarOpen(true);
@@ -164,7 +190,7 @@ const ActivityPage: React.FC = () => {
 
   const handleDelete = async (activityId: number) => {
     try {
-      // await deleteActivity(activityId);
+      await deleteActivity(activityId);
       setSnackbarMessage("Atividade removida com sucesso!");
       setSnackbarOpen(true);
       fetchActivityHistory(Number(id));
@@ -216,7 +242,9 @@ const ActivityPage: React.FC = () => {
           <Accordion
             key={`${activity.updatedFields.id}-${index}`} // Use o "id" diretamente em "activity"
             expanded={expanded === `panel${activity.updatedFields.id}-${index}`}
-            onChange={handleExpand(`panel${activity.updatedFields.id}-${index}`)}
+            onChange={handleExpand(
+              `panel${activity.updatedFields.id}-${index}`
+            )}
             sx={{ marginBottom: 2 }}
           >
             <AccordionSummary
@@ -225,24 +253,27 @@ const ActivityPage: React.FC = () => {
               id={`panel${activity.updatedFields.id}-${index}-header`}
             >
               <Typography>
-                {activity.updatedFields.titulo} - {activity.updatedFields.data || "Carregando..."}
+                {activity.updatedFields.titulo} -{" "}
+                {activity.updatedFields.data || "Carregando..."}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Typography>
-                <strong>Responsável:</strong> {activity.updatedFields.responsavel}
+                <strong>Responsável:</strong>{" "}
+                {activity.updatedFields.responsavel}
               </Typography>
               <Typography>
                 <strong>Atividade:</strong> {activity.updatedFields.atividade}
               </Typography>
               <Typography>
-                <strong>Periodicidade:</strong> {activity.updatedFields.Periodicidade}
+                <strong>Periodicidade:</strong>{" "}
+                {activity.updatedFields.Periodicidade}
               </Typography>
               <Typography>
                 <strong>Blocos:</strong>
                 {activity.updatedFields.blocoIDs
                   ?.map(
-                    (blockId) =>
+                    (blockId: string | number) =>
                       blocks.find((block) => block.id === blockId)?.name || ""
                   )
                   .join(", ")}
@@ -282,11 +313,18 @@ const ActivityPage: React.FC = () => {
                 obrigatorio: "Sim",
                 blocoIDs: [],
                 activityRegular: false,
+                responsavel_info: {
+                  nome: "",
+                  telefone: "",
+                  email: "",
+                },
+                id_name: "",
+                category_id: 0, // Valor padrão
               }
             }
             onSave={handleSaveActivity}
             disabled={false}
-            title={isEditing ? "Editar Atividade" : "Adicionar Atividade"} // Passa o título dinamicamente
+            title={isEditing ? "Editar Atividade" : "Adicionar Atividade"}
           />
         )}
 
