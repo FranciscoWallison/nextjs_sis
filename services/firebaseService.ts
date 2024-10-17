@@ -225,19 +225,33 @@ export const usuarioPeriodicidadesAtualizar = async (
     if (data === null) {
       return false;
     }
-    console.log("====================================");
-    console.log(updatedActivity);
-    console.log("====================================");
-    // Atualizar a atividade correspondente
-    const updatedData = data.questions.map((activity: Activity) =>
-      activity.id === updatedActivity.id
-        ? { ...activity, ...updatedActivity } // Atualiza a atividade correspondente
-        : activity
+
+    // Verificar se a atividade já existe na lista
+    const activityExists = data.questions.some(
+      (activity: Activity) => activity.id === updatedActivity.id
     );
+
+    let updatedData;
+
+    if (activityExists) {
+      // Se a atividade já existe, atualiza ela
+      updatedData = data.questions.map((activity: Activity) =>
+        activity.id === updatedActivity.id
+          ? { ...activity, ...updatedActivity } // Atualiza a atividade correspondente
+          : activity
+      );
+    } else {
+      // Se a atividade não existe, adiciona ela à lista
+      updatedData = [...data.questions, updatedActivity];
+    }
 
     // Substituir as atividades no objeto data
     data.questions = updatedData;
 
+    console.log("========usuarioPeriodicidadesAtualizar==============");
+    console.log(updatedActivity, data.questions);
+    console.log("====================================");
+    debugger;
     // Salvar os dados atualizados no servidor
     await salvarNovo(data);
     await registrarHistoricoManutencao(updatedActivity);
@@ -253,33 +267,52 @@ export const usuarioPeriodicidadesAdicionar = async (
   updatedActivity: any
 ): Promise<boolean> => {
   try {
+    // Obter as periodicidades do usuário
     const data = await pegarUsuarioPeriodicidades();
 
     if (data === null) {
       return false;
     }
 
+    // Atividades existentes
     const questions = data.questions;
 
-    // Filtra os objetos que estão em updatedActivity, mas não em questions
+    // Cria um conjunto de IDs para verificar quais atividades já existem
     const idsInQuestions = new Set(questions.map((q) => q.id));
-    const uniqueInUpdatedActivity = updatedActivity.filter(
-      (activity: any) => !idsInQuestions.has(activity.id)
-    );
 
-    console.log("====================================");
-    console.log(uniqueInUpdatedActivity, updatedActivity, data.questions);
-    console.log("====================================");
+    // Encontra o maior ID existente em 'questions'
+    const maxId = Math.max(...questions.map((q) => q.id), 0); // Garante que o mínimo seja 0 se não houver atividades
 
-    data.questions = updatedActivity;
+    // Filtra as atividades que não estão em 'questions' e gera novo ID se id === 0
+    const uniqueInUpdatedActivity = updatedActivity
+      .map((activity: any) => {
+        if (activity.id === 0) {
+          // Se o id for 0, gera um novo id baseado no maior ID existente
+          return { ...activity, id: maxId + 1 };
+        }
+        return activity;
+      })
+      .filter((activity: any) => !idsInQuestions.has(activity.id));
 
+    if (uniqueInUpdatedActivity.length === 0) {
+      console.log("Nenhuma nova atividade para adicionar.");
+      return false; // Retorna falso se não houver novas atividades
+    }
+
+    // Adiciona as novas atividades ao array 'questions'
+    data.questions = [...questions, ...uniqueInUpdatedActivity];
+
+    console.log("Adicionando atividades:", uniqueInUpdatedActivity);
+
+    // Salvar os dados atualizados
     await salvarNovo(data);
+
+    // Registrar o histórico da primeira nova atividade (se houver mais de uma)
     await registrarHistoricoManutencao(uniqueInUpdatedActivity[0]);
+
     return true;
   } catch (error) {
-    console.log("====================================");
-    console.log("usuarioPeriodicidadesAdicionar", error);
-    console.log("====================================");
+    console.log("Erro em usuarioPeriodicidadesAdicionar:", error);
     return false;
   }
 };
@@ -304,7 +337,7 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
 
     return await validaUsuarioForm();
   } catch (error) {
-    console.log("============salvarNovo================");
+    console.log("============salvarNovo ERRO================");
     console.error(error);
     console.log("====================================");
   }
