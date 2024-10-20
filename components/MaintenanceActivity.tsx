@@ -99,13 +99,13 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                     blocks.find((block) => block.id === blockId)?.name
                 )
                 .filter((name) => name)
+                .sort((a, b) => a?.localeCompare(b)) // Ordena blocos em ordem alfabética
                 .join(", ")}
             </Typography>
           )}
 
           {activity.data && (
             <>
-            {console.log(activity)}
               <Typography variant="body2">
                 Última manutenção: {formatDate(activity.data) || "Carregando..."}
               </Typography>

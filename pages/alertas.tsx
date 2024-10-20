@@ -83,10 +83,16 @@ const AlertsPage: React.FC = () => {
             </Typography>
             <List>
               {alerts.map((activity) => (
-                <ListItem key={activity.id}>
-                  <ListItemButton onClick={() => handleEditActivity(activity)}>
+                <ListItem key={activity.id} sx={{ width: "100%" }}>
+                  <ListItemButton
+                    sx={{ padding: 0, width: "100%" }}
+                    onClick={() => handleEditActivity(activity)}
+                  >
                     <Alert
-                      severity={activity.status === "Vencido" ? "error" : "warning"}
+                      sx={{ width: "100%" }}
+                      severity={
+                        activity.status === "Vencido" ? "error" : "warning"
+                      }
                     >
                       <AlertTitle>{activity.titulo}</AlertTitle>
                       Status: {activity.status} - Vencimento: {activity.dueDate}
