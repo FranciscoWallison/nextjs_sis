@@ -151,10 +151,6 @@ const Periodicidades: React.FC = () => {
     setSnackbarOpen(false);
   };
 
-  const handleUpdate = async (updatedActivity: Activity) => {
-    await onSave(updatedActivity);
-  };
-
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFilters({
@@ -181,6 +177,11 @@ const Periodicidades: React.FC = () => {
 
       return matchTitle && matchResponsavel && matchData;
     });
+  };
+
+  const handleUpdate = async (updatedActivity: Activity) => {
+    fetchData();
+    setSnackbarOpen(true);
   };
 
   return (
@@ -240,7 +241,7 @@ const Periodicidades: React.FC = () => {
               key={index}
               category={category.titulo}
               activities={applyFilters([category])}
-              onUpdate={(activity) => handleOpenModal(activity)} // Abre o modal para edição
+              onUpdate={(activity) => handleUpdate(activity)} // Abre o modal para edição
               titleUpdate="Adicionar"
               onRemove={(activityId) => console.log(activityId)}
               removeValid={false} // Ou uma lógica para validar a remoção

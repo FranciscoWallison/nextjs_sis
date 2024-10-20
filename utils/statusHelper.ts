@@ -125,15 +125,6 @@ export const getStatus = async (
   const combinedData: CombinedData = {
     ...responseP,
     buildingAge: responseP.buildingAge || "2020-01-01", // Ajuste se necessário
-    buildingName: "Edifício Exemplo", // Valores padrão ou obtidos de outra fonte
-    bairro: "Centro",
-    address: "Rua Exemplo, 123",
-    firstName: "Nome",
-    lastName: "Sobrenome",
-    cidade: "Cidade",
-    spda: "Sim",
-    spda_para_raios: "Sim",
-    uf: "UF",
   };
 
   const buildingDeliveryDate = parseISO(combinedData.buildingAge);

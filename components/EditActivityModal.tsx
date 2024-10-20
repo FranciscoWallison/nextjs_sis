@@ -24,6 +24,7 @@ import {
   usuarioPeriodicidadesAdicionar,
 } from "@/services/firebaseService";
 import HelpActivity from "@/utils/HelpActivity";
+import { useNotification } from "@/contexts/NotificationContext";
 
 interface EditActivityModalProps {
   open: boolean;
@@ -48,6 +49,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   onSave,
   disabled = false,
 }) => {
+  const { fetchNotifications } = useNotification();
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
@@ -172,6 +174,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
           onActivityUpdated(); // Chama a função do pai para atualizar os dados
         }
         onClose(); // Fecha o modal
+        await fetchNotifications();
       } catch (error) {
         console.error("Erro ao salvar a atividade:", error);
       }

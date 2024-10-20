@@ -248,10 +248,6 @@ export const usuarioPeriodicidadesAtualizar = async (
     // Substituir as atividades no objeto data
     data.questions = updatedData;
 
-    console.log("========usuarioPeriodicidadesAtualizar==============");
-    console.log(updatedActivity, data.questions);
-    console.log("====================================");
-    debugger;
     // Salvar os dados atualizados no servidor
     await salvarNovo(data);
     await registrarHistoricoManutencao(updatedActivity);

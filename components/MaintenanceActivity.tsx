@@ -105,11 +105,12 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
           {activity.data && (
             <>
+            {console.log(activity)}
               <Typography variant="body2">
                 Última manutenção: {formatDate(activity.data) || "Carregando..."}
               </Typography>
               <Typography variant="body2">
-                Próxima manutenção: {formatDate(activity.data) || "Carregando..."}
+                Próxima manutenção: {activity.dueDate}
               </Typography>
             </>
           )}
