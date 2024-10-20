@@ -166,7 +166,6 @@ const Manutencoes: React.FC = () => {
   };
 
   const handleUpdate = async (updatedActivity: Activity) => {
-    await usuarioPeriodicidadesAtualizar(updatedActivity);
     fetchData();
     setSnackbarOpen(true);
   };

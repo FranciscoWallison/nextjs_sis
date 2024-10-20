@@ -23,6 +23,7 @@ import {
   usuarioPeriodicidadesAtualizar,
   usuarioPeriodicidadesAdicionar,
 } from "@/services/firebaseService";
+import HelpActivity from "@/utils/HelpActivity";
 
 interface EditActivityModalProps {
   open: boolean;
@@ -80,7 +81,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
         } else {
           // Se showNotApplicable for false e "Não aplicável" estiver na lista, remove
           if (notApplicableIndex !== -1) {
-            options = options.filter((option: any) => option !== "Não aplicável");
+            options = options.filter(
+              (option: any) => option !== "Não aplicável"
+            );
           }
         }
 
@@ -151,13 +154,16 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
         activityRegular, // Inclui o estado de "Feito" na atividade
       };
 
-      finalActivity.id_name = "hasCriado";
-      finalActivity.category_id = 200;
+      // formata data
+      // const date_format = await HelpActivity.formatDate(finalActivity.data);
+      // finalActivity.data = date_format;
 
       try {
         if (isEdit) {
           await usuarioPeriodicidadesAtualizar(finalActivity); // Atualiza a atividade existente
         } else {
+          finalActivity.id_name = "hasCriado";
+          finalActivity.category_id = 200;
           await usuarioPeriodicidadesAdicionar([finalActivity]); // Adiciona uma nova atividade
         }
 

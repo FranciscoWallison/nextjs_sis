@@ -1,15 +1,21 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import AuthStorage from "../utils/AuthStorage";
 import { interceptAuth } from "../services/authService";
-import { validaUsuarioForm, pegarUsuarioPeriodicidades } from "@/services/firebaseService";
+import {
+  validaUsuarioForm,
+  pegarUsuarioPeriodicidades,
+} from "@/services/firebaseService";
 
 const withAuth = (WrappedComponent: React.FC) => {
   const Wrapper: React.FC = (props) => {
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
       const checkAuth = async () => {
+        setIsLoading(true); // Ativa o estado de carregamento
+
         const user = AuthStorage.getUser();
 
         // Verifica se o usuário está autenticado antes de continuar
@@ -37,11 +43,18 @@ const withAuth = (WrappedComponent: React.FC) => {
         // Redireciona para o dashboard se o caminho for a root "/"
         if (router.pathname === "/") {
           router.replace("/Dashboard");
+          return;
         }
+
+        setIsLoading(false); // Desativa o estado de carregamento após todas as validações
       };
 
       checkAuth();
-    }, [router.pathname]); // Verifica a cada mudança de rota
+    }, [router]);
+
+    if (isLoading) {
+      return <div></div>; // Pode customizar uma tela de carregamento ou spinner
+    }
 
     return <WrappedComponent {...props} />;
   };

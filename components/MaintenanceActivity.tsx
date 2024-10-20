@@ -1,12 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Button,
-  Modal,
-} from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, Typography, Box, Button, Modal } from "@mui/material";
 import { useRouter } from "next/router";
 import { Activity, fetchBlocks } from "@/services/firebaseService";
 import ActivityStatus from "@/components/layout/ActivityStatus";
@@ -29,9 +22,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 }) => {
   const [removeOpen, setRemoveOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
-    null
-  );
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
 
@@ -67,6 +58,12 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
       onRemove(activity.id);
     }
     handleRemoveClose();
+  };
+
+  // Função para formatar a data para o formato dia/mês/ano
+  const formatDate = (dateString: string): string => {
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
   };
 
   return (
@@ -109,10 +106,10 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           {activity.data && (
             <>
               <Typography variant="body2">
-                Última manutenção: {activity.data || "Carregando..."}
+                Última manutenção: {formatDate(activity.data) || "Carregando..."}
               </Typography>
               <Typography variant="body2">
-                Próxima manutenção: {activity.data || "Carregando..."}
+                Próxima manutenção: {formatDate(activity.data) || "Carregando..."}
               </Typography>
             </>
           )}
