@@ -7,6 +7,7 @@ import {
   Button,
   Snackbar,
   Alert,
+  MenuItem,
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
@@ -28,10 +29,24 @@ const Periodicidades: React.FC = () => {
     responsavel: "",
     data: "",
   });
+  const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
+  const [responsaveis, setResponsaveis] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
     null
   );
+
+  const fetchResponsaveis = useCallback(async () => {
+    const response = await fetch("/items/items.json");
+    const result = await response.json();
+
+    // Extrai todos os responsáveis e remove duplicados
+    const responsaveisUnicos = [
+      ...new Set(result.map((item: { responsavel: string }) => item.responsavel)),
+    ];
+
+    setResponsaveis(responsaveisUnicos);
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -55,8 +70,9 @@ const Periodicidades: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    fetchResponsaveis();
     fetchData();
-  }, [fetchData]);
+  }, [fetchResponsaveis, fetchData]);
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -70,8 +86,6 @@ const Periodicidades: React.FC = () => {
 
   const handleRemove = async (activity: Activity) => {
     try {
-      // Sua lógica para remover a atividade
-      // Por exemplo, você pode chamar um serviço que remove a atividade no backend
       console.log("Atividade a ser removida:", activity);
     } catch (error) {
       console.error("Erro ao remover atividade:", error);
@@ -158,9 +172,11 @@ const Periodicidades: React.FC = () => {
       const matchTitle = activity.titulo
         .toLowerCase()
         .includes(filters.titulo.toLowerCase());
-      const matchResponsavel = activity.responsavel
-        .toLowerCase()
-        .includes(filters.responsavel.toLowerCase());
+
+      const matchResponsavel =
+        selectedResponsaveis.length === 0 ||
+        selectedResponsaveis.includes(activity.responsavel);
+
       const matchData = !filters.data || activity.data === filters.data;
 
       return matchTitle && matchResponsavel && matchData;
@@ -187,12 +203,23 @@ const Periodicidades: React.FC = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                select
                 fullWidth
-                label="Filtrar por Responsável"
+                label="Filtrar por Responsáveis"
                 name="responsavel"
-                value={filters.responsavel}
-                onChange={handleFilterChange}
-              />
+                SelectProps={{
+                  multiple: true,
+                  value: selectedResponsaveis,
+                  onChange: (event) =>
+                    setSelectedResponsaveis(event.target.value as string[]),
+                }}
+              >
+                {responsaveis.map((responsavel) => (
+                  <MenuItem key={responsavel} value={responsavel}>
+                    {responsavel}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
           </Grid>
 
