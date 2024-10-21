@@ -15,6 +15,15 @@ import HelpActivity from "@/utils/HelpActivity";
 interface PeriodicidadeResponse {
   questions: Activity[];
   buildingAge?: string;
+  buildingName?: string;
+  bairro?: string;
+  address?: string;
+  firstName?: string;
+  cidade?: string;
+  lastName?: string;
+  spda?: string | boolean; // Permitir que spda seja string ou boolean
+  spda_para_raios?: string | boolean;
+  uf?: string;
 }
 
 interface BuildingData {
@@ -31,7 +40,7 @@ interface BuildingData {
 }
 
 // Tipo combinado que unifica PeriodicidadeResponse e BuildingData
-type CombinedData = PeriodicidadeResponse & BuildingData;
+type CombinedData = PeriodicidadeResponse;
 
 // Função para calcular a próxima data com base na data de início e na periodicidade
 const calculateNextDate = (
@@ -106,9 +115,25 @@ export const getStatus = async (
   // Verifica se o usuário existe e se os dados do usuário estão disponíveis
   let responseP: PeriodicidadeResponse | null = null;
 
-  if (user?.data_user && 'questions' in user.data_user) {
-    // Verifica se user.data_user contém a propriedade questions
-    responseP = user.data_user as PeriodicidadeResponse;
+  if (user?.data_user && "questions" in user.data_user) {
+    // Converte `user.data_user` para `PeriodicidadeResponse`, convertendo booleanos para strings quando necessário
+    const dataUser = user.data_user as unknown as Record<string, unknown>;
+
+    responseP = {
+      ...dataUser,
+      spda:
+        typeof dataUser.spda === "boolean"
+          ? dataUser.spda
+            ? "true"
+            : "false"
+          : dataUser.spda,
+      spda_para_raios:
+        typeof dataUser.spda_para_raios === "boolean"
+          ? dataUser.spda_para_raios
+            ? "true"
+            : "false"
+          : dataUser.spda_para_raios,
+    } as PeriodicidadeResponse;
   }
 
   if (!responseP) {
@@ -120,14 +145,40 @@ export const getStatus = async (
       return { status: "Dados do usuário não encontrados", dueDate: null };
     }
   }
-
   // Verifica a idade do edifício e combina dados do edifício se necessário
-  const combinedData: CombinedData = {
-    ...responseP,
-    buildingAge: responseP.buildingAge || "2020-01-01", // Ajuste se necessário
+  const buildingData: BuildingData = {
+    buildingAge: responseP?.buildingAge || "2020-01-01",
+    buildingName: responseP?.buildingName || "Nome Padrão",
+    bairro: responseP?.bairro || "Bairro Padrão",
+    address: responseP?.address || "Endereço Padrão",
+    firstName: responseP?.firstName || "Primeiro Nome",
+    lastName: responseP?.lastName || "Último Nome",
+    cidade: responseP?.cidade || "Cidade Padrão",
+    spda:
+      typeof responseP.spda === "boolean"
+        ? responseP.spda
+          ? "true"
+          : "false"
+        : responseP.spda || "SPDA Padrão",
+    spda_para_raios:
+      typeof responseP.spda_para_raios === "boolean"
+        ? responseP.spda_para_raios
+          ? "true"
+          : "false"
+        : responseP.spda_para_raios || "SPDA para Raios Padrão",
+    uf: responseP?.uf || "UF Padrão",
   };
 
-  const buildingDeliveryDate = parseISO(combinedData.buildingAge);
+  // Combina responseP com os dados do edifício
+  const combinedData: CombinedData = {
+    ...responseP,
+    ...buildingData, // Adiciona ou sobrescreve com os dados do edifício
+  };
+
+  const buildingDeliveryDate = combinedData.buildingAge
+    ? parseISO(combinedData.buildingAge)
+    : new Date("2020-01-01"); // Define uma data padrão caso buildingAge seja undefined
+
   const today = new Date();
 
   const buildingAge = isValid(buildingDeliveryDate)

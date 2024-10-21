@@ -29,7 +29,9 @@ const Periodicidades: React.FC = () => {
     responsavel: "",
     data: "",
   });
-  const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
+  const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>(
+    []
+  );
   const [responsaveis, setResponsaveis] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
@@ -41,9 +43,9 @@ const Periodicidades: React.FC = () => {
     const result = await response.json();
 
     // Extrai todos os responsáveis e remove duplicados
-    const responsaveisUnicos = [
-      ...new Set(result.map((item: { responsavel: string }) => item.responsavel)),
-    ];
+    const responsaveisUnicos: string[] = Array.from(
+      new Set(result.map((item: { responsavel: string }) => item.responsavel))
+    );
 
     setResponsaveis(responsaveisUnicos);
   }, []);
