@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import InputMask from "react-input-mask";
 import {
   Container,
   Typography,
@@ -14,7 +15,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
-  SelectChangeEvent 
+  SelectChangeEvent,
 } from "@mui/material";
 import MaintenanceCategory from "../components/MaintenanceCategory";
 import withAuth from "../hoc/withAuth";
@@ -26,20 +27,30 @@ import {
   fetchBlockById,
 } from "@/services/firebaseService";
 import HelpQuestions from "@/utils/HelpQuestions";
-import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
+import { getStatus } from "@/utils/statusHelper";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import do LocalizationProvider
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Adaptador para Day.js
+import dayjs, { Dayjs } from "dayjs"; // Import para trabalhar com datas
+interface Bloco {
+  id: string;
+  name: string;
+}
 
 const Manutencoes: React.FC = () => {
   const [data, setData] = useState<Activity[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]); // Novo estado para armazenar as atividades filtradas
   const [loading, setLoading] = useState<boolean>(true);
   const [titleUpdate, setTitleUpdate] = useState<string>("Última Manutenção");
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+
   const [filters, setFilters] = useState({
     titulo: "",
     responsavel: "",
-    data: "",
-    blocos: [] as string[], // Novo estado para blocos selecionados
+    data: null as Dayjs | null, // Use Dayjs como tipo para a data
+    blocos: [] as string[],
   });
-  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Estado para armazenar blocos carregados
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
   const [statusFilters, setStatusFilters] = useState({
     regular: false,
     aVencer: false,
@@ -56,7 +67,7 @@ const Manutencoes: React.FC = () => {
     }
 
     const activitiesWithBlocks = await Promise.all(
-      responseP.questions.map(async (activity) => {
+      responseP.questions.map(async (activity: Activity) => {
         if (activity.blocoIDs && activity.blocoIDs.length > 0) {
           try {
             const blocosPromises = activity.blocoIDs.map((blocoID) =>
@@ -70,7 +81,7 @@ const Manutencoes: React.FC = () => {
               return {
                 ...activity,
                 blocos: blocos.map((bloco, index) => ({
-                  id: `generated-id-${index}`, // Gera um id se não existir
+                  id: `generated-id-${index}`,
                   name: bloco.name,
                 })),
               };
@@ -91,17 +102,16 @@ const Manutencoes: React.FC = () => {
     setData(sortedData);
     setLoading(false);
 
-    // Carregar blocos únicos para o filtro
     const uniqueBlocks = Array.from(
       new Map(
-        activitiesWithBlocks.flatMap((activity) => {
-          if ("blocos" in activity) {
-            return activity.blocos?.map((bloco) => [bloco.id, bloco]); // Cria um array de pares [id, bloco]
+        activitiesWithBlocks.flatMap((activity: Activity) => {
+          if (Array.isArray(activity.blocos)) {
+            return activity.blocos.map((bloco) => [bloco.id, bloco]);
           }
           return [];
         })
-      ).values() // Retorna apenas os blocos (sem os IDs) como valores únicos
-    );    
+      ).values()
+    ).map((bloco) => bloco as Bloco); // Converta `bloco` explicitamente para o tipo `Bloco`
 
     setBlocks(uniqueBlocks);
   }, []);
@@ -109,6 +119,16 @@ const Manutencoes: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // UseEffect para aplicar os filtros e atualizar as atividades filtradas
+  useEffect(() => {
+    const filterData = async () => {
+      const filteredData = await applyFilters(data);
+      setFilteredActivities(filteredData); // Armazena o resultado das atividades filtradas
+    };
+
+    filterData();
+  }, [data, filters, statusFilters]);
 
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
@@ -146,7 +166,6 @@ const Manutencoes: React.FC = () => {
   };
 
   const handleUpdate = async (updatedActivity: Activity) => {
-    await usuarioPeriodicidadesAtualizar(updatedActivity);
     fetchData();
     setSnackbarOpen(true);
   };
@@ -176,6 +195,13 @@ const Manutencoes: React.FC = () => {
     });
   };
 
+  const handleDateChange = (newDate: Dayjs | null) => {
+    setFilters({
+      ...filters,
+      data: newDate,
+    });
+  };
+
   const handleBlockFilterChange = (event: SelectChangeEvent<string[]>) => {
     setFilters({
       ...filters,
@@ -190,178 +216,187 @@ const Manutencoes: React.FC = () => {
     }));
   };
 
-  const applyFilters = (activities: Activity[]): Activity[] => {
-    return activities.filter((activity) => {
-      const matchTitle = activity.titulo
-        .toLowerCase()
-        .includes(filters.titulo.toLowerCase());
-      const matchResponsavel = activity.responsavel
-        .toLowerCase()
-        .includes(filters.responsavel.toLowerCase());
-      const matchData =
-        !filters.data ||
-        (activity.data && activity.data.includes(filters.data));
+  const applyFilters = async (activities: Activity[]): Promise<Activity[]> => {
+    const filteredActivities = await Promise.all(
+      activities.map(async (activity) => {
+        const dataStatus = await getStatus(activity);
 
-      const dataStatus = getStatus(activity);
+        const matchTitle = activity.titulo
+          .toLowerCase()
+          .includes(filters.titulo.toLowerCase());
+        const matchResponsavel = activity.responsavel
+          .toLowerCase()
+          .includes(filters.responsavel.toLowerCase());
+        const matchData =
+          !filters.data ||
+          (activity.data && dayjs(activity.data).isSame(filters.data, "day")); // Verifica se a data da atividade coincide com a data filtrada
 
-      const matchStatus =
-        (statusFilters.regular && dataStatus.status === "Regular") ||
-        (statusFilters.aVencer && dataStatus.status === "A vencer") ||
-        (statusFilters.vencido && dataStatus.status === "Vencido");
+        const matchStatus =
+          (statusFilters.regular && dataStatus.status === "Regular") ||
+          (statusFilters.aVencer && dataStatus.status === "A vencer") ||
+          (statusFilters.vencido && dataStatus.status === "Vencido");
 
-      // Filtrar por blocos selecionados
-      const matchBlock =
-        filters.blocos.length === 0 ||
-        (activity.blocoIDs &&
-          activity.blocoIDs.some((blocoID) =>
-            blocks.some(
-              (block) =>
-                block.id === blocoID && filters.blocos.includes(block.name)
-            )
-          ));
+        const matchBlock =
+          filters.blocos.length === 0 ||
+          (activity.blocoIDs &&
+            activity.blocoIDs.some((blocoID) =>
+              blocks.some(
+                (block) =>
+                  block.id === blocoID && filters.blocos.includes(block.name)
+              )
+            ));
 
-      return (
-        matchTitle &&
-        matchResponsavel &&
-        matchData &&
-        matchBlock &&
-        ((!statusFilters.regular &&
-          !statusFilters.aVencer &&
-          !statusFilters.vencido) ||
-          matchStatus)
-      );
-    });
+        return (
+          matchTitle &&
+          matchResponsavel &&
+          matchData &&
+          matchBlock &&
+          ((!statusFilters.regular &&
+            !statusFilters.aVencer &&
+            !statusFilters.vencido) ||
+            matchStatus)
+        );
+      })
+    );
+
+    return activities.filter((_, index) => filteredActivities[index]);
   };
 
   const progress = calculateProgress();
 
   return (
-    <>
-      {loading ? (
-        <Container>
-          <CircularProgress />
-        </Container>
-      ) : (
-        <>
-          <Box sx={{ width: "100%", mb: 2 }}>
-            <LinearProgress variant="determinate" value={progress} />
-            <Typography variant="body2" color="text.secondary">{`${Math.round(
-              progress
-            )}% completado`}</Typography>
-          </Box>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <>
+        {loading ? (
+          <Container>
+            <CircularProgress />
+          </Container>
+        ) : (
+          <>
+            <Box sx={{ width: "100%", mb: 2 }}>
+              <LinearProgress variant="determinate" value={progress} />
+              <Typography variant="body2" color="text.secondary">{`${Math.round(
+                progress
+              )}% completado`}</Typography>
+            </Box>
 
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Filtrar por Título"
-                name="titulo"
-                value={filters.titulo}
-                onChange={handleFilterChange}
-              />
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Título"
+                  name="titulo"
+                  value={filters.titulo}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Filtrar por Responsável"
+                  name="responsavel"
+                  value={filters.responsavel}
+                  onChange={handleFilterChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <DatePicker
+                  sx={{ width: "100%" }}
+                  label="Filtrar por Data"
+                  value={filters.data}
+                  onChange={handleDateChange}
+                  format="DD/MM/YYYY" // Novo formato desejado
+                  slotProps={{
+                    textField: { fullWidth: true }, // Define largura total para o TextField
+                  }}
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Filtrar por Responsável"
-                name="responsavel"
-                value={filters.responsavel}
-                onChange={handleFilterChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Filtrar por Data"
-                name="data"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={filters.data}
-                onChange={handleFilterChange}
-              />
-            </Grid>
-            <Grid item xs={12} sm={12}>
-              {blocks.length > 0 && (
-                <FormControl fullWidth>
-                  <InputLabel>Filtrar por Bloco</InputLabel>
-                  <Select
-                    multiple
-                    value={filters.blocos}
-                    onChange={handleBlockFilterChange} // Função corrigida
-                    renderValue={(selected) =>
-                      (selected as string[]).join(", ")
-                    } // Casting para string[]
-                  >
-                    {blocks.map((block) => (
-                      <MenuItem key={block.id} value={block.name}>
-                        {block.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            </Grid>
-          </Grid>
 
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth={true}
-                variant={statusFilters.regular ? "contained" : "outlined"}
-                color="success"
-                onClick={() => handleStatusFilterChange("regular")}
-              >
-                Regular
-              </Button>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={12}>
+                {blocks.length > 0 && (
+                  <FormControl fullWidth>
+                    <InputLabel>Filtrar por Bloco</InputLabel>
+                    <Select
+                      multiple
+                      value={filters.blocos}
+                      onChange={handleBlockFilterChange}
+                      renderValue={(selected) =>
+                        (selected as string[]).join(", ")
+                      }
+                    >
+                      {blocks.map((block) => (
+                        <MenuItem key={block.id} value={block.name}>
+                          {block.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth={true}
-                variant={statusFilters.aVencer ? "contained" : "outlined"}
-                color="warning"
-                onClick={() => handleStatusFilterChange("aVencer")}
-              >
-                A vencer
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth={true}
-                variant={statusFilters.vencido ? "contained" : "outlined"}
-                color="error"
-                onClick={() => handleStatusFilterChange("vencido")}
-              >
-                Vencido
-              </Button>
-            </Grid>
-          </Grid>
 
-          <MaintenanceCategory
-            category="Manutenção"
-            activities={applyFilters(data)}
-            onUpdate={handleUpdate}
-            onRemove={handleRemove}
-            removeValid={true}
-            titleUpdate={titleUpdate}
-          />
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth={true}
+                  variant={statusFilters.regular ? "contained" : "outlined"}
+                  color="success"
+                  onClick={() => handleStatusFilterChange("regular")}
+                >
+                  Regular
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth={true}
+                  variant={statusFilters.aVencer ? "contained" : "outlined"}
+                  color="warning"
+                  onClick={() => handleStatusFilterChange("aVencer")}
+                >
+                  A vencer
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button
+                  fullWidth={true}
+                  variant={statusFilters.vencido ? "contained" : "outlined"}
+                  color="error"
+                  onClick={() => handleStatusFilterChange("vencido")}
+                >
+                  Vencido
+                </Button>
+              </Grid>
+            </Grid>
 
-          <Snackbar
-            open={snackbarOpen}
-            autoHideDuration={6000}
-            onClose={handleSnackbarClose}
-            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-          >
-            <Alert
+            <MaintenanceCategory
+              category="Manutenção"
+              activities={filteredActivities} // Passa as atividades filtradas
+              onUpdate={handleUpdate}
+              onRemove={handleRemove}
+              removeValid={true}
+              titleUpdate={titleUpdate}
+            />
+
+            <Snackbar
+              open={snackbarOpen}
+              autoHideDuration={6000}
               onClose={handleSnackbarClose}
-              severity="success"
-              sx={{ width: "100%" }}
+              anchorOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              Atividade atualizada com sucesso!
-            </Alert>
-          </Snackbar>
-        </>
-      )}
-    </>
+              <Alert
+                onClose={handleSnackbarClose}
+                severity="success"
+                sx={{ width: "100%" }}
+              >
+                Atividade atualizada com sucesso!
+              </Alert>
+            </Snackbar>
+          </>
+        )}
+      </>
+    </LocalizationProvider>
   );
 };
 

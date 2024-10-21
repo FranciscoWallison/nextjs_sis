@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Box, Button, Container, Grid } from "@mui/material";
-import Manutencoes from "../components/Manutencoes";
-import Periodicidades from "../components/Periodicidades";
-import MainLayout from "../components/layout/MainLayout";
-import withAuth from "../hoc/withAuth";
+import Manutencoes from "@/components/Manutencoes";
+import Periodicidades from "@/components/Periodicidades";
+import MainLayout from "@/components/layout/MainLayout";
+import withAuth from "@/hoc/withAuth";
 
 const ManutencoesDashboard: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<"manutencoes" | "periodicidades">("manutencoes");

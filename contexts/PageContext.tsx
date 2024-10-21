@@ -33,6 +33,7 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
     { title: "Manutenções", url: "/ManutencoesDashboard", icon: EngineeringIcon },
     { title: "Calendário", url: "/calendario", icon: CalendarMonthIcon },
     { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
+    // { title: "Activity", url: "/activity", icon: DashboardIcon },
     { title: "Gestão de Blocos", url: "/gestaoblocos", icon: ViewModuleIcon }, // Adicionado aqui
   ]);
 

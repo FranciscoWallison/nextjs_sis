@@ -1,20 +1,74 @@
-import { add, differenceInDays, isValid, parseISO } from "date-fns";
+import {
+  add,
+  differenceInDays,
+  isValid,
+  parseISO,
+  differenceInYears,
+} from "date-fns";
 import { Activity } from "@/services/firebaseService";
+import AuthStorage from "@/utils/AuthStorage";
+import { FirebaseUser } from "@/interface/FirebaseUser";
+import { pegarUsuarioPeriodicidades } from "@/services/firebaseService";
+import HelpActivity from "@/utils/HelpActivity";
+
+// Defina as interfaces
+interface PeriodicidadeResponse {
+  questions: Activity[];
+  buildingAge?: string;
+}
+
+interface BuildingData {
+  buildingAge: string;
+  buildingName: string;
+  bairro: string;
+  address: string;
+  firstName: string;
+  cidade: string;
+  lastName: string;
+  spda: string;
+  spda_para_raios: string;
+  uf: string;
+}
+
+// Tipo combinado que unifica PeriodicidadeResponse e BuildingData
+type CombinedData = PeriodicidadeResponse & BuildingData;
 
 // Função para calcular a próxima data com base na data de início e na periodicidade
-const calculateNextDate = (startDate: string, periodicity: string) => {
+const calculateNextDate = (
+  startDate: string,
+  periodicity: string,
+  buildingAge: number | null
+) => {
   if (startDate === "") {
     return null;
   }
+  const dateValid = HelpActivity.formatDateToISO(startDate);
 
-  const date = parseISO(startDate);
-  console.log('====================================');
-  console.log(startDate);
-  console.log('====================================');
+  const date = parseISO(dateValid);
+
   if (!isValid(date)) {
     return null; // Retorna null se a data não for válida
   }
 
+  // Caso de periodicidade dependente da idade do edifício
+  if (
+    periodicity.includes(
+      "A cada 5 anos para edifícios de até 10 anos de entrega, A cada 3 anos para"
+    )
+  ) {
+    if (buildingAge !== null) {
+      if (buildingAge <= 10) {
+        return add(date, { years: 5 }); // Retorna a data após 5 anos
+      } else if (buildingAge >= 11 && buildingAge <= 30) {
+        return add(date, { years: 3 }); // Retorna a data após 3 anos
+      } else if (buildingAge > 30) {
+        return add(date, { years: 1 }); // Retorna a data após 1 ano
+      }
+    }
+    return null;
+  }
+
+  // Outras periodicidades
   switch (periodicity) {
     case "A cada semana":
       return add(date, { weeks: 1 });
@@ -44,19 +98,57 @@ const calculateNextDate = (startDate: string, periodicity: string) => {
 };
 
 // Função para determinar o status e a data de vencimento
-export const getStatus = (
+export const getStatus = async (
   activity: Activity
-): { status: string; dueDate: Date | null } => {
+): Promise<{ status: string; dueDate: Date | null }> => {
+  const user: FirebaseUser | null = AuthStorage.getUser();
+
+  // Verifica se o usuário existe e se os dados do usuário estão disponíveis
+  let responseP: PeriodicidadeResponse | null = null;
+
+  if (user?.data_user && 'questions' in user.data_user) {
+    // Verifica se user.data_user contém a propriedade questions
+    responseP = user.data_user as PeriodicidadeResponse;
+  }
+
+  if (!responseP) {
+    // Se responseP for null, tenta buscar os dados do usuário com o uid
+    responseP = await pegarUsuarioPeriodicidades(user?.uid);
+
+    // Se ainda assim não encontrar os dados, retorna um status apropriado
+    if (!responseP) {
+      return { status: "Dados do usuário não encontrados", dueDate: null };
+    }
+  }
+
+  // Verifica a idade do edifício e combina dados do edifício se necessário
+  const combinedData: CombinedData = {
+    ...responseP,
+    buildingAge: responseP.buildingAge || "2020-01-01", // Ajuste se necessário
+  };
+
+  const buildingDeliveryDate = parseISO(combinedData.buildingAge);
+  const today = new Date();
+
+  const buildingAge = isValid(buildingDeliveryDate)
+    ? differenceInYears(today, buildingDeliveryDate)
+    : null;
+
   if (activity.activityRegular && activity.Periodicidade === "Não aplicável") {
     return { status: "Regular", dueDate: null };
-  } if (!activity.activityRegular && activity.Periodicidade === "Não aplicável"){
+  }
+
+  if (!activity.activityRegular && activity.Periodicidade === "Não aplicável") {
     return { status: "Não Regularizado", dueDate: null };
-  } // Lida com data indefinida
+  }
 
-  if (!activity.data) return { status: "Data não cadastrada", dueDate: null }; // Lida com data indefinida
+  if (!activity.data) return { status: "Data não cadastrada", dueDate: null };
 
-  const today = new Date();
-  const nextDate = calculateNextDate(activity.data, activity.Periodicidade);
+  const nextDate = calculateNextDate(
+    activity.data,
+    activity.Periodicidade,
+    buildingAge
+  );
 
   if (!nextDate || !isValid(nextDate))
     return { status: "Data não cadastrada", dueDate: null };
@@ -66,5 +158,6 @@ export const getStatus = (
   if (daysDifference > 7) return { status: "Regular", dueDate: nextDate };
   if (daysDifference <= 7 && daysDifference >= 0)
     return { status: "A vencer", dueDate: nextDate };
+
   return { status: "Vencido", dueDate: nextDate };
 };

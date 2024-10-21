@@ -31,7 +31,7 @@ const Validador: React.FC = () => {
       
       {/* Exibe o texto de carregamento com animação de "..." */}
       <Typography variant="h6" component="div">
-        Carregando{loadingDots}
+        {loadingDots}
       </Typography>
     </Box>
   );

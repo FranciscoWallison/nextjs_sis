@@ -31,12 +31,17 @@ class AuthStorage {
 
   // TODO:: MONTAR INTERFACE
   static setUser(user: object): void {
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    }
   }
 
   static getUser(): FirebaseUser | null {
-    const user = localStorage.getItem(this.USER_KEY);
-    return user ? JSON.parse(user) : null;
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem(this.USER_KEY);
+      return user ? JSON.parse(user) : null;
+    }
+    return null;
   }
 
   static removeUser(): void {

@@ -8,58 +8,47 @@
         "descricao": "A cada 15 dias"
     },
     {
+        "id": 12,
+        "descricao": "A cada 6 meses"
+    },
+    {
         "id": 2,
-        "descricao": "A cada mês"
+        "descricao": "A cada 1 mês"
     },
     {
         "id": 3,
-        "descricao": "A cada dois meses"
+        "descricao": "A cada 2 meses"
     },
     {
         "id": 4,
-        "descricao": "A cada três meses"
+        "descricao": "A cada 3 meses"
     },
     {
         "id": 5,
-        "descricao": "A cada ano"
+        "descricao": "A cada 1 ano"
+    },
+    {
+        "id": 9,
+        "descricao": "A cada 2 anos"
     },
     {
         "id": 6,
         "descricao": "A cada 3 anos"
     },
     {
-        "id": 7,
-        "descricao": "Conforme indicação dos fornecedores"
-    },
-    {
-        "id": 8,
-        "descricao": "A cada seis meses"
-    },
-    {
-        "id": 9,
-        "descricao": "A cada dois anos"
-    },
-    {
-        "id": 10,
-        "descricao": "A cada três anos"
+        "id": 13,
+        "descricao": "A cada 5 anos"
     },
     {
         "id": 11,
         "descricao": "A cada 5 anos para edifícios de até 10 anos de entrega, A cada 3 anos para edifícios entre 11 a 30 anos de entrega, A cada ano para edifícios com mais de 30 anos de entrega"
     },
     {
-        "id": 12,
-        "descricao": "A cada 6 meses"
+        "id": 7,
+        "descricao": "Conforme indicação dos fornecedores"
     },
     {
-        "id": 13,
-        "descricao": "A cada 5 anos"
-    },
-    {
-        "id": 14,
-        "descricao": "A cada 1 ano"
-    },    {
         "id": 64,
         "descricao": "Não aplicável"
-    } 
+    }
 ]

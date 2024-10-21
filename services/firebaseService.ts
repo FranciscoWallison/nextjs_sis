@@ -59,19 +59,33 @@ export const CriarUsuario = async (data: LoginData): Promise<boolean> => {
 export const Login = async (data: LoginData): Promise<boolean> => {
   const auth = getAuth(app);
 
-  return await signInWithEmailAndPassword(auth, data.email, data.password)
-    .then((userCredential) => {
-      // Signed in
-      const user = userCredential.user;
-      AuthStorage.setUser(user);
-      return true;
-    })
-    .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
+  try {
+    // Faz o login do usuário
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      data.email,
+      data.password
+    );
 
-      return false;
-    });
+    const user = userCredential.user;
+
+    // Obtenha os dados de periodicidade do usuário
+    const dataUser = await pegarUsuarioPeriodicidades(user.uid);
+
+    // Adicione o campo data_user ao objeto user
+    const userWithFullData = {
+      ...user, // Mantém os dados existentes
+      data_user: dataUser, // Adiciona o campo data_user
+    };
+
+    // Armazena o objeto completo no AuthStorage (localStorage)
+    AuthStorage.setUser(userWithFullData);
+
+    return true;
+  } catch (error) {
+    console.error("Erro no login:", error);
+    return false;
+  }
 };
 
 export const ObservadorEstado = async (): Promise<boolean> => {
@@ -137,6 +151,10 @@ export interface Activity {
   category_id?: number;
   blocoIDs?: string[]; // Adicionando blocoIDs ao tipo, permitindo que seja opcional
   activityRegular?: boolean; // Adicionando activityRegular como opcional
+  status?: string;
+  dueDate?: string;
+  updatedFields?: any;
+  blocos?: any[];
 }
 
 export interface CategoryData {
@@ -156,33 +174,47 @@ export interface CategoryData {
 }
 
 export interface PeriodicidadeResponse {
-  questions: CategoryData[];
+  userId: string; // O ID do usuário associado a esta resposta
+  questions: Activity[]; // Array de atividades do tipo 'Activity'
+  lastUpdate?: string; // Opcional: Data da última atualização
 }
 
-export const pegarUsuarioPeriodicidades =
-  async (): Promise<PeriodicidadeResponse | null> => {
-    try {
+export const pegarUsuarioPeriodicidades = async (
+  uid?: string // uid é opcional
+): Promise<PeriodicidadeResponse | null> => {
+  try {
+    // Se o uid não for passado como parâmetro, obtém o usuário do AuthStorage
+    if (!uid) {
       const user: FirebaseUser | null = AuthStorage.getUser();
       if (!user || !user.uid) {
-        // throw new Error("User not authenticated");
-        return null;
+        return null; // Se não encontrar o usuário ou uid, retorna null
       }
-      const db = getFirestore(app);
-      const docRef = doc(db, "cliente", user.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        // throw new Error("No such document!");
-        return null;
-      }
-
-      const data = docSnap.data() as PeriodicidadeResponse;
-      return data;
-    } catch (error) {
-      console.error("pegarUsuarioPeriodicidades error", error);
-      throw error;
+      uid = user.uid; // Usa o uid do usuário autenticado
     }
-  };
+
+    // Conexão com o Firestore
+    const db = getFirestore(app);
+    const docRef = doc(db, "cliente", uid); // Usa o uid fornecido ou do AuthStorage
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return null; // Se o documento não existir, retorna null
+    }
+
+    const data = docSnap.data() as PeriodicidadeResponse;
+    return data;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("permissions")) {
+        return null;
+      }
+      console.error("pegarUsuarioPeriodicidades error", error);
+    } else {
+      console.error("Erro desconhecido", error);
+    }
+    throw error;
+  }
+};
 
 export const usuarioPeriodicidadesAtualizar = async (
   updatedActivity: Activity
@@ -193,22 +225,32 @@ export const usuarioPeriodicidadesAtualizar = async (
     if (data === null) {
       return false;
     }
-    console.log("====================================");
-    console.log(updatedActivity);
-    console.log("====================================");
-    // Atualizar a atividade correspondente
-    const updatedData = data.questions.map((activity: Activity) =>
-      activity.id === updatedActivity.id
-        ? { ...activity, ...updatedActivity } // Atualiza a atividade correspondente
-        : activity
+
+    // Verificar se a atividade já existe na lista
+    const activityExists = data.questions.some(
+      (activity: Activity) => activity.id === updatedActivity.id
     );
+
+    let updatedData;
+
+    if (activityExists) {
+      // Se a atividade já existe, atualiza ela
+      updatedData = data.questions.map((activity: Activity) =>
+        activity.id === updatedActivity.id
+          ? { ...activity, ...updatedActivity } // Atualiza a atividade correspondente
+          : activity
+      );
+    } else {
+      // Se a atividade não existe, adiciona ela à lista
+      updatedData = [...data.questions, updatedActivity];
+    }
 
     // Substituir as atividades no objeto data
     data.questions = updatedData;
 
     // Salvar os dados atualizados no servidor
     await salvarNovo(data);
-    await registrarHistoricoAlteracao(updatedActivity);
+    await registrarHistoricoManutencao(updatedActivity);
 
     return true;
   } catch (error) {
@@ -221,33 +263,52 @@ export const usuarioPeriodicidadesAdicionar = async (
   updatedActivity: any
 ): Promise<boolean> => {
   try {
+    // Obter as periodicidades do usuário
     const data = await pegarUsuarioPeriodicidades();
 
     if (data === null) {
       return false;
     }
 
+    // Atividades existentes
     const questions = data.questions;
 
-    // Filtra os objetos que estão em updatedActivity, mas não em questions
-    const idsInQuestions = new Set(questions.map((q) => q.id));    
-    const uniqueInUpdatedActivity = updatedActivity.filter(
-      (activity: any) => !idsInQuestions.has(activity.id)
-    );
+    // Cria um conjunto de IDs para verificar quais atividades já existem
+    const idsInQuestions = new Set(questions.map((q) => q.id));
 
-    console.log('====================================');
-    console.log(uniqueInUpdatedActivity, updatedActivity, data.questions);
-    console.log('====================================');
+    // Encontra o maior ID existente em 'questions'
+    const maxId = Math.max(...questions.map((q) => q.id), 0); // Garante que o mínimo seja 0 se não houver atividades
 
-    data.questions = updatedActivity;
+    // Filtra as atividades que não estão em 'questions' e gera novo ID se id === 0
+    const uniqueInUpdatedActivity = updatedActivity
+      .map((activity: any) => {
+        if (activity.id === 0) {
+          // Se o id for 0, gera um novo id baseado no maior ID existente
+          return { ...activity, id: maxId + 1 };
+        }
+        return activity;
+      })
+      .filter((activity: any) => !idsInQuestions.has(activity.id));
 
+    if (uniqueInUpdatedActivity.length === 0) {
+      console.log("Nenhuma nova atividade para adicionar.");
+      return false; // Retorna falso se não houver novas atividades
+    }
+
+    // Adiciona as novas atividades ao array 'questions'
+    data.questions = [...questions, ...uniqueInUpdatedActivity];
+
+    console.log("Adicionando atividades:", uniqueInUpdatedActivity);
+
+    // Salvar os dados atualizados
     await salvarNovo(data);
-    await registrarHistoricoAlteracao(uniqueInUpdatedActivity[0]);
+
+    // Registrar o histórico da primeira nova atividade (se houver mais de uma)
+    await registrarHistoricoManutencao(uniqueInUpdatedActivity[0]);
+
     return true;
   } catch (error) {
-    console.log("====================================");
-    console.log("usuarioPeriodicidadesAdicionar", error);
-    console.log("====================================");
+    console.log("Erro em usuarioPeriodicidadesAdicionar:", error);
     return false;
   }
 };
@@ -272,7 +333,7 @@ export const salvarNovo = async (data: any): Promise<boolean> => {
 
     return await validaUsuarioForm();
   } catch (error) {
-    console.log("============salvarNovo================");
+    console.log("============salvarNovo ERRO================");
     console.error(error);
     console.log("====================================");
   }
@@ -405,10 +466,9 @@ export const fetchBlockById = async (
 };
 
 // Função para registrar o histórico de alteração no Firestore, vinculando ao usuário autenticado
-const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
+const registrarHistoricoManutencao = async (updatedActivity: Activity) => {
   const user: FirebaseUser | null = AuthStorage.getUser();
   if (!user || !user.uid) {
-    // Usuário não autenticado
     console.error("Usuário não autenticado.");
     return null;
   }
@@ -417,15 +477,15 @@ const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
     const db = getFirestore(app);
     const historicoCollectionRef = collection(db, "historico_manutencao");
 
-    // Dados para o log de alteração
     const historicoData = {
       activityId: updatedActivity.id,
       updatedFields: updatedActivity, // Salvar todos os campos atualizados
-      timestamp: Timestamp.now(), // Registrar a data/hora da alteração
+      timestamp: Timestamp.now(),
       userId: user.uid, // Adicionar o ID do usuário que fez a alteração
     };
 
     await addDoc(historicoCollectionRef, historicoData);
+    console.log("Histórico registrado com sucesso.");
   } catch (error) {
     console.error("Erro ao registrar histórico de alteração:", error);
   }
@@ -434,21 +494,28 @@ const registrarHistoricoAlteracao = async (updatedActivity: Activity) => {
 // Função para buscar o histórico de alterações de uma atividade específica, filtrado pelo usuário autenticado
 export const getActivityHistory = async (activityId: number) => {
   const user: FirebaseUser | null = AuthStorage.getUser();
+
   if (!user || !user.uid) {
-    // Usuário não autenticado
     console.error("Usuário não autenticado.");
     return [];
   }
+
+  if (!activityId) {
+    console.error("ID da atividade indefinido.");
+    return [];
+  }
+
+  console.log("activityId:", activityId);
+  console.log("user.userId:", user.uid);
 
   try {
     const db = getFirestore(app);
     const historicoCollectionRef = collection(db, "historico_manutencao");
 
-    // Consulta para buscar todas as alterações feitas na atividade especificada, ordenadas por timestamp, e filtradas pelo userId
     const q = query(
       historicoCollectionRef,
       where("activityId", "==", activityId),
-      where("userId", "==", user.uid), // Filtra pelo ID do usuário autenticado
+      where("userId", "==", user.uid),
       orderBy("timestamp", "desc")
     );
 
@@ -462,5 +529,83 @@ export const getActivityHistory = async (activityId: number) => {
   } catch (error) {
     console.error("Erro ao buscar histórico de atividade:", error);
     return [];
+  }
+};
+
+export const addActivity = async (newActivity: Activity): Promise<boolean> => {
+  try {
+    const user: FirebaseUser | null = AuthStorage.getUser();
+    if (!user || !user.uid) {
+      console.error("Usuário não autenticado.");
+      return false;
+    }
+
+    const db = getFirestore(app);
+    const activityRef = collection(db, "atividades");
+
+    // Adiciona a nova atividade ao Firestore
+    await addDoc(activityRef, {
+      ...newActivity,
+      userId: user.uid, // Relaciona a atividade ao usuário
+      createdAt: Timestamp.now(),
+    });
+
+    console.log("Atividade adicionada com sucesso.");
+    return true;
+  } catch (error) {
+    console.error("Erro ao adicionar atividade:", error);
+    return false;
+  }
+};
+
+export const updateActivity = async (
+  activityId: string | number,
+  updatedActivity: Activity
+): Promise<boolean> => {
+  try {
+    const user: FirebaseUser | null = AuthStorage.getUser();
+    if (!user || !user.uid) {
+      console.error("Usuário não autenticado.");
+      return false;
+    }
+
+    const db = getFirestore(app);
+    const activityRef = doc(db, "atividades", activityId.toString());
+
+    // Atualiza os campos da atividade no Firestore
+    await updateDoc(activityRef, {
+      ...updatedActivity,
+      updatedAt: Timestamp.now(), // Marca a data da última atualização
+    });
+
+    console.log("Atividade atualizada com sucesso.");
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar atividade:", error);
+    return false;
+  }
+};
+
+export const deleteActivity = async (
+  activityId: string | number
+): Promise<boolean> => {
+  try {
+    const user: FirebaseUser | null = AuthStorage.getUser();
+    if (!user || !user.uid) {
+      console.error("Usuário não autenticado.");
+      return false;
+    }
+
+    const db = getFirestore(app);
+    const activityRef = doc(db, "atividades", activityId.toString());
+
+    // Remove a atividade do Firestore
+    await deleteDoc(activityRef);
+
+    console.log("Atividade removida com sucesso.");
+    return true;
+  } catch (error) {
+    console.error("Erro ao remover atividade:", error);
+    return false;
   }
 };

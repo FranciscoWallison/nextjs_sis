@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Chip } from "@mui/material";
 import { getStatus } from "@/utils/statusHelper"; // Supondo que a função getStatus está no utils
+
 interface Activity {
   obrigatorio: string;
   Periodicidade: string;
@@ -14,13 +15,25 @@ interface Activity {
   atividade: string;
   titulo: string;
   id: number;
-  data?: string;  // Torna 'data' opcional
-  category_id?: number;  // Torna category_id opcional
+  data?: string; // Torna 'data' opcional
+  category_id?: number; // Torna category_id opcional
 }
 
 const ActivityStatus: React.FC<{ activity: Activity }> = ({ activity }) => {
+  const [dataStatus, setDataStatus] = useState<{ status: string; dueDate: Date | null }>({
+    status: "Carregando...",
+    dueDate: null,
+  });
 
-  const dataStatus = getStatus(activity);
+  useEffect(() => {
+    const fetchStatus = async () => {
+      const result = await getStatus(activity); // Aguarda a resolução da Promise
+      setDataStatus(result);
+    };
+
+    fetchStatus();
+  }, [activity]);
+
   const getColor = (status: string) => {
     switch (status) {
       case "Regular":

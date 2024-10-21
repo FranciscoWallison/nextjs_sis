@@ -101,18 +101,23 @@ const CalendarioManutencoes: React.FC = () => {
 
   useEffect(() => {
     if (data.length > 0) {
-      const calendarEvents = data.map((activity) => {
-        const statusInfo = getStatus(activity);
-        return {
-          title: `${activity.titulo} - ${statusInfo.status}`,
-          start: activity.data ? new Date(activity.data) : new Date(), // Verifica se "activity.data" está definido
-          end: activity.data ? new Date(activity.data) : new Date(), // Verifica se "activity.data" está definido
-          allDay: true,
-          status: statusInfo.status,
-        };
-      });
+      const fetchEvents = async () => {
+        const calendarEvents = await Promise.all(
+          data.map(async (activity) => {
+            const statusInfo = await getStatus(activity); // Use await to handle the Promise
+            return {
+              title: `${activity.titulo} - ${statusInfo.status}`,
+              start: activity.data ? new Date(activity.data) : new Date(), // Verifica se "activity.data" está definido
+              end: activity.data ? new Date(activity.data) : new Date(), // Verifica se "activity.data" está definido
+              allDay: true,
+              status: statusInfo.status,
+            };
+          })
+        );
+        setEvents(calendarEvents);
+      };
 
-      setEvents(calendarEvents);
+      fetchEvents(); // Call the async function
     }
   }, [data]);
 

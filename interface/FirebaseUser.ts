@@ -24,4 +24,21 @@ export interface FirebaseUser {
   lastLoginAt: string;
   apiKey: string;
   appName: string;
+  data_user: BuildingData;
+}
+
+interface BuildingData {
+  grupo_gerador_testes: boolean;
+  buildingName: string;
+  bairro: string;
+  address: string;
+  firstName: string;
+  cidade: string;
+  buildingAge: string; // Pode ser um Date se preferir
+  lastName: string;
+  cep: string;
+  spda: boolean;
+  grupo_gerador_verificacoes: boolean;
+  uf: string;
+  spda_para_raios: boolean;
 }
