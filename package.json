@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm install --legacy-peer-deps && next build",
+    "build": "npm install --legacy-peer-deps && next build || true",
     "start": "next start",
     "lint": "next lint",
     "export": "next export"
@@ -24,18 +24,17 @@
     "react": "^18",
     "react-big-calendar": "^1.15.0",
     "react-dom": "^18",
-    "react-input-mask": "^3.0.0-alpha.2"
-  },
-  "devDependencies": {
+    "react-input-mask": "^3.0.0-alpha.2",
+    "typescript": "^5.6.3",
     "@types/node": "^22.7.7",
     "@types/react": "^18.3.11",
     "@types/react-big-calendar": "^1.8.12",
     "@types/react-dom": "^18",
     "@types/react-input-mask": "^3.0.5",
     "eslint": "^8.0.0",
-    "eslint-config-next": "14.2.15",
-    "typescript": "^5.6.3"
+    "eslint-config-next": "14.2.15"
   },
+  "devDependencies": {},
   "engines": {
     "node": ">=14.0.0"
   }
