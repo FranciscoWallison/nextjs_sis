@@ -11,6 +11,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker"; // Import do DatePi
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import de LocalizationProvider
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Import do adaptador para Dayjs
 import dayjs, { Dayjs } from "dayjs"; // Utilizando dayjs para formatação de datas
+import "dayjs/locale/pt-br"; // Importa o idioma português para o dayjs
+dayjs.locale("pt-br"); // Define o idioma padrão como português
 import InputMask from "react-input-mask";
 import { FormContext } from "../contexts/FormContext";
 

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, Typography, Box, Button, Modal } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Button,
+  Modal,
+} from "@mui/material";
 import { useRouter } from "next/router";
 import { Activity, fetchBlocks } from "@/services/firebaseService";
 import ActivityStatus from "@/components/layout/ActivityStatus";
@@ -22,7 +29,9 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 }) => {
   const [removeOpen, setRemoveOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+    null
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
 
@@ -99,7 +108,11 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                     blocks.find((block) => block.id === blockId)?.name
                 )
                 .filter((name) => name)
-                .sort((a, b) => a?.localeCompare(b)) // Ordena blocos em ordem alfabética
+                .sort((a, b) => {
+                  if (!a) return -1;
+                  if (!b) return 1;
+                  return a.localeCompare(b);
+                })
                 .join(", ")}
             </Typography>
           )}
@@ -107,7 +120,8 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
           {activity.data && (
             <>
               <Typography variant="body2">
-                Última manutenção: {formatDate(activity.data) || "Carregando..."}
+                Última manutenção:{" "}
+                {formatDate(activity.data) || "Carregando..."}
               </Typography>
               <Typography variant="body2">
                 Próxima manutenção: {activity.dueDate}

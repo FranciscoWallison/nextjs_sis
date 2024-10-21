@@ -32,6 +32,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import do LocalizationProvider
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Adaptador para Day.js
 import dayjs, { Dayjs } from "dayjs"; // Import para trabalhar com datas
+import "dayjs/locale/pt-br"; // Importa o idioma português para o dayjs
+dayjs.locale("pt-br"); // Define o idioma padrão como português
 interface Bloco {
   id: string;
   name: string;
