@@ -8,7 +8,7 @@ import {
   Modal,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { Activity, fetchBlocks } from "@/services/firebaseService";
+import { Activity, fetchBlocks, fetchSuppliers } from "@/services/firebaseService"; // Importa a função fetchSuppliers
 import ActivityStatus from "@/components/layout/ActivityStatus";
 import EditActivityModal from "./EditActivityModal"; // Import do modal EditActivityModal
 
@@ -28,21 +28,23 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   titleUpdate,
 }) => {
   const [removeOpen, setRemoveOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
     null
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>([]); // Armazena os fornecedores
 
   const router = useRouter();
 
   useEffect(() => {
-    const loadBlocks = async () => {
+    const loadBlocksAndSuppliers = async () => {
       const fetchedBlocks = await fetchBlocks();
+      const fetchedSuppliers = await fetchSuppliers(); // Consulta os fornecedores
       setBlocks(fetchedBlocks || []);
+      setSuppliers(fetchedSuppliers || []);
     };
-    loadBlocks();
+    loadBlocksAndSuppliers();
   }, []);
 
   const handleOpenModal = (activity: Activity) => {
@@ -116,6 +118,24 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                 .join(", ")}
             </Typography>
           )}
+
+          {/* Exibição dos Fornecedores */}
+          {/* {console.log(activity.supplierIDs)}
+          {Array.isArray(activity.supplierIDs) &&
+            activity.supplierIDs.length > 0 && (
+              <Typography variant="body2">
+                <strong>Fornecedores:</strong>{" "}
+
+                {console.log(activity)}
+                {activity.supplierIDs
+                  .map((supplierId) =>
+                    suppliers.find((supplier) => supplier.id === supplierId)
+                      ?.nome
+                  )
+                  .filter((name) => name)
+                  .join(", ")}
+              </Typography>
+            )} */}
 
           {activity.data && (
             <>

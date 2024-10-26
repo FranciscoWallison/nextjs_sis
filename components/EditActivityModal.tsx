@@ -12,12 +12,12 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker"; // Import do DatePicker
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"; // Import de LocalizationProvider
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Import do adaptador para Dayjs
-import dayjs, { Dayjs } from "dayjs"; // Utilizando dayjs para formatação de datas
-import "dayjs/locale/pt-br"; // Importa o idioma português para o dayjs
-dayjs.locale("pt-br"); // Define o idioma padrão como português
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/pt-br";
+dayjs.locale("pt-br");
 
 import { SelectChangeEvent } from "@mui/material/Select";
 import {
@@ -25,8 +25,8 @@ import {
   fetchBlocks,
   usuarioPeriodicidadesAtualizar,
   usuarioPeriodicidadesAdicionar,
+  fetchSuppliers,
 } from "@/services/firebaseService";
-import HelpActivity from "@/utils/HelpActivity";
 import { useNotification } from "@/contexts/NotificationContext";
 
 interface EditActivityModalProps {
@@ -34,10 +34,9 @@ interface EditActivityModalProps {
   activity: Activity | null;
   onClose: () => void;
   onActivityUpdated?: () => void;
-  title?: string; // Título dinâmico opcional
-  isEdit?: boolean; // Indica se o modal está em modo de edição ou criação
-  showNotApplicable?: boolean; // Novo parâmetro: Se deve mostrar a opção "Não aplicável"
-  onSave?: (updatedActivity: Activity) => Promise<void>;
+  title?: string;
+  isEdit?: boolean;
+  showNotApplicable?: boolean;
   disabled?: boolean;
 }
 
@@ -46,156 +45,110 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   activity,
   onClose,
   onActivityUpdated,
-  title = "Atividade", // Título padrão
-  isEdit = false, // Indica se está editando ou criando uma nova atividade
-  showNotApplicable = false, // Novo parâmetro: controla a exibição de "Não aplicável"
-  onSave,
+  title = "Atividade",
+  isEdit = false,
+  showNotApplicable = false,
   disabled = false,
 }) => {
   const { fetchNotifications } = useNotification();
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>([]);
+  const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
   const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null); // Estado para a data selecionada
-  const [activityRegular, setActivityRegular] = useState<boolean>(false); // Estado para "Marcar como Feito"
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const [activityRegular, setActivityRegular] = useState<boolean>(false);
 
   useEffect(() => {
-    const loadBlocks = async () => {
+    const loadInitialData = async () => {
       const fetchedBlocks = await fetchBlocks();
+      const fetchedSuppliers = await fetchSuppliers();
       setBlocks(fetchedBlocks || []);
-    };
+      setSuppliers(fetchedSuppliers || []);
 
-    const fetchPeriodicityOptions = async () => {
-      try {
-        const response = await fetch("/periodicidades/periodicidade.json");
-        const result = await response.json();
-        let options = result.map(
-          (item: { descricao: string }) => item.descricao
-        );
+      const response = await fetch("/periodicidades/periodicidade.json");
+      const result = await response.json();
+      const options = result.map((item: { descricao: string }) => item.descricao);
+      if (showNotApplicable && !options.includes("Não aplicável")) {
+        options.unshift("Não aplicável");
+      }
+      setPeriodicityOptions(options);
 
-        // Verifica se "Não aplicável" já está presente
-        const notApplicableIndex = options.indexOf("Não aplicável");
-
-        if (showNotApplicable) {
-          // Se showNotApplicable for true e "Não aplicável" não estiver na lista, adiciona
-          if (notApplicableIndex === -1) {
-            options = ["Não aplicável", ...options];
-          }
-        } else {
-          // Se showNotApplicable for false e "Não aplicável" estiver na lista, remove
-          if (notApplicableIndex !== -1) {
-            options = options.filter(
-              (option: any) => option !== "Não aplicável"
-            );
-          }
-        }
-
-        setPeriodicityOptions(options);
-      } catch (error) {
-        console.error("Erro ao buscar as opções de periodicidade:", error);
+      if (activity) {
+        setEditedActivity(activity);
+        setSelectedBlocks(activity.blocoIDs || []);
+        setSelectedDate(activity.data ? dayjs(activity.data) : null);
+        setActivityRegular(activity.activityRegular || false);
+        setSelectedSuppliers(activity.suppliers || []);
       }
     };
 
-    loadBlocks();
-    fetchPeriodicityOptions();
-
-    if (activity) {
-      setEditedActivity(activity);
-      setSelectedBlocks(activity.blocoIDs || []);
-      if (activity.data) {
-        setSelectedDate(dayjs(activity.data)); // Define a data selecionada
-      }
-      // Define o estado de "Feito" baseado em activityRegular já existente
-      setActivityRegular(activity.activityRegular || false);
-    }
+    loadInitialData();
   }, [activity, showNotApplicable]);
 
-  const handleSelectChange = useCallback(
-    (event: SelectChangeEvent<string[]>) => {
-      const value = Array.isArray(event.target.value) ? event.target.value : [];
-      setSelectedBlocks(value);
-    },
-    []
-  );
+  const handleSelectChange = (event: SelectChangeEvent<string[]>) => {
+    setSelectedBlocks(event.target.value as string[]);
+  };
 
-  const handleSelectChangePeriodicidade = useCallback(
-    (event: SelectChangeEvent<string>) => {
-      const value = event.target.value;
-      setEditedActivity((prevActivity) =>
-        prevActivity ? { ...prevActivity, Periodicidade: value } : null
-      );
-    },
-    []
-  );
+  const handleSupplierChange = (event: SelectChangeEvent<string[]>) => {
+    setSelectedSuppliers(event.target.value as string[]);
+  };
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditedActivity((prevActivity) =>
-      prevActivity ? { ...prevActivity, [name]: value } : null
+  const handleSelectChangePeriodicidade = (event: SelectChangeEvent<string>) => {
+    setEditedActivity((prev) =>
+      prev ? { ...prev, Periodicidade: event.target.value } : null
     );
-  }, []);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditedActivity((prev) =>
+      prev ? { ...prev, [name]: value } : null
+    );
+  };
 
   const handleDateChange = (newDate: Dayjs | null) => {
     setSelectedDate(newDate);
-    if (newDate) {
-      setEditedActivity((prevActivity) =>
-        prevActivity
-          ? { ...prevActivity, data: newDate.format("YYYY-MM-DD") }
-          : null
-      );
-    }
+    setEditedActivity((prev) =>
+      prev ? { ...prev, data: newDate?.format("YYYY-MM-DD") || "" } : null
+    );
   };
 
   const handleSave = async () => {
-    if (editedActivity) {
-      const finalActivity = {
-        ...editedActivity,
-        blocoIDs:
-          selectedBlocks.length === 0
-            ? blocks.map((b) => b.id)
-            : selectedBlocks,
-        activityRegular, // Inclui o estado de "Feito" na atividade
-      };
+    if (!editedActivity) return;
 
-      // formata data
-      // const date_format = await HelpActivity.formatDate(finalActivity.data);
-      // finalActivity.data = date_format;
+    const finalActivity = {
+      ...editedActivity,
+      blocoIDs: selectedBlocks.length ? selectedBlocks : blocks.map((b) => b.id),
+      suppliers: selectedSuppliers,
+      activityRegular,
+    };
 
-      try {
-        if (isEdit) {
-          await usuarioPeriodicidadesAtualizar(finalActivity); // Atualiza a atividade existente
-        } else {
-          finalActivity.id_name = "hasCriado";
-          finalActivity.category_id = 200;
-          await usuarioPeriodicidadesAdicionar([finalActivity]); // Adiciona uma nova atividade
-        }
-
-        setSnackbarOpen(true); // Mostra o Snackbar de sucesso
-        if (onActivityUpdated) {
-          onActivityUpdated(); // Chama a função do pai para atualizar os dados
-        }
-        onClose(); // Fecha o modal
-        await fetchNotifications();
-      } catch (error) {
-        console.error("Erro ao salvar a atividade:", error);
+    try {
+      if (isEdit) {
+        await usuarioPeriodicidadesAtualizar(finalActivity);
+      } else {
+        finalActivity.id_name = "hasCriado";
+        finalActivity.category_id = 200;
+        await usuarioPeriodicidadesAdicionar([finalActivity]);
       }
+
+      setSnackbarOpen(true);
+      onActivityUpdated?.();
+      onClose();
+      await fetchNotifications();
+    } catch (error) {
+      console.error("Erro ao salvar a atividade:", error);
     }
   };
 
-  const handleMarkAsDone = () => {
-    const newValue = !activityRegular;
-    setActivityRegular(newValue);
-  };
-
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false);
-  };
+  const handleMarkAsDone = () => setActivityRegular(!activityRegular);
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      {/* Adicionando LocalizationProvider para o DatePicker */}
       <Modal open={open} onClose={onClose}>
         <Box
           sx={{
@@ -210,7 +163,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             p: 4,
           }}
         >
-          <Typography variant="h6" component="h2">
+          <Typography variant="h6">
             {isEdit ? `Editar ${title}` : `Nova ${title}`}
           </Typography>
 
@@ -239,6 +192,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             onChange={handleChange}
             disabled={disabled}
           />
+
           <FormControl fullWidth margin="normal">
             <InputLabel>Periodicidade</InputLabel>
             <Select
@@ -260,17 +214,12 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             <Select
               multiple
               label="Blocos"
-              value={Array.isArray(selectedBlocks) ? selectedBlocks : []}
+              value={selectedBlocks}
               onChange={handleSelectChange}
               renderValue={(selected) =>
-                Array.isArray(selected)
-                  ? selected
-                      .map(
-                        (selectedId) =>
-                          blocks.find((block) => block.id === selectedId)?.name
-                      )
-                      .join(", ")
-                  : ""
+                selected
+                  .map((id) => blocks.find((block) => block.id === id)?.name)
+                  .join(", ")
               }
             >
               {blocks.map((block) => (
@@ -281,8 +230,28 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             </Select>
           </FormControl>
 
-          {/* O campo de data só é exibido se "Não aplicável" NÃO for selecionado */}
-          {editedActivity?.Periodicidade !== "Não aplicável" ? (
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Fornecedores</InputLabel>
+            <Select
+              multiple
+              label="Fornecedores"
+              value={selectedSuppliers}
+              onChange={handleSupplierChange}
+              renderValue={(selected) =>
+                selected
+                  .map((id) => suppliers.find((supplier) => supplier.id === id)?.nome)
+                  .join(", ")
+              }
+            >
+              {suppliers.map((supplier) => (
+                <MenuItem key={supplier.id} value={supplier.id}>
+                  {supplier.nome}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {editedActivity?.Periodicidade !== "Não aplicável" && (
             <DatePicker
               label="Data"
               value={selectedDate}
@@ -295,16 +264,6 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 },
               }}
             />
-          ) : (
-            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
-              <Button
-                variant="contained"
-                color={activityRegular ? "success" : "primary"}
-                onClick={handleMarkAsDone}
-              >
-                {activityRegular ? "Feito" : "Marcar como Feito"}
-              </Button>
-            </Box>
           )}
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
