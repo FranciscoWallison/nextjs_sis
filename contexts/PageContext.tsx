@@ -35,7 +35,7 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
     { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
     // { title: "Activity", url: "/activity", icon: DashboardIcon },
     { title: "Gestão de Blocos", url: "/gestaoblocos", icon: ViewModuleIcon }, // Adicionado aqui
-    { title: "Fornecedores", url: "/gestaoblocos", icon: PrecisionManufacturingIcon }, // Adicionado aqui
+    { title: "Fornecedores", url: "/FornecedorPage", icon: PrecisionManufacturingIcon }, // Adicionado aqui
   ]);
 
   const addPage = (page: Page) => {
