@@ -231,7 +231,7 @@ const Manutencoes: React.FC = () => {
           .includes(filters.responsavel.toLowerCase());
         const matchData =
           !filters.data ||
-          (activity.data && dayjs(activity.data).isSame(filters.data, "day")); // Verifica se a data da atividade coincide com a data filtrada
+          (activity.data && dayjs(activity.data).isSame(filters.data, "day"));
 
         const matchStatus =
           (statusFilters.regular && dataStatus.status === "Regular") ||
@@ -240,13 +240,10 @@ const Manutencoes: React.FC = () => {
 
         const matchBlock =
           filters.blocos.length === 0 ||
-          (activity.blocoIDs &&
-            activity.blocoIDs.some((blocoID) =>
-              blocks.some(
-                (block) =>
-                  block.id === blocoID && filters.blocos.includes(block.name)
-              )
-            ));
+          (activity.blocos &&
+            activity.blocos.some((block) =>
+              filters.blocos.includes(block.name)
+            )); 
 
         return (
           matchTitle &&
