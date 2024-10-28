@@ -18,6 +18,8 @@ import {
   Select,
   MenuItem,
   Grid,
+  Card,
+  CardContent,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -164,28 +166,36 @@ const FornecedorPage: React.FC = () => {
                 Buscar
               </Button>
             </Grid>
+            <Grid item xs={12} sm="auto">
+              {/* Formulário de Criação/Edição */}
+              <Button variant="contained" onClick={() => setOpenForm(true)}>
+                Adicionar Fornecedor
+              </Button>
+            </Grid>
           </Grid>
         </Box>
 
         {/* Lista de Fornecedores */}
-        <List>
-          {filteredSuppliers.map((supplier) => (
-            <ListItem key={supplier.id}>
-              <ListItemText primary={supplier.nome} secondary={supplier.area} />
-              <IconButton onClick={() => handleEditSupplier(supplier)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton onClick={() => handleDeleteSupplier(supplier.id)}>
-                <DeleteIcon />
-              </IconButton>
-            </ListItem>
-          ))}
-        </List>
 
-        {/* Formulário de Criação/Edição */}
-        <Button variant="contained" onClick={() => setOpenForm(true)}>
-          Adicionar Fornecedor
-        </Button>
+        {filteredSuppliers.map((supplier) => (
+          <ListItem key={supplier.id}>
+            <Card sx={{ width: "100%" }}>
+              <CardContent>
+                <ListItemText
+                  primary={supplier.nome}
+                  secondary={supplier.area}
+                />
+                <IconButton onClick={() => handleEditSupplier(supplier)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton onClick={() => handleDeleteSupplier(supplier.id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </CardContent>
+            </Card>
+          </ListItem>
+        ))}
+
         <SupplierForm
           open={openForm}
           onClose={() => setOpenForm(false)}

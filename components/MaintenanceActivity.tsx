@@ -8,7 +8,11 @@ import {
   Modal,
 } from "@mui/material";
 import { useRouter } from "next/router";
-import { Activity, fetchBlocks, fetchSuppliers } from "@/services/firebaseService"; // Importa a função fetchSuppliers
+import {
+  Activity,
+  fetchBlocks,
+  fetchSuppliers,
+} from "@/services/firebaseService"; // Importa a função fetchSuppliers
 import ActivityStatus from "@/components/layout/ActivityStatus";
 import EditActivityModal from "./EditActivityModal"; // Import do modal EditActivityModal
 
@@ -33,7 +37,9 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
-  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>([]); // Armazena os fornecedores
+  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>(
+    []
+  ); // Armazena os fornecedores
 
   const router = useRouter();
 
@@ -118,16 +124,13 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                 .join(", ")}
             </Typography>
           )}
-
           {/* Exibição dos Fornecedores */}
-          {/* {console.log(activity.supplierIDs)}
-          {Array.isArray(activity.supplierIDs) &&
-            activity.supplierIDs.length > 0 && (
+
+          {Array.isArray(activity.suppliers) &&
+            activity?.suppliers.length > 0 && (
               <Typography variant="body2">
                 <strong>Fornecedores:</strong>{" "}
-
-                {console.log(activity)}
-                {activity.supplierIDs
+                {activity.suppliers
                   .map((supplierId) =>
                     suppliers.find((supplier) => supplier.id === supplierId)
                       ?.nome
@@ -135,7 +138,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
                   .filter((name) => name)
                   .join(", ")}
               </Typography>
-            )} */}
+            )}
 
           {activity.data && (
             <>

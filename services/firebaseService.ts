@@ -155,6 +155,7 @@ export interface Activity {
   dueDate?: string;
   updatedFields?: any;
   blocos?: any[];
+  suppliers?: any[];
 }
 
 export interface CategoryData {
