@@ -155,6 +155,7 @@ export interface Activity {
   dueDate?: string;
   updatedFields?: any;
   blocos?: any[];
+  suppliers?: any[];
 }
 
 export interface CategoryData {
@@ -608,4 +609,48 @@ export const deleteActivity = async (
     console.error("Erro ao remover atividade:", error);
     return false;
   }
+};
+
+// Tipo Supplier para Firebase
+export interface Supplier {
+  id: string;
+  nome: string;
+  cnpj: string;
+  email: string;
+  telefone: string;
+  area: string;
+  estado: string;
+  cidade: string;
+  link: string;
+}
+
+export const fetchSuppliers = async (): Promise<Supplier[]> => {
+  const db = getFirestore(app);
+  const suppliersCollection = collection(db, "fornecedores");
+  const snapshot = await getDocs(suppliersCollection);
+  return snapshot.docs.map(
+    (doc) => ({ id: doc.id, ...doc.data() } as Supplier)
+  );
+};
+
+export const addSupplier = async (
+  data: Omit<Supplier, "id">
+): Promise<void> => {
+  const db = getFirestore(app);
+  await addDoc(collection(db, "fornecedores"), data);
+};
+
+export const updateSupplier = async (
+  id: string,
+  data: Omit<Supplier, "id">
+): Promise<void> => {
+  const db = getFirestore(app);
+  const supplierRef = doc(db, "fornecedores", id);
+  await updateDoc(supplierRef, data);
+};
+
+export const deleteSupplier = async (id: string): Promise<void> => {
+  const db = getFirestore(app);
+  const supplierRef = doc(db, "fornecedores", id);
+  await deleteDoc(supplierRef);
 };

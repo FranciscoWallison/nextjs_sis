@@ -9,8 +9,8 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import LayersIcon from "@mui/icons-material/Layers";
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import BusinessIcon from '@mui/icons-material/Business';
-import ViewModuleIcon from "@mui/icons-material/ViewModule"; // Adicionei o ícone
-
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 interface Page {
   title: string;
   url: string;
@@ -35,6 +35,7 @@ export const PageProvider: React.FC<{ children: ReactNode }> = ({
     { title: "Alertas", url: "/alertas", icon: NotificationImportantIcon },
     // { title: "Activity", url: "/activity", icon: DashboardIcon },
     { title: "Gestão de Blocos", url: "/gestaoblocos", icon: ViewModuleIcon }, // Adicionado aqui
+    { title: "Fornecedores", url: "/FornecedorPage", icon: PrecisionManufacturingIcon }, // Adicionado aqui
   ]);
 
   const addPage = (page: Page) => {

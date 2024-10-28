@@ -181,7 +181,7 @@ const Periodicidades: React.FC = () => {
     });
   };
 
-  const handleUpdate = async (updatedActivity: Activity) => {
+  const handleUpdate = async () => {
     fetchData();
     setSnackbarOpen(true);
   };
@@ -243,7 +243,7 @@ const Periodicidades: React.FC = () => {
               key={index}
               category={category.titulo}
               activities={applyFilters([category])}
-              onUpdate={(activity) => handleUpdate(activity)} // Abre o modal para edição
+              onUpdate={handleUpdate} // Abre o modal para edição
               titleUpdate="Adicionar"
               onRemove={(activityId) => console.log(activityId)}
               removeValid={false} // Ou uma lógica para validar a remoção
@@ -254,7 +254,7 @@ const Periodicidades: React.FC = () => {
             open={modalOpen}
             activity={selectedActivity || initialActivity} // Define se está editando ou criando
             onClose={handleCloseModal}
-            onSave={onSave}
+            onActivityUpdated={() => handleUpdate()}
             isEdit={!!selectedActivity} // Define se está editando ou criando
             showNotApplicable={true}
           />

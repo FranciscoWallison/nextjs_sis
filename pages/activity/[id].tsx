@@ -171,21 +171,11 @@ const ActivityPage: React.FC = () => {
     setModalOpen(true);
   };
 
-  const handleSaveActivity = async (updatedActivity: Activity) => {
-    try {
-      if (isEditing && updatedActivity.id) {
-        await updateActivity(updatedActivity.id, updatedActivity);
-        setSnackbarMessage("Atividade atualizada com sucesso!");
-      } else {
-        await addActivity(updatedActivity);
-        setSnackbarMessage("Atividade adicionada com sucesso!");
-      }
-      setSnackbarOpen(true);
-      fetchActivityHistory(Number(id));
-      setModalOpen(false);
-    } catch (error) {
-      console.error("Erro ao salvar atividade:", error);
-    }
+  const handleSaveActivity = async () => {
+    setSnackbarMessage("Atividade adicionada com sucesso!");
+    setSnackbarOpen(true);
+    fetchActivityHistory(Number(id));
+    setModalOpen(false);
   };
 
   const handleDelete = async (activityId: number) => {
@@ -322,7 +312,7 @@ const ActivityPage: React.FC = () => {
                 category_id: 0, // Valor padrão
               }
             }
-            onSave={handleSaveActivity}
+            onActivityUpdated={handleSaveActivity}
             disabled={false}
             title={isEditing ? "Editar Atividade" : "Adicionar Atividade"}
           />
