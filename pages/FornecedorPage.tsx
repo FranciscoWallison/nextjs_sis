@@ -178,8 +178,8 @@ const FornecedorPage: React.FC = () => {
         {/* Lista de Fornecedores */}
 
         {filteredSuppliers.map((supplier) => (
-          <ListItem key={supplier.id}>
-            <Card sx={{ width: "100%" }}>
+          <>
+            <Card sx={{ width: "100%", marginTop: "2em" }}>
               <CardContent>
                 <ListItemText
                   primary={supplier.nome}
@@ -193,7 +193,7 @@ const FornecedorPage: React.FC = () => {
                 </IconButton>
               </CardContent>
             </Card>
-          </ListItem>
+          </>
         ))}
 
         <SupplierForm

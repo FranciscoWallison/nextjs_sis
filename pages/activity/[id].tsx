@@ -244,7 +244,11 @@ const ActivityPage: React.FC = () => {
             >
               <Typography>
                 {activity.updatedFields.titulo} -{" "}
-                {activity.updatedFields.data || "Carregando..."}
+                {activity.updatedFields.data
+                  ? new Date(activity.updatedFields.data).toLocaleDateString(
+                      "pt-BR"
+                    )
+                  : "Carregando..."}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
