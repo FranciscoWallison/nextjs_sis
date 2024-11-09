@@ -1,6 +1,6 @@
 import React from "react";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // Importa o plugin diretamente
+import autoTable from "jspdf-autotable";
 import { Button } from "@mui/material";
 import { Activity } from "@/services/firebaseService";
 import dayjs from "dayjs";
@@ -10,11 +10,19 @@ interface Block {
   name: string;
 }
 
-interface ExportPdfButtonProps {
-  activities: Activity[];
+interface Supplier {
+  id: string;
+  nome: string;
 }
 
-const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities }) => {
+
+interface ExportPdfButtonProps {
+  activities: Activity[];
+  blocks: Block[];
+  suppliers: Supplier[];
+}
+
+const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities, blocks, suppliers }) => {
   const generatePdf = () => {
     const doc = new jsPDF();
 
@@ -29,26 +37,34 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities }) => {
     // Cabeçalhos da tabela
     const tableColumnHeaders = [
       "Título",
-      "Responsável",
-      "Atividade",
+      // "Responsável",
+      // "Atividade",
       "Periodicidade",
       "Data",
       "Blocos",
+      "Fornecedor"
     ];
 
     // Dados da tabela com validações
     const tableRows = activities.map((activity) => [
       activity.updatedFields?.titulo || "Título Indisponível",
-      activity.updatedFields?.responsavel || "Responsável Indisponível",
-      activity.updatedFields?.atividade || "Atividade Indisponível",
+      // activity.updatedFields?.responsavel || "Responsável Indisponível",
+      // activity.updatedFields?.atividade || "Atividade Indisponível",
       activity.updatedFields?.Periodicidade || "Periodicidade Indisponível",
       activity.updatedFields?.data
         ? dayjs(activity.updatedFields.data).format("DD/MM/YYYY")
         : "-",
-      // Converte blocoIDs em nomes, se existirem
+      // Mapeia blocoIDs para nomes de blocos usando a lista `blocks` passada como prop
       activity.updatedFields?.blocoIDs
-        ?.map((bloco: Block) => bloco.name)
-        .join(", ") || "-"
+        ?.map((blockId: string | number) =>
+          blocks.find((block) => block.id === blockId)?.name || "Bloco Indisponível"
+        )
+        .join(", ") || "-",
+        activity.updatedFields?.suppliers
+        ?.map((supplierId: string | number) =>
+          suppliers.find((supplier) => supplier.id === supplierId)?.nome || "Fornecedor Indisponível"
+        )
+        .join(", ") || "-",
     ]);
 
     // Configuração da tabela usando autoTable diretamente

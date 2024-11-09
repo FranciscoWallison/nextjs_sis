@@ -85,8 +85,11 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         return acc;
       }, [] as { label: string; names: string[] }[]);
 
+      // Ordena o array em ordem alfabética antes de setar o estado
+      groupedItems.sort((a, b) => a.label.localeCompare(b.label));
+
       setFormItems(groupedItems);
-      setAllItems(items); // Armazena todos os itens para uso posterior
+      setAllItems(items);
     } catch (error) {
       console.error("Erro ao buscar ou processar os itens:", error);
       alert("Não foi possível carregar os itens. Tente novamente mais tarde.");
@@ -99,7 +102,6 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     fetchFormItems();
   }, [fetchFormItems]);
 
-  // Função para alternar a seleção de todos os itens
   const handleSelectAll = () => {
     const checked = !selectAllChecked;
     setSelectAllChecked(checked);
@@ -114,13 +116,12 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     setFormData({ ...formData, ...updatedFormData });
   };
 
-  // Função para alternar a seleção de um grupo de itens baseado no título
   const handleChipClick = (names: string[]) => {
-    if (!names) return; // Garantindo que names não seja undefined
+    if (!names) return;
     const allSelected = names.every((name) => formData[name] === true);
 
     const updatedFormData = names.reduce((acc, name) => {
-      acc[name] = !allSelected; // Alterna entre selecionar/deselecionar todos os itens com o mesmo título
+      acc[name] = !allSelected;
       return acc;
     }, {} as Record<string, boolean>);
 
@@ -193,7 +194,6 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         <Grid container spacing={2}>
           {formItems.map((group) => (
             <Grid item xs={12} sm={6} key={group.label}>
-              {/* Verificação de segurança para garantir que 'names' exista */}
               <Chip
                 icon={group.names && group.names.every((name) => formData[name]) ? <DoneIcon /> : undefined}
                 label={group.label}

@@ -174,27 +174,33 @@ const FornecedorPage: React.FC = () => {
             </Grid>
           </Grid>
         </Box>
-
         {/* Lista de Fornecedores */}
-
         {filteredSuppliers.map((supplier) => (
-          <>
-            <Card sx={{ width: "100%", marginTop: "2em" }}>
-              <CardContent>
-                <ListItemText
-                  primary={supplier.nome}
-                  secondary={supplier.area}
-                />
-                <IconButton onClick={() => handleEditSupplier(supplier)}>
-                  <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => handleDeleteSupplier(supplier.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </CardContent>
-            </Card>
-          </>
+          <Card key={supplier.id} sx={{ width: "100%", marginTop: "2em" }}>
+            <CardContent>
+              <ListItemText
+                primary={supplier.nome}
+                secondary={
+                  <>
+                    <Typography variant="body2" color="textSecondary">
+                      Área: {supplier.area}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Telefone: {supplier.telefone}
+                    </Typography>
+                  </>
+                }
+              />
+              <IconButton onClick={() => handleEditSupplier(supplier)}>
+                <EditIcon />
+              </IconButton>
+              <IconButton onClick={() => handleDeleteSupplier(supplier.id)}>
+                <DeleteIcon />
+              </IconButton>
+            </CardContent>
+          </Card>
         ))}
+
 
         <SupplierForm
           open={openForm}

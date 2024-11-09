@@ -15,9 +15,8 @@ import { useRouter } from "next/router";
 import {
   getActivityHistory,
   Activity,
-  updateActivity,
   deleteActivity,
-  addActivity,
+  fetchSuppliers,
   fetchBlocks,
 } from "@/services/firebaseService";
 import MainLayout from "@/components/layout/MainLayout";
@@ -58,14 +57,25 @@ const ActivityPage: React.FC = () => {
   const [formattedActivityDates, setFormattedActivityDates] = useState<{
     [key: number]: string;
   }>({}); // Estado para armazenar as datas formatadas das atividades
-
+  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>(
+    []
+  );
   useEffect(() => {
     if (id) {
       fetchPageTitle(Number(id));
       fetchActivityHistory(Number(id));
-      loadBlocks(); // Carregar blocos disponíveis
     }
   }, [id]);
+
+  useEffect(() => {
+    const loadBlocksAndSuppliers = async () => {
+      const fetchedBlocks = await fetchBlocks();
+      const fetchedSuppliers = await fetchSuppliers(); // Consulta os fornecedores
+      setBlocks(fetchedBlocks || []);
+      setSuppliers(fetchedSuppliers || []);
+    };
+    loadBlocksAndSuppliers();
+  }, []);
 
   useEffect(() => {
     const formatActivityDates = async () => {
@@ -133,16 +143,6 @@ const ActivityPage: React.FC = () => {
     }
   };
 
-  // Função para carregar os blocos disponíveis
-  const loadBlocks = async () => {
-    try {
-      const fetchedBlocks = await fetchBlocks();
-      setBlocks(fetchedBlocks || []);
-    } catch (error) {
-      console.error("Erro ao carregar blocos:", error);
-    }
-  };
-
   const handleExpand =
     (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
       setExpanded(isExpanded ? panel : false);
@@ -205,7 +205,7 @@ const ActivityPage: React.FC = () => {
   };
 
   return (
-    <MainLayout title="Histórico de Alterações">
+    <MainLayout title="Histórico de Manutenções">
       <Box sx={{ padding: { xs: 2, md: 4 } }}>
         <Button
           startIcon={<ArrowBackIcon />}
@@ -239,7 +239,7 @@ const ActivityPage: React.FC = () => {
             Adicionar Atividade
           </Button>
 
-          <ExportPdfButton activities={activities} />
+          <ExportPdfButton activities={activities} blocks={blocks} suppliers={suppliers} />
         </Box>
 
 
@@ -287,6 +287,17 @@ const ActivityPage: React.FC = () => {
                   )
                   .join(", ")}
               </Typography>
+
+              <Typography>
+                <strong>Fornecedores:</strong>
+                {activity.updatedFields.suppliers
+                  ?.map(
+                    (supplierId: string | number) =>
+                      suppliers.find((supplier) => supplier.id === supplierId)?.nome || ""
+                  )
+                  .join(", ")}
+              </Typography>
+
               <Box sx={{ display: "flex", gap: 2, marginTop: 2 }}>
                 <Button
                   variant="contained"
