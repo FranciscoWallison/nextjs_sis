@@ -205,7 +205,7 @@ const ActivityPage: React.FC = () => {
   };
 
   return (
-    <MainLayout title="Histórico de Alterações">
+    <MainLayout title="Histórico de Manutenções">
       <Box sx={{ padding: { xs: 2, md: 4 } }}>
         <Button
           startIcon={<ArrowBackIcon />}

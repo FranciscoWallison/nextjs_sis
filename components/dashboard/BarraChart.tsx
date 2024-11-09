@@ -9,8 +9,8 @@ import { getStatus } from "@/utils/statusHelper";
 // Função assíncrona para agrupar as atividades por mês e status
 const groupByMonthAndStatus = async (activities: Activity[]) => {
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "June",
-    "July", "Aug", "Sept", "Oct", "Nov", "Dec"
+    "Jan", "Feb", "Mar", "Abr", "Mai", "Jun",
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez"
   ];
 
   // Inicializa um objeto para armazenar os dados por mês
@@ -24,7 +24,7 @@ const groupByMonthAndStatus = async (activities: Activity[]) => {
   // Itera sobre as atividades e agrupa-as por mês e status
   for (const activity of activities) {
     const date = new Date(activity.data || Date.now()); // Usa a data atual se não houver data
-    const monthIndex = date.getMonth(); // Obtém o índice do mês (0 = Jan, 11 = Dec)
+    const monthIndex = date.getMonth(); // Obtém o índice do mês (0 = Jan, 11 = Dez)
     const monthData = dataByMonth[monthIndex];
 
     const statusInfo = await getStatus(activity); // Aguarda a função assíncrona
@@ -45,7 +45,7 @@ const valueFormatter = (value: number | null) => `${value}`;
 
 export default function BarraChart() {
   const [loading, setLoading] = useState<boolean>(true);
-  const [dataset, setDataset] = useState<any[]>([]); // Dataset para o gráfico
+  const [dataset, setDataset] = useState<any[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -56,7 +56,6 @@ export default function BarraChart() {
       return;
     }
 
-    // Calcula o status de cada atividade e agrupa os dados
     const groupedData = await groupByMonthAndStatus(responseP.questions);
     setDataset(groupedData);
     setLoading(false);
@@ -83,19 +82,19 @@ export default function BarraChart() {
                 dataKey: "vencido", 
                 label: "Vencido", 
                 valueFormatter, 
-                color: theme.palette.error.main // Define cor de 'error' para 'Vencido'
+                color: theme.palette.error.main
               },
               { 
                 dataKey: "regular", 
                 label: "Regular", 
                 valueFormatter, 
-                color: theme.palette.success.main // Define cor de 'success' para 'Regular'
+                color: theme.palette.success.main
               },
               { 
                 dataKey: "avencer", 
                 label: "A vencer", 
                 valueFormatter, 
-                color: theme.palette.warning.main // Define cor de 'warning' para 'A vencer'
+                color: theme.palette.warning.main
               },
             ]}
             width={500}

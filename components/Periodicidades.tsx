@@ -29,20 +29,15 @@ const Periodicidades: React.FC = () => {
     responsavel: "",
     data: "",
   });
-  const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>(
-    []
-  );
+  const [selectedResponsaveis, setSelectedResponsaveis] = useState<string[]>([]);
   const [responsaveis, setResponsaveis] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
-    null
-  );
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
 
   const fetchResponsaveis = useCallback(async () => {
     const response = await fetch("/items/items.json");
     const result = await response.json();
 
-    // Extrai todos os responsáveis e remove duplicados
     const responsaveisUnicos: string[] = Array.from(
       new Set(result.map((item: { responsavel: string }) => item.responsavel))
     );
@@ -65,7 +60,7 @@ const Periodicidades: React.FC = () => {
       responseP.questions
     );
 
-    const sortedData = sortActivities(addData);
+    const sortedData = sortActivities(addData); // Ordena as atividades antes de setá-las no estado
 
     setData(sortedData);
     setLoading(false);
@@ -82,7 +77,7 @@ const Periodicidades: React.FC = () => {
   };
 
   const handleOpenModal = (activity?: Activity) => {
-    setSelectedActivity(activity || null); // Se não houver atividade, estará criando uma nova
+    setSelectedActivity(activity || null);
     setModalOpen(true);
   };
 
@@ -141,12 +136,8 @@ const Periodicidades: React.FC = () => {
       return [];
     }
 
-    return activities.sort((a, b) => {
-      const aDone = !!a.data;
-      const bDone = !!b.data;
-
-      return aDone === bDone ? 0 : aDone ? 1 : -1;
-    });
+    // Ordena as atividades pelo título em ordem alfabética
+    return activities.sort((a, b) => a.titulo.localeCompare(b.titulo));
   };
 
   const handleSnackbarClose = () => {
@@ -243,19 +234,19 @@ const Periodicidades: React.FC = () => {
               key={index}
               category={category.titulo}
               activities={applyFilters([category])}
-              onUpdate={handleUpdate} // Abre o modal para edição
+              onUpdate={handleUpdate}
               titleUpdate="Adicionar"
               onRemove={(activityId) => console.log(activityId)}
-              removeValid={false} // Ou uma lógica para validar a remoção
+              removeValid={false}
             />
           ))}
 
           <EditActivityModal
             open={modalOpen}
-            activity={selectedActivity || initialActivity} // Define se está editando ou criando
+            activity={selectedActivity || initialActivity}
             onClose={handleCloseModal}
             onActivityUpdated={() => handleUpdate()}
-            isEdit={!!selectedActivity} // Define se está editando ou criando
+            isEdit={!!selectedActivity}
             showNotApplicable={true}
           />
 
@@ -270,8 +261,7 @@ const Periodicidades: React.FC = () => {
               severity="success"
               sx={{ width: "100%" }}
             >
-              Atividade {selectedActivity ? "atualizada" : "criada"} com
-              sucesso!
+              Atividade {selectedActivity ? "atualizada" : "criada"} com sucesso!
             </Alert>
           </Snackbar>
         </>
