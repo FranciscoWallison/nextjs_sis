@@ -33,6 +33,8 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; // Adaptador para Day.js
 import dayjs, { Dayjs } from "dayjs"; // Import para trabalhar com datas
 import "dayjs/locale/pt-br"; // Importa o idioma português para o dayjs
+import ExportPdfButton from "./ExportPdfButton";
+
 dayjs.locale("pt-br"); // Define o idioma padrão como português
 interface Bloco {
   id: string;
@@ -243,7 +245,7 @@ const Manutencoes: React.FC = () => {
           (activity.blocos &&
             activity.blocos.some((block) =>
               filters.blocos.includes(block.name)
-            )); 
+            ));
 
         return (
           matchTitle &&
@@ -278,7 +280,6 @@ const Manutencoes: React.FC = () => {
                 progress
               )}% completado`}</Typography>
             </Box>
-
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={4}>
                 <TextField
@@ -311,7 +312,6 @@ const Manutencoes: React.FC = () => {
                 />
               </Grid>
             </Grid>
-
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={12}>
                 {blocks.length > 0 && (
@@ -335,7 +335,6 @@ const Manutencoes: React.FC = () => {
                 )}
               </Grid>
             </Grid>
-
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={4}>
                 <Button
@@ -368,6 +367,13 @@ const Manutencoes: React.FC = () => {
                 </Button>
               </Grid>
             </Grid>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} sm={12}>
+                <Box sx={{ display: "flex", justifyContent: "end", mb: 2 }}>
+                  <ExportPdfButton activities={filteredActivities} />
+                </Box>
+              </Grid>
+            </Grid>
 
             <MaintenanceCategory
               category="Manutenção"
@@ -377,7 +383,6 @@ const Manutencoes: React.FC = () => {
               removeValid={true}
               titleUpdate={titleUpdate}
             />
-
             <Snackbar
               open={snackbarOpen}
               autoHideDuration={6000}

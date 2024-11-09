@@ -23,6 +23,7 @@ import {
 import MainLayout from "@/components/layout/MainLayout";
 import EditActivityModal from "@/components/EditActivityModal"; // Importando o modal de atividades
 import HelpActivity from "@/utils/HelpActivity"; // Importando o utilitário para formatação de datas
+import ExportPdfButton from "@/components/ExportPdfButtonHistorico"; // Importa o botão de exportação de PDF
 
 interface ActivityItem {
   titulo: string;
@@ -219,14 +220,28 @@ const ActivityPage: React.FC = () => {
           {pageTitle}
         </Typography>
 
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleAddActivity}
-          sx={{ mb: 2 }}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" }, // Coluna para telas pequenas, linha para maiores
+            gap: 2,
+            mb: 2,
+          }}
         >
-          Adicionar Atividade
-        </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddActivity}
+            sx={{ width: { xs: "100%", sm: "auto" } }} // Largura total em telas pequenas
+          >
+            Adicionar Atividade
+          </Button>
+
+          <ExportPdfButton activities={activities} />
+        </Box>
+
 
         {activities.map((activity, index) => (
           <Accordion
@@ -243,11 +258,11 @@ const ActivityPage: React.FC = () => {
               id={`panel${activity.updatedFields.id}-${index}-header`}
             >
               <Typography>
-                {activity.updatedFields.titulo} -{" "}
+                {activity.updatedFields.titulo} -  {" "}
                 {activity.updatedFields.data
                   ? new Date(activity.updatedFields.data).toLocaleDateString(
-                      "pt-BR"
-                    )
+                    "pt-BR"
+                  )
                   : "Carregando..."}
               </Typography>
             </AccordionSummary>
