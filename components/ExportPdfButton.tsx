@@ -5,11 +5,24 @@ import { Button } from "@mui/material";
 import { Activity } from "@/services/firebaseService";
 import dayjs from "dayjs";
 
-interface ExportPdfButtonProps {
-  activities: Activity[];
+interface Block {
+  id: string;
+  name: string;
 }
 
-const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities }) => {
+interface Supplier {
+  id: string;
+  nome: string;
+}
+
+
+interface ExportPdfButtonProps {
+  activities: Activity[];
+  blocks: Block[];
+  suppliers: Supplier[];
+}
+
+const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities, blocks, suppliers }) => {
   const generatePdf = () => {
     const doc = new jsPDF();
 
@@ -25,7 +38,7 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities }) => {
     const tableColumnHeaders = [
       "Título",
       "Responsável",
-      "Periodicidade",
+      // "Periodicidade",
       "Última Manutenção",
       "Próxima Manutenção",
       "Blocos",
@@ -36,11 +49,18 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities }) => {
     const tableRows = activities.map((activity) => [
       activity.titulo,
       activity.responsavel,
-      activity.Periodicidade,
+      // activity.Periodicidade,
       activity.data ? dayjs(activity.data).format("DD/MM/YYYY") : "-",
       activity.dueDate || "-",
-      activity.blocoIDs?.join(", ") || "-",
-      activity.suppliers?.join(", ") || "-",
+      activity?.blocos
+        ?.map((block: Block) => block?.name || "Bloco Indisponível"
+        )
+        .join(", ") || "-",
+        activity?.suppliers
+        ?.map((supplierId: string | number) =>
+          suppliers.find((supplier) => supplier.id === supplierId)?.nome || "Fornecedor Indisponível"
+        )
+        .join(", ") || "-",
     ]);
 
     // Configuração da tabela usando o método autoTable do plugin

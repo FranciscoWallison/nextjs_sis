@@ -127,7 +127,7 @@ export const validaUsuarioForm = async (): Promise<boolean> => {
 export interface Block {
   id: string;
   name: string;
-  userId: string;
+  userId?: string;
 }
 
 export interface ResponsibleInfo {
@@ -156,6 +156,7 @@ export interface Activity {
   updatedFields?: any;
   blocos?: any[];
   suppliers?: any[];
+  blocks?: Block[];
 }
 
 export interface CategoryData {
@@ -625,9 +626,19 @@ export interface Supplier {
 }
 
 export const fetchSuppliers = async (): Promise<Supplier[]> => {
+  // Obtém o usuário autenticado
+  const user = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    console.error("Usuário não autenticado.");
+    return []; // Retorna um array vazio se o usuário não estiver autenticado
+  }
+
+  const userId = user.uid; // Obtém o ID do usuário
+
   const db = getFirestore(app);
-  const suppliersCollection = collection(db, "fornecedores");
+  const suppliersCollection = collection(db, "users", userId, "fornecedores");
   const snapshot = await getDocs(suppliersCollection);
+
   return snapshot.docs.map(
     (doc) => ({ id: doc.id, ...doc.data() } as Supplier)
   );
@@ -636,21 +647,42 @@ export const fetchSuppliers = async (): Promise<Supplier[]> => {
 export const addSupplier = async (
   data: Omit<Supplier, "id">
 ): Promise<void> => {
+  const user = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    console.error("Usuário não autenticado.");
+    return;
+  }
+
+  const userId = user.uid;
   const db = getFirestore(app);
-  await addDoc(collection(db, "fornecedores"), data);
+  await addDoc(collection(db, "users", userId, "fornecedores"), data);
 };
 
 export const updateSupplier = async (
   id: string,
   data: Omit<Supplier, "id">
 ): Promise<void> => {
+  const user = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    console.error("Usuário não autenticado.");
+    return;
+  }
+
+  const userId = user.uid;
   const db = getFirestore(app);
-  const supplierRef = doc(db, "fornecedores", id);
+  const supplierRef = doc(db, "users", userId, "fornecedores", id);
   await updateDoc(supplierRef, data);
 };
 
 export const deleteSupplier = async (id: string): Promise<void> => {
+  const user = AuthStorage.getUser();
+  if (!user || !user.uid) {
+    console.error("Usuário não autenticado.");
+    return;
+  }
+
+  const userId = user.uid;
   const db = getFirestore(app);
-  const supplierRef = doc(db, "fornecedores", id);
+  const supplierRef = doc(db, "users", userId, "fornecedores", id);
   await deleteDoc(supplierRef);
 };

@@ -22,7 +22,7 @@ import withAuth from "../hoc/withAuth";
 import {
   pegarUsuarioPeriodicidades,
   Activity,
-  usuarioPeriodicidadesAtualizar,
+  fetchSuppliers,
   salvarNovo,
   fetchBlockById,
 } from "@/services/firebaseService";
@@ -47,6 +47,10 @@ const Manutencoes: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [titleUpdate, setTitleUpdate] = useState<string>("Última Manutenção");
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]); // Armazena os blocos
+  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>(
+    []
+  );
 
   const [filters, setFilters] = useState({
     titulo: "",
@@ -54,12 +58,21 @@ const Manutencoes: React.FC = () => {
     data: null as Dayjs | null, // Use Dayjs como tipo para a data
     blocos: [] as string[],
   });
-  const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
   const [statusFilters, setStatusFilters] = useState({
     regular: false,
     aVencer: false,
     vencido: false,
   });
+
+  useEffect(() => {
+    const loadBlocksAndSuppliers = async () => {
+
+      const fetchedSuppliers = await fetchSuppliers(); // Consulta os fornecedores
+      setSuppliers(fetchedSuppliers || []);
+    };
+    loadBlocksAndSuppliers();
+  }, []);
+
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -370,7 +383,7 @@ const Manutencoes: React.FC = () => {
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={12}>
                 <Box sx={{ display: "flex", justifyContent: "end", mb: 2 }}>
-                  <ExportPdfButton activities={filteredActivities} />
+                  <ExportPdfButton activities={filteredActivities}  blocks={blocks} suppliers={suppliers} />
                 </Box>
               </Grid>
             </Grid>

@@ -39,7 +39,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
   const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>(
     []
-  ); // Armazena os fornecedores
+  );
 
   const router = useRouter();
 
