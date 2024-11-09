@@ -368,9 +368,11 @@ const Manutencoes: React.FC = () => {
               </Grid>
             </Grid>
             <Grid container spacing={2} sx={{ mb: 2 }}>
-              <Box sx={{ display: "flex", justifyContent: "end", mb: 2 }}>
-                <ExportPdfButton activities={filteredActivities} />
-              </Box>
+              <Grid item xs={12} sm={12}>
+                <Box sx={{ display: "flex", justifyContent: "end", mb: 2 }}>
+                  <ExportPdfButton activities={filteredActivities} />
+                </Box>
+              </Grid>
             </Grid>
 
             <MaintenanceCategory

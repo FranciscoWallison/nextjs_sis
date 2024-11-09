@@ -1,9 +1,14 @@
 import React from "react";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable"; // Importa o plugin diretamente para o TypeScript reconhecer
+import autoTable from "jspdf-autotable"; // Importa o plugin diretamente
 import { Button } from "@mui/material";
 import { Activity } from "@/services/firebaseService";
 import dayjs from "dayjs";
+
+interface Block {
+  id: string;
+  name: string;
+}
 
 interface ExportPdfButtonProps {
   activities: Activity[];
@@ -15,7 +20,7 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities }) => {
 
     // Título do documento
     doc.setFontSize(18);
-    doc.text("Relatório de Manutenção", 14, 20);
+    doc.text("Relatório de Manutenção - Origem: Sistema de Atividades", 14, 20);
 
     // Data de geração
     doc.setFontSize(12);
@@ -25,25 +30,28 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({ activities }) => {
     const tableColumnHeaders = [
       "Título",
       "Responsável",
+      "Atividade",
       "Periodicidade",
-      "Última Manutenção",
-      "Próxima Manutenção",
+      "Data",
       "Blocos",
-      "Fornecedores",
     ];
 
-    // Dados da tabela
+    // Dados da tabela com validações
     const tableRows = activities.map((activity) => [
-      activity.titulo,
-      activity.responsavel,
-      activity.Periodicidade,
-      activity.data ? dayjs(activity.data).format("DD/MM/YYYY") : "-",
-      activity.dueDate || "-",
-      activity.blocoIDs?.join(", ") || "-",
-      activity.suppliers?.join(", ") || "-",
+      activity.updatedFields?.titulo || "Título Indisponível",
+      activity.updatedFields?.responsavel || "Responsável Indisponível",
+      activity.updatedFields?.atividade || "Atividade Indisponível",
+      activity.updatedFields?.Periodicidade || "Periodicidade Indisponível",
+      activity.updatedFields?.data
+        ? dayjs(activity.updatedFields.data).format("DD/MM/YYYY")
+        : "-",
+      // Converte blocoIDs em nomes, se existirem
+      activity.updatedFields?.blocoIDs
+        ?.map((bloco: Block) => bloco.name)
+        .join(", ") || "-"
     ]);
 
-    // Configuração da tabela usando o método autoTable do plugin
+    // Configuração da tabela usando autoTable diretamente
     autoTable(doc, {
       startY: 40,
       head: [tableColumnHeaders],
