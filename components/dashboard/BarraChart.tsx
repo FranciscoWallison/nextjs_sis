@@ -118,12 +118,6 @@ export default function BarraChart() {
               yAxis={[
                 {
                   label: "Manutenções",
-                  gridLines: {
-                    show: true, // Mostra as linhas horizontais no eixo Y
-                    stroke: theme.palette.grey[300], // Define a cor
-                    strokeWidth: 1, // Define a espessura
-                    strokeDasharray: "4,4", // Estilo tracejado
-                  },
                 },
               ]}
               series={[
@@ -155,6 +149,7 @@ export default function BarraChart() {
                 left: 50,
               }}
             />
+
           </div>
         )}
       </div>

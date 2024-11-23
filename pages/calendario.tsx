@@ -113,8 +113,8 @@ const CalendarioManutencoes: React.FC = () => {
 
               return {
                 title: `${activity.titulo} - ${statusInfo.status} - Próx.: ${nextMaintenanceDate.format("DD/MM/YYYY")}`,
-                start: new Date(activity.data), // Última data cadastrada
-                end: new Date(activity.data),
+                start: activity.data ? new Date(activity.data) : new Date(), // Última data cadastrada ou data atual como fallback
+                end: activity.data ? new Date(activity.data) : new Date(),                
                 allDay: true,
                 status: statusInfo.status,
               };
