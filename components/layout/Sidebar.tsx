@@ -9,11 +9,12 @@ import {
   ListItemText,
   Box,
   Button,
+  useMediaQuery,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Ícone para o botão de sair
 import { MainListItems, secondaryListItems } from "./listItems";
-import { styled } from "@mui/material/styles";
+import { styled, Theme } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
 import { usePageContext } from "@/contexts/PageContext";
 import { useRouter } from "next/router";
@@ -31,6 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { pages } = usePageContext();
   const router = useRouter();
+  const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm")); // Detecta se é mobile
 
   const handleLogoff = () => {
     // Limpa o localStorage
@@ -42,32 +44,41 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const Drawer = styled(MuiDrawer, {
     shouldForwardProp: (prop) => prop !== "open",
-  })(({ theme, open }) => ({
-    "& .MuiDrawer-paper": {
-      position: "relative",
-      whiteSpace: "nowrap",
-      width: drawerWidth,
-      transition: theme.transitions.create("width", {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.enteringScreen,
-      }),
-      boxSizing: "border-box",
-      ...(!open && {
-        overflowX: "hidden",
+  })(({ theme, open }) => {
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Detecta se a tela é mobile
+
+    return {
+      width: isMobile && open ? "100%" : "auto", 
+      "& .MuiDrawer-paper": {
+        position: "relative",
+        whiteSpace: "nowrap",
+        width: isMobile ? (open ? "100% !important" : theme.spacing(7)) : open ? `${drawerWidth}px` : theme.spacing(7),
         transition: theme.transitions.create("width", {
           easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.leavingScreen,
+          duration: theme.transitions.duration.enteringScreen,
         }),
-        width: theme.spacing(7),
-        [theme.breakpoints.up("sm")]: {
-          width: theme.spacing(9),
-        },
-      }),
-    },
-  }));
+        boxSizing: "border-box",
+        ...(isMobile && open && {
+          width: "100% !important", // Define largura total para mobile quando o menu está aberto
+        }),
+        ...(!open && {
+          overflowX: "hidden",
+          transition: theme.transitions.create("width", {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
+          width: theme.spacing(7),
+          [theme.breakpoints.up("sm")]: {
+            width: theme.spacing(9),
+          },
+        }),
+      },
+    };
+  });
+
 
   return (
-    <Drawer variant="permanent" open={open}>
+    <Drawer variant={"permanent"} open={open}>
       <Toolbar
         sx={{
           display: "flex",

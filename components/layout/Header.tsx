@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import {
   Toolbar,
@@ -11,6 +11,7 @@ import {
   Alert,
   AlertTitle,
   Snackbar,
+  useMediaQuery,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -42,6 +43,9 @@ const Header: React.FC<HeaderProps> = ({
     null
   );
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Detecta se a tela é mobile
 
   const AppBar = styled(MuiAppBar, {
     shouldForwardProp: (prop) => prop !== "open",
@@ -89,7 +93,10 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <AppBar position="absolute" open={open}>
-        <Toolbar sx={{ pr: "24px" }}>
+        <Toolbar sx={{
+          pr: "24px", // Padding direito
+          ...((isMobile && open) && { display: "none" }), // Exemplo de ajuste no mobile
+        }}>
           <IconButton
             edge="start"
             color="inherit"
@@ -128,6 +135,14 @@ const Header: React.FC<HeaderProps> = ({
         }
         keepMounted // Mantém o menu montado para evitar problemas de posicionamento
       >
+        {/* {isMobile && (
+          <MenuItem onClick={handleCloseNotifications}>
+            <Typography variant="body2" color="textSecondary">
+              Fechar
+            </Typography>
+          </MenuItem>
+        )} */}
+
         {/* Verifica se há notificações */}
         {alerts.length > 0 ? (
           alerts.map((activity: Activity) => (
