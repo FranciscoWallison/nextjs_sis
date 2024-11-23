@@ -1,33 +1,30 @@
 import * as React from "react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useTheme } from "@mui/material/styles";
 import Title from "./Title";
 import { pegarUsuarioPeriodicidades, Activity } from "@/services/firebaseService";
 import { getStatus } from "@/utils/statusHelper";
 
-// Função assíncrona para agrupar as atividades por mês e status
 const groupByMonthAndStatus = async (activities: Activity[]) => {
   const months = [
     "Jan", "Feb", "Mar", "Abr", "Mai", "Jun",
-    "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez",
   ];
 
-  // Inicializa um objeto para armazenar os dados por mês
-  const dataByMonth = months.map(month => ({
+  const dataByMonth = months.map((month) => ({
     month,
     vencido: 0,
     regular: 0,
     avencer: 0,
   }));
 
-  // Itera sobre as atividades e agrupa-as por mês e status
   for (const activity of activities) {
-    const date = new Date(activity.data || Date.now()); // Usa a data atual se não houver data
-    const monthIndex = date.getMonth(); // Obtém o índice do mês (0 = Jan, 11 = Dez)
+    const date = new Date(activity.data || Date.now());
+    const monthIndex = date.getMonth();
     const monthData = dataByMonth[monthIndex];
 
-    const statusInfo = await getStatus(activity); // Aguarda a função assíncrona
+    const statusInfo = await getStatus(activity);
 
     if (statusInfo.status === "Vencido") {
       monthData.vencido += 1;
@@ -44,8 +41,11 @@ const groupByMonthAndStatus = async (activities: Activity[]) => {
 const valueFormatter = (value: number | null) => `${value}`;
 
 export default function BarraChart() {
+  const theme = useTheme();
   const [loading, setLoading] = useState<boolean>(true);
   const [dataset, setDataset] = useState<any[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 500, height: 300 });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -65,41 +65,97 @@ export default function BarraChart() {
     fetchData();
   }, [fetchData]);
 
-  const theme = useTheme();
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        setDimensions({
+          width: width,
+          height: width / 1.9, // Define uma proporção para o gráfico
+        });
+      }
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   return (
     <React.Fragment>
       <Title>Manutenções por Período</Title>
-      <div style={{ width: "100%", flexGrow: 1, overflow: "hidden" }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "800px", // Limita o tamanho máximo do contêiner
+          margin: "0 auto",
+          overflowX: "auto", // Adiciona barra de rolagem horizontal
+          padding: "16px", // Adiciona um pouco de espaçamento interno
+        }}
+      >
         {loading ? (
           <p>Carregando...</p>
         ) : (
-          <BarChart
-            dataset={dataset}
-            xAxis={[{ scaleType: "band", dataKey: "month" }]}
-            series={[
-              { 
-                dataKey: "vencido", 
-                label: "Vencido", 
-                valueFormatter, 
-                color: theme.palette.error.main
-              },
-              { 
-                dataKey: "regular", 
-                label: "Regular", 
-                valueFormatter, 
-                color: theme.palette.success.main
-              },
-              { 
-                dataKey: "avencer", 
-                label: "A vencer", 
-                valueFormatter, 
-                color: theme.palette.warning.main
-              },
-            ]}
-            width={500}
-            height={300}
-          />
+          <div
+            ref={containerRef}
+            style={{
+              minWidth: "600px", // Garante que o gráfico tenha largura mínima
+              maxWidth: "100%", // Limita a largura do gráfico ao tamanho do contêiner
+            }}
+          >
+            <BarChart
+              dataset={dataset}
+              xAxis={[
+                {
+                  scaleType: "band",
+                  dataKey: "month",
+                },
+              ]}
+              yAxis={[
+                {
+                  label: "Manutenções",
+                  gridLines: {
+                    show: true, // Mostra as linhas horizontais no eixo Y
+                    stroke: theme.palette.grey[300], // Define a cor
+                    strokeWidth: 1, // Define a espessura
+                    strokeDasharray: "4,4", // Estilo tracejado
+                  },
+                },
+              ]}
+              series={[
+                {
+                  dataKey: "vencido",
+                  label: "Vencido",
+                  valueFormatter,
+                  color: theme.palette.error.main,
+                },
+                {
+                  dataKey: "regular",
+                  label: "Regular",
+                  valueFormatter,
+                  color: theme.palette.success.main,
+                },
+                {
+                  dataKey: "avencer",
+                  label: "A vencer",
+                  valueFormatter,
+                  color: theme.palette.warning.main,
+                },
+              ]}
+              width={dimensions.width}
+              height={dimensions.height}
+              margin={{
+                top: 20,
+                right: 30,
+                bottom: 40,
+                left: 50,
+              }}
+            />
+          </div>
         )}
       </div>
     </React.Fragment>

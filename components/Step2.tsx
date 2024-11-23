@@ -119,14 +119,14 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      {" "}
-      {/* Adicionando LocalizationProvider */}
-      <Box>
-        <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
+      <Box sx={{ padding: { xs: 2, sm: 4 }, maxWidth: "800px", margin: "0 auto" }}>
+        <Typography component="h1" sx={{ mt: 2, mb: 4 }} variant="h6" textAlign="center">
           Olá, {formData.lastName}! Precisamos que você preencha as informações
           iniciais referentes ao condomínio.
         </Typography>
-        <Grid container spacing={2}>
+
+        <Grid container spacing={3}>
+          {/* Nome do Condomínio */}
           <Grid item xs={12} sm={6}>
             <TextField
               label="Nome do Condomínio"
@@ -136,12 +136,11 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               fullWidth
               required
               error={errors.buildingName}
-              helperText={
-                errors.buildingName ? "Nome do condomínio é obrigatório" : ""
-              }
-              sx={{ mt: 2 }}
+              helperText={errors.buildingName ? "Nome do condomínio é obrigatório" : ""}
             />
           </Grid>
+
+          {/* Data de Entrega */}
           <Grid item xs={12} sm={6}>
             <DatePicker
               label="Data de Entrega"
@@ -157,56 +156,47 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
                     : "",
                 },
               }}
-              sx={{ mt: 2 }}
             />
           </Grid>
+
+          {/* CNPJ */}
           <Grid item xs={12} sm={6}>
             <InputMask
               mask="99.999.999/9999-99"
               value={formData.cnpj || ""}
               onChange={handleChange}
-              disabled={loadingCEP}
             >
               <TextField
                 label="CNPJ"
                 name="cnpj"
-                value={formData.cnpj || ""}
-                onChange={handleChange}
                 fullWidth
-                sx={{ mt: 2 }}
-                disabled={loadingCEP}
               />
             </InputMask>
           </Grid>
 
+          {/* CEP */}
           <Grid item xs={12} sm={6}>
             <InputMask
               mask="99999-999"
               value={formData.cep || ""}
               onChange={handleChange}
               onBlur={handleCEPBlur}
-              disabled={loadingCEP}
             >
               <TextField
                 label="CEP"
                 name="cep"
-                value={formData.cep || ""}
-                onChange={handleChange}
                 fullWidth
                 required
                 error={errors.cep}
                 helperText={errors.cep ? "CEP é obrigatório" : ""}
-                sx={{ mt: 2 }}
                 InputProps={{
-                  endAdornment: loadingCEP ? (
-                    <CircularProgress size={20} />
-                  ) : null,
+                  endAdornment: loadingCEP ? <CircularProgress size={20} /> : null,
                 }}
-                disabled={loadingCEP}
               />
             </InputMask>
           </Grid>
 
+          {/* Endereço */}
           <Grid item xs={12} sm={6}>
             <TextField
               label="Rua/Endereço"
@@ -217,9 +207,10 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               required
               error={errors.address}
               helperText={errors.address ? "Endereço é obrigatório" : ""}
-              sx={{ mt: 2 }}
             />
           </Grid>
+
+          {/* Bairro */}
           <Grid item xs={12} sm={6}>
             <TextField
               label="Bairro"
@@ -230,9 +221,10 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               required
               error={errors.bairro}
               helperText={errors.bairro ? "Bairro é obrigatório" : ""}
-              sx={{ mt: 2 }}
             />
           </Grid>
+
+          {/* Cidade */}
           <Grid item xs={12} sm={6}>
             <TextField
               label="Cidade"
@@ -243,11 +235,12 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
               required
               error={errors.cidade}
               helperText={errors.cidade ? "Cidade é obrigatória" : ""}
-              sx={{ mt: 2 }}
             />
           </Grid>
         </Grid>
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+
+        {/* Botões de Navegação */}
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
           <Button variant="contained" onClick={handleBack}>
             Voltar
           </Button>
@@ -257,6 +250,7 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         </Box>
       </Box>
     </LocalizationProvider>
+
   );
 };
 

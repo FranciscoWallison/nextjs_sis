@@ -1,10 +1,7 @@
 import React from "react";
-import { Grid, Paper, Container, Toolbar, Box } from "@mui/material";
-import Chart from "./Chart";
+import { Grid, Paper, Container, Box } from "@mui/material";
 import PizzaChart from "./PizzaChart";
 import BarraChart from "./BarraChart";
-import Deposits from "./Deposits";
-import Orders from "./Orders";
 
 const DashboardContent: React.FC = () => (
   <Box
@@ -15,58 +12,46 @@ const DashboardContent: React.FC = () => (
           ? theme.palette.grey[100]
           : theme.palette.grey[900],
       flexGrow: 1,
-      height: "100vh",
+      minHeight: "100vh", // Garante que o conteúdo ocupe pelo menos a altura total
       overflow: "auto",
+      padding: { xs: 2, sm: 4 }, // Padding dinâmico
     }}
   >
-    {/* <Toolbar /> */}
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg">
       <Grid container spacing={3}>
-        {/* Chart */}
-        <Grid item xs={12} md={12} lg={5}>
+        {/* Gráfico de Pizza */}
+        <Grid item xs={12} md={6} lg={5}>
           <Paper
             sx={{
               p: 2,
               display: "flex",
               flexDirection: "column",
-              height: 280,
+              justifyContent: "center", // Centraliza o conteúdo verticalmente
+              alignItems: "center", // Centraliza horizontalmente
+              height: "auto", // Altura dinâmica
             }}
           >
             <PizzaChart />
           </Paper>
         </Grid>
-        {/* <Grid item xs={12} md={8} lg={9}>
-          <Paper
-            sx={{
-              p: 2,
-              display: "flex",
-              flexDirection: "column",
-              height: 240,
-            }}
-          >
-            <Chart />
-          </Paper>
-        </Grid> */}
-        {/* Recent Deposits */}
+
+        {/* Gráfico de Barra */}
         <Grid item xs={12} md={12} lg={12}>
           <Paper
             sx={{
               p: 2,
               display: "flex",
               flexDirection: "column",
-              height: 350,
+              justifyContent: "center",
+              alignItems: "center",
+              height: "auto", // Altura dinâmica
+              maxWidth: "100%", // Responsividade
+              overflow: "hidden", // Evita overflow do conteúdo
             }}
           >
             <BarraChart />
-            {/* <Deposits /> */}
           </Paper>
         </Grid>
-        {/* Recent Orders */}
-        {/* <Grid item xs={12}>
-          <Paper sx={{ p: 2, display: "flex", flexDirection: "column" }}>
-            <Orders />
-          </Paper>
-        </Grid> */}
       </Grid>
     </Container>
   </Box>

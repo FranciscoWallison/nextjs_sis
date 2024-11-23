@@ -53,28 +53,47 @@ export default function HorizontalLinearStepper() {
 
   return (
     <FormProvider>
-      <Box sx={{ width: "100%" }}>
-        <Stepper activeStep={activeStep}>
+      <Box
+        sx={{
+          width: "100%",
+          padding: { xs: 2, sm: 4 },
+          boxSizing: "border-box",
+        }}
+      >
+        <Stepper activeStep={activeStep} alternativeLabel>
           {steps.map((label, index) => (
             <Step key={label}>
-              <StepLabel>{label}</StepLabel>
+              <StepLabel>
+                <Typography variant="body2" sx={{ textAlign: "center" }}>
+                  {label}
+                </Typography>
+              </StepLabel>
             </Step>
           ))}
         </Stepper>
-        {activeStep === steps.length ? (
-          <React.Fragment>
-            <Typography sx={{ mt: 2, mb: 1 }}>
-              All steps completed - you&apos;re finished
-            </Typography>
-            <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
-              <Box sx={{ flex: "1 1 auto" }} />
-              <Button onClick={handleReset}>Reset</Button>
+        <Box
+          sx={{
+            marginTop: { xs: 2, sm: 4 },
+            padding: { xs: 2, sm: 4 },
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          {activeStep === steps.length ? (
+            <Box textAlign="center">
+              <Typography sx={{ mt: 2, mb: 1 }}>
+                Todos os passos foram concluídos!
+              </Typography>
+              <Button onClick={handleReset} variant="contained">
+                Reiniciar
+              </Button>
             </Box>
-          </React.Fragment>
-        ) : (
-          <React.Fragment>{getStepContent(activeStep)}</React.Fragment>
-        )}
+          ) : (
+            getStepContent(activeStep)
+          )}
+        </Box>
       </Box>
+
     </FormProvider>
   );
 }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useTheme } from "@mui/material/styles";
 import Title from "./Title";
@@ -18,6 +18,8 @@ export default function PizzaChart() {
     { id: 1, value: 0, label: "Regular", color: theme.palette.success.main },
     { id: 2, value: 0, label: "A vencer", color: theme.palette.warning.main },
   ]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 400, height: 200 });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -83,10 +85,39 @@ export default function PizzaChart() {
     theme.palette.warning.main,
   ]);
 
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        setDimensions({
+          width: width,
+          height: width / 2, // Define uma proporção para o gráfico
+        });
+      }
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   return (
     <React.Fragment>
       <Title>Manutenções Programadas</Title>
-      <div style={{ width: "100%", flexGrow: 1, overflow: "hidden" }}>
+      <div
+        ref={containerRef}
+        style={{
+          width: "100%",
+          maxWidth: "600px", // Limita o tamanho máximo do gráfico
+          margin: "0 auto", // Centraliza o gráfico
+          flexGrow: 1,
+          overflow: "hidden",
+        }}
+      >
         {loading ? (
           <p>Carregando...</p>
         ) : (
@@ -97,12 +128,12 @@ export default function PizzaChart() {
                   id: item.id,
                   value: item.value,
                   label: item.label,
-                  color: item.color, // As cores já estão aplicadas no próprio dado
+                  color: item.color,
                 })),
               },
             ]}
-            width={400}
-            height={200}
+            width={dimensions.width}
+            height={dimensions.height}
           />
         )}
       </div>
