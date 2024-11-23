@@ -493,7 +493,7 @@ const registrarHistoricoManutencao = async (updatedActivity: Activity) => {
   }
 };
 
-// Função para buscar o histórico de alterações de uma atividade específica, filtrado pelo usuário autenticado
+// Função para buscar o históricos de manutenções de uma atividade específica, filtrado pelo usuário autenticado
 export const getActivityHistory = async (activityId: number) => {
   const user: FirebaseUser | null = AuthStorage.getUser();
 
