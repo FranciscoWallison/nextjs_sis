@@ -10,6 +10,22 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+// Componente wrapper para InputMask usando React.forwardRef
+const InputMaskCustom = React.forwardRef(function InputMaskCustom(
+  { mask, value, onChange, ...otherProps }: any,
+  ref
+) {
+  return (
+    <InputMask
+      mask={mask}
+      value={value}
+      onChange={onChange}
+      {...otherProps}
+      inputRef={ref} // Importante para suportar refs
+    />
+  );
+});
+
 const SupplierForm: React.FC<{
   open: boolean;
   onClose: () => void;
@@ -42,14 +58,8 @@ const SupplierForm: React.FC<{
         value={formData.cnpj}
         onChange={(e) => onFormChange("cnpj", e.target.value)}
         InputProps={{
-          inputComponent: (props) => (
-            <InputMask
-              {...props}
-              mask="99.999.999/9999-99"
-              value={formData.cnpj}
-              onChange={(e) => onFormChange("cnpj", e.target.value)}
-            />
-          ),
+          inputComponent: InputMaskCustom,
+          inputProps: { mask: "99.999.999/9999-99" },
         }}
       />
 
@@ -73,14 +83,8 @@ const SupplierForm: React.FC<{
         value={formData.telefone}
         onChange={(e) => onFormChange("telefone", e.target.value)}
         InputProps={{
-          inputComponent: (props) => (
-            <InputMask
-              {...props}
-              mask="(99) 99999-9999"
-              value={formData.telefone}
-              onChange={(e) => onFormChange("telefone", e.target.value)}
-            />
-          ),
+          inputComponent: InputMaskCustom,
+          inputProps: { mask: "(99) 99999-9999" },
         }}
       />
 

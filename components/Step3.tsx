@@ -174,38 +174,74 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   if (loading) return <CircularProgress />;
 
   return (
-    <Box>
-      <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
+    <Box sx={{ padding: { xs: 2, sm: 4 }, maxWidth: "800px", margin: "0 auto" }}>
+      <Typography component="h1" sx={{ mt: 2, mb: 4 }} variant="h6" textAlign="center">
         Para o sistema gerar as manutenções necessárias conforme NBR 5674, por
-        favor selecione abaixo caso o {formData.buildingName} possua algum
-        desses itens:
+        favor selecione abaixo caso o {formData.buildingName} possua algum desses itens:
       </Typography>
+
       <Container>
-        <Grid container spacing={2}>
+        {/* Botão de Seleção Geral */}
+        <Box sx={{ textAlign: "center", mb: 4 }}>
           <Chip
             icon={selectAllChecked ? <DoneIcon /> : undefined}
             label={selectAllChecked ? "Todos Selecionados" : "Selecionar Todos"}
             onClick={handleSelectAll}
             color={selectAllChecked ? "primary" : "default"}
-            sx={{ mt: 2, mb: 2 }}
+            sx={{ fontSize: "1rem", padding: "10px 20px" }}
           />
-        </Grid>
+        </Box>
 
-        <Grid container spacing={2}>
+        {/* Lista de Itens */}
+        <Grid container spacing={3}>
           {formItems.map((group) => (
             <Grid item xs={12} sm={6} key={group.label}>
-              <Chip
-                icon={group.names && group.names.every((name) => formData[name]) ? <DoneIcon /> : undefined}
-                label={group.label}
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  border: "1px solid",
+                  borderColor: "grey.300",
+                  borderRadius: "16px",
+                  padding: "10px 15px",
+                  backgroundColor:
+                    group.names &&
+                      group.names.every((name) => formData[name])
+                      ? "primary.main"
+                      : "background.paper",
+                  color:
+                    group.names &&
+                      group.names.every((name) => formData[name])
+                      ? "white"
+                      : "text.primary",
+                }}
                 onClick={() => handleChipClick(group.names)}
-                color={group.names && group.names.every((name) => formData[name]) ? "primary" : "default"}
-                sx={{ mt: 1, mb: 1 }}
-              />
+              >
+                {/* Ícone de seleção */}
+                {group.names && group.names.every((name) => formData[name]) && (
+                  <DoneIcon sx={{ marginRight: "8px" }} />
+                )}
+
+                {/* Título com quebra de linha */}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    wordWrap: "break-word", // Permite quebra de linha automática
+                    overflow: "visible", // Evita cortar texto
+                    whiteSpace: "normal", // Permite múltiplas linhas
+                  }}
+                >
+                  {group.label}
+                </Typography>
+              </Box>
             </Grid>
           ))}
         </Grid>
 
-        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+
+        {/* Botões de Navegação */}
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
           <Button variant="contained" onClick={handleBack}>
             Voltar
           </Button>
@@ -215,6 +251,7 @@ const Step3: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         </Box>
       </Container>
     </Box>
+
   );
 };
 

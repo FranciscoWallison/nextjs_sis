@@ -98,28 +98,35 @@ const CalendarioManutencoes: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
   useEffect(() => {
     if (data.length > 0) {
       const fetchEvents = async () => {
         const calendarEvents = await Promise.all(
-          data.map(async (activity) => {
-            const statusInfo = await getStatus(activity); // Use await to handle the Promise
-            return {
-              title: `${activity.titulo} - ${statusInfo.status}`,
-              start: activity.data ? new Date(activity.data) : new Date(), // Verifica se "activity.data" está definido
-              end: activity.data ? new Date(activity.data) : new Date(), // Verifica se "activity.data" está definido
-              allDay: true,
-              status: statusInfo.status,
-            };
-          })
+          data
+            .filter((activity) => activity.data) // Filtra atividades com a última data cadastrada
+            .map(async (activity) => {
+              const statusInfo = await getStatus(activity); // Obtém o status da atividade
+              const nextMaintenanceDate = moment(activity.dueDate).add(
+                activity.Periodicidade || 0,
+                "days"
+              ); // Calcula a próxima data de manutenção
+
+              return {
+                title: `${activity.titulo} - ${statusInfo.status} - Próx.: ${nextMaintenanceDate.format("DD/MM/YYYY")}`,
+                start: activity.data ? new Date(activity.data) : new Date(), // Última data cadastrada ou data atual como fallback
+                end: activity.data ? new Date(activity.data) : new Date(),                
+                allDay: true,
+                status: statusInfo.status,
+              };
+            })
         );
         setEvents(calendarEvents);
       };
 
-      fetchEvents(); // Call the async function
+      fetchEvents(); // Chama a função para buscar eventos
     }
   }, [data]);
+
 
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
@@ -208,6 +215,32 @@ const CalendarioManutencoes: React.FC = () => {
                 startAccessor="start"
                 endAccessor="end"
                 style={{ height: "100%", margin: "50px 0" }}
+                eventPropGetter={(event) => {
+                  let backgroundColor = "";
+                  switch (event.status) {
+                    case "Regular":
+                      backgroundColor = "green";
+                      break;
+                    case "A vencer":
+                      backgroundColor = "orange";
+                      break;
+                    case "Vencido":
+                      backgroundColor = "red";
+                      break;
+                    default:
+                      backgroundColor = "gray"; // Cor padrão para outros tipos
+                      break;
+                  }
+                  return {
+                    style: {
+                      backgroundColor,
+                      color: "white", // Define a cor do texto para contraste
+                      borderRadius: "5px",
+                      border: "none",
+                      padding: "5px",
+                    },
+                  };
+                }}
               />
             </Box>
           </>

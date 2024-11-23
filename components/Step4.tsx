@@ -35,20 +35,30 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
   };
 
   return (
-    <Box>
-      <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
-        Parabéns! Você cadastrou o seu condomínio, e todas as manutenções selecionadas já estão cadastradas.
+    <Box sx={{ padding: { xs: 2, sm: 4 }, maxWidth: "800px", margin: "0 auto" }}>
+      <Typography
+        component="h1"
+        sx={{ mt: 2, mb: 4 }}
+        variant="h6"
+        textAlign="center"
+      >
+        🎉 Parabéns! Você cadastrou o seu condomínio, e todas as manutenções selecionadas já estão cadastradas.
       </Typography>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+
+      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
         <Button variant="contained" onClick={handleBack}>
           Voltar
         </Button>
-
-        <Button variant="contained" onClick={handleRedirect} sx={{ mt: 2 }}>
+        <Button
+          variant="contained"
+          onClick={handleRedirect}
+          sx={{ backgroundColor: "green", ":hover": { backgroundColor: "darkgreen" } }}
+        >
           Seguir para o Painel Principal
         </Button>
       </Box>
     </Box>
+
   );
 };
 

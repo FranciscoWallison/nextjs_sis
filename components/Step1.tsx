@@ -11,7 +11,7 @@ const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
   }
 
   const { formData, setFormData } = context;
-  
+
   const [firstNameError, setFirstNameError] = useState(false);
   const [lastNameError, setLastNameError] = useState(false);
 
@@ -42,8 +42,18 @@ const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
   };
 
   return (
-    <Box>
-      <Typography component="h1" sx={{ mt: 2, mb: 1 }} variant="h6">
+    <Box
+      sx={{
+        maxWidth: "600px",
+        width: "100%",
+        margin: "0 auto",
+        padding: { xs: 2, sm: 4 },
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
+      <Typography component="h1" variant="h6" textAlign="center">
         Olá, Síndico! Seja bem-vindo ao GMP+.
       </Typography>
       <TextField
@@ -54,7 +64,6 @@ const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
         required
         error={firstNameError}
         helperText={firstNameError ? "Nome é obrigatório" : ""}
-        sx={{ mb: 2 }}
       />
       <TextField
         label="Sobrenome"
@@ -64,13 +73,19 @@ const Step1: React.FC<{ handleNext: () => void }> = ({ handleNext }) => {
         required
         error={lastNameError}
         helperText={lastNameError ? "Sobrenome é obrigatório" : ""}
-        sx={{ mb: 2 }}
       />
-      <Button variant="contained" onClick={handleNextStep} sx={{ mt: 2 }}>
+      <Button
+        variant="contained"
+        onClick={handleNextStep}
+        fullWidth
+        sx={{ mt: 2 }}
+      >
         Continuar
       </Button>
     </Box>
+
   );
 };
 
 export default Step1;
+

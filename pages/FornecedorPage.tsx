@@ -167,39 +167,102 @@ const FornecedorPage: React.FC = () => {
               </Button>
             </Grid>
             <Grid item xs={12} sm="auto">
-              {/* Formulário de Criação/Edição */}
-              <Button variant="contained" onClick={() => setOpenForm(true)}>
+              <Button
+                fullWidth
+                sx={{ height: "100%" }}
+                variant="contained"
+                onClick={() => {
+                  setFormData({
+                    nome: "",
+                    cnpj: "",
+                    email: "",
+                    telefone: "",
+                    area: "",
+                    estado: "",
+                    cidade: "",
+                    link: "",
+                  }); // Limpa os dados do formulário
+                  setCurrentSupplier(null); // Garante que não seja um fornecedor existente
+                  setOpenForm(true); // Abre o modal
+                }}
+              >
                 Adicionar Fornecedor
               </Button>
+
             </Grid>
           </Grid>
         </Box>
         {/* Lista de Fornecedores */}
+        {/* Lista de Fornecedores */}
         {filteredSuppliers.map((supplier) => (
-          <Card key={supplier.id} sx={{ width: "100%", marginTop: "2em" }}>
+          <Card
+            key={supplier.id}
+            sx={{
+              marginTop: "1em",
+              borderRadius: "8px",
+              boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+              padding: "1em",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
             <CardContent>
-              <ListItemText
-                primary={supplier.nome}
-                secondary={
-                  <>
-                    <Typography variant="body2" color="textSecondary">
-                      Área: {supplier.area}
-                    </Typography>
+              <Grid container spacing={2} alignItems="center">
+                {/* Nome e Área de Atuação */}
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="h6" component="div">
+                    {supplier.nome}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Área: {supplier.area}
+                  </Typography>
+                </Grid>
+                {/* Telefone e Ações */}
+                <Grid item xs={12} sm={6} container spacing={2} alignItems="center">
+                  <Grid item xs={12} sm={6}>
                     <Typography variant="body2" color="textSecondary">
                       Telefone: {supplier.telefone}
                     </Typography>
-                  </>
-                }
-              />
-              <IconButton onClick={() => handleEditSupplier(supplier)}>
-                <EditIcon />
-              </IconButton>
-              <IconButton onClick={() => handleDeleteSupplier(supplier.id)}>
-                <DeleteIcon />
-              </IconButton>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      href={`https://wa.me/${supplier.telefone.replace(/[^0-9]/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        marginTop: "0.5em",
+                        textTransform: "none",
+                      }}
+                    >
+                      Abrir no WhatsApp
+                    </Button>
+                  </Grid>
+                  {/* Botões de Ação */}
+                  <Grid item xs={12} sm={6} container justifyContent="flex-end" spacing={1}>
+                    <Grid item>
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleEditSupplier(supplier)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Grid>
+                    <Grid item>
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDeleteSupplier(supplier.id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         ))}
+
 
 
         <SupplierForm
