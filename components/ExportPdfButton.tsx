@@ -32,7 +32,7 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
     doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), "F"); // "F" para preenchimento
 
     // Carregar a imagem local
-    const imagePath = "./logo.png"; // Caminho da imagem local
+    const imagePath = "./logo-gmp.svg"; // Caminho da imagem local
     const loadImageToBase64 = (url: string): Promise<string> => {
       return new Promise((resolve, reject) => {
         const img = new Image();

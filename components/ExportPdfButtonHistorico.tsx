@@ -31,7 +31,7 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
     doc.setFillColor(244, 244, 244); // Cor RGB (244, 244, 244) equivalente ao var(--scrollbar-bg-color)
     doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), "F"); // "F" para preenchimento
     // Carregar a imagem local e adicionar ao PDF
-    const imagePath = "./logo.png"; // Caminho para a imagem local
+    const imagePath = "./logo-gmp.svg"; // Caminho para a imagem local
     const loadImageToBase64 = (url: string): Promise<string> => {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -58,7 +58,8 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
 
     // Título do documento
     doc.setFontSize(18);
-    doc.text("Relatório de Manutenção - Origem: Sistema de Atividades", 70, 20);
+
+    
 
     // Data de geração
     doc.setFontSize(12);
@@ -66,7 +67,7 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
 
     // Cabeçalhos da tabela
     const tableColumnHeaders = [
-      "Título",
+      // "Título",
       "Periodicidade",
       "Data",
       "Blocos",
@@ -74,8 +75,10 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
     ];
 
     // Dados da tabela com validações
-    const tableRows = activities.map((activity) => [
-      activity.updatedFields?.titulo || "Título Indisponível",
+    const tableRows = activities.map((activity) => {
+      doc.text(activity.updatedFields?.titulo, 70, 20);
+      return [
+      // activity.updatedFields?.titulo || "Título Indisponível",
       activity.updatedFields?.Periodicidade || "Periodicidade Indisponível",
       activity.updatedFields?.data
         ? dayjs(activity.updatedFields.data).format("DD/MM/YYYY")
@@ -92,7 +95,7 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
           "Fornecedor Indisponível"
         )
         .join(", ") || "-",
-    ]);
+    ]});
 
     // Configuração da tabela usando autoTable diretamente
     autoTable(doc, {
