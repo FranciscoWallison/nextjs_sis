@@ -53,7 +53,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const { fetchNotifications } = useNotification();
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
-  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>(
+    []
+  );
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
   const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
@@ -70,7 +72,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
       const response = await fetch("/periodicidades/periodicidade.json");
       const result = await response.json();
-      const options = result.map((item: { descricao: string }) => item.descricao);
+      const options = result.map(
+        (item: { descricao: string }) => item.descricao
+      );
       if (showNotApplicable && !options.includes("Não aplicável")) {
         options.unshift("Não aplicável");
       }
@@ -96,7 +100,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
     setSelectedSuppliers(event.target.value as string[]);
   };
 
-  const handleSelectChangePeriodicidade = (event: SelectChangeEvent<string>) => {
+  const handleSelectChangePeriodicidade = (
+    event: SelectChangeEvent<string>
+  ) => {
     setEditedActivity((prev) =>
       prev ? { ...prev, Periodicidade: event.target.value } : null
     );
@@ -104,9 +110,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditedActivity((prev) =>
-      prev ? { ...prev, [name]: value } : null
-    );
+    setEditedActivity((prev) => (prev ? { ...prev, [name]: value } : null));
   };
 
   const handleDateChange = (newDate: Dayjs | null) => {
@@ -121,7 +125,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
     const finalActivity = {
       ...editedActivity,
-      blocoIDs: selectedBlocks.length ? selectedBlocks : blocks.map((b) => b.id),
+      blocoIDs: selectedBlocks.length
+        ? selectedBlocks
+        : blocks.map((b) => b.id),
       suppliers: selectedSuppliers,
       activityRegular,
     };
@@ -239,7 +245,10 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
               onChange={handleSupplierChange}
               renderValue={(selected) =>
                 selected
-                  .map((id) => suppliers.find((supplier) => supplier.id === id)?.nome)
+                  .map(
+                    (id) =>
+                      suppliers.find((supplier) => supplier.id === id)?.nome
+                  )
                   .join(", ")
               }
             >
@@ -251,7 +260,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             </Select>
           </FormControl>
 
-          {editedActivity?.Periodicidade !== "Não aplicável" && (
+          {editedActivity?.Periodicidade !== "Não aplicável" ? (
             <DatePicker
               label="Data"
               value={selectedDate}
@@ -264,6 +273,16 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 },
               }}
             />
+          ) : (
+            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
+              <Button
+                variant="contained"
+                color={activityRegular ? "success" : "primary"}
+                onClick={handleMarkAsDone}
+              >
+                {activityRegular ? "Feito" : "Marcar como Feito"}
+              </Button>
+            </Box>
           )}
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
