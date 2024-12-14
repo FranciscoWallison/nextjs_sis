@@ -116,7 +116,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const handleDateChange = (newDate: Dayjs | null) => {
     setSelectedDate(newDate);
     setEditedActivity((prev) =>
-      prev ? { ...prev, data: newDate?.format("YYYY-MM-DD") || "" } : null
+      prev ? { ...prev, data: newDate ? newDate.toISOString() : "" } : null
     );
   };
 
