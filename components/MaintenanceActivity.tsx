@@ -131,9 +131,10 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
               <Typography variant="body2">
                 <strong>Fornecedores:</strong>{" "}
                 {activity.suppliers
-                  .map((supplierId) =>
-                    suppliers.find((supplier) => supplier.id === supplierId)
-                      ?.nome
+                  .map(
+                    (supplierId) =>
+                      suppliers.find((supplier) => supplier.id === supplierId)
+                        ?.nome
                   )
                   .filter((name) => name)
                   .join(", ")}
@@ -142,13 +143,20 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
 
           {activity.data && (
             <>
-              <Typography variant="body2">
-                Última manutenção:{" "}
-                {formatDate(activity.data) || "Carregando..."}
-              </Typography>
-              <Typography variant="body2">
-                Próxima manutenção: {activity.dueDate}
-              </Typography>
+              {activity.nao_feito &&
+              formatDate(activity.data) === "00/00/0000" ? (
+                <Typography variant="body2">Nunca foi realizado</Typography>
+              ) : (
+                <>
+                  <Typography variant="body2">
+                    Última manutenção:{" "}
+                    {formatDate(activity.data) || "Carregando..."}
+                  </Typography>
+                  <Typography variant="body2">
+                    Próxima manutenção: {activity.dueDate}
+                  </Typography>
+                </>
+              )}
             </>
           )}
 
@@ -168,7 +176,8 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
             >
               {titleUpdate}
             </Button>
-            {activity.data && (
+            {(activity.data && !(activity.nao_feito &&
+              formatDate(activity.data) === "00/00/0000")) && (
               <Button
                 variant="contained"
                 color="info"

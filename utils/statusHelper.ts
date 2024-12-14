@@ -185,6 +185,14 @@ export const getStatus = async (
     ? differenceInYears(today, buildingDeliveryDate)
     : null;
 
+  if (
+    activity?.nao_feito &&
+    activity?.neverDone &&
+    activity?.data === "0000-00-00"
+  ) {
+    return { status: "Vencido", dueDate: null }
+  }
+
   if (activity.activityRegular && activity.Periodicidade === "Não aplicável") {
     return { status: "Regular", dueDate: null };
   }

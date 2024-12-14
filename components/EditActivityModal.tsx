@@ -62,6 +62,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
+  const [neverDone, setNeverDone] = useState<boolean>(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -91,6 +92,16 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
     loadInitialData();
   }, [activity, showNotApplicable]);
+
+  const handleMarkAsNeverDone = () => {
+    setSelectedDate(null);
+    setNeverDone(!neverDone);
+    setEditedActivity((prev) =>
+      prev
+        ? { ...prev, neverDone: true, nao_feito: true, data: "0000-00-00" }
+        : null
+    );
+  };
 
   const handleSelectChange = (event: SelectChangeEvent<string[]>) => {
     setSelectedBlocks(event.target.value as string[]);
@@ -130,6 +141,8 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
         : blocks.map((b) => b.id),
       suppliers: selectedSuppliers,
       activityRegular,
+      neverDone: editedActivity?.neverDone || false,
+      nao_feito: editedActivity?.neverDone || false,
     };
 
     try {
@@ -261,18 +274,39 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
           </FormControl>
 
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
-            <DatePicker
-              label="Data"
-              value={selectedDate}
-              onChange={handleDateChange}
-              format="DD/MM/YYYY"
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  margin: "normal",
-                },
-              }}
-            />
+            <>
+              {selectedDate ? (
+                ""
+              ) : (
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}
+                >
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleMarkAsNeverDone}
+                  >
+                    {neverDone ? "Adicionar Data" : "Nunca foi realizada"}
+                  </Button>
+                </Box>
+              )}
+              {!neverDone ? (
+                <DatePicker
+                  label="Data"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  format="DD/MM/YYYY"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      margin: "normal",
+                    },
+                  }}
+                />
+              ) : (
+                ""
+              )}
+            </>
           ) : (
             <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
               <Button

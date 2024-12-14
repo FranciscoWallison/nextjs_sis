@@ -157,6 +157,7 @@ export interface Activity {
   blocos?: any[];
   suppliers?: any[];
   blocks?: Block[];
+  neverDone?: boolean;
 }
 
 export interface CategoryData {
