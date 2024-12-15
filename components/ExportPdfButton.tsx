@@ -17,8 +17,17 @@ interface Supplier {
   nome: string;
 }
 
+interface Activity {
+  titulo: string;
+  responsavel: string;
+  data?: string;
+  dueDate?: string;
+  blocos?: Block[];
+  suppliers?: Supplier[];
+}
+
 interface ExportPdfButtonProps {
-  activities: any[];
+  activities: Activity[];
   blocks: Block[];
   suppliers: Supplier[];
 }
@@ -31,7 +40,13 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
   const generatePdf = async () => {
     const doc = new jsPDF();
     doc.setFillColor(244, 244, 244);
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), "F");
+    doc.rect(
+      0,
+      0,
+      doc.internal.pageSize.getWidth(),
+      doc.internal.pageSize.getHeight(),
+      "F"
+    );
 
     try {
       // Adiciona o logotipo PNG diretamente ao PDF
@@ -64,8 +79,8 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
       activity.responsavel,
       activity.data ? dayjs(activity.data).format("DD/MM/YYYY") : "-",
       activity.dueDate || "-",
-      activity?.blocos?.map((block) => block.name).join(", ") || "-",
-      activity?.suppliers?.map((supplier) => supplier.nome).join(", ") || "-",
+      activity?.blocos?.map((block: Block) => block.name).join(", ") || "-",
+      activity?.suppliers?.map((supplier: Supplier) => supplier.nome).join(", ") || "-",
     ]);
 
     autoTable(doc, {
