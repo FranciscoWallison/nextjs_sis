@@ -98,7 +98,12 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
     setNeverDone(!neverDone);
     setEditedActivity((prev) =>
       prev
-        ? { ...prev, neverDone: true, nao_feito: true, data: "0000-00-00" }
+        ? {
+            ...prev,
+            neverDone: !neverDone,
+            nao_feito: !neverDone,
+            data: "0000-00-00",
+          }
         : null
     );
   };
@@ -127,7 +132,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const handleDateChange = (newDate: Dayjs | null) => {
     setSelectedDate(newDate);
     setEditedActivity((prev) =>
-      prev ? { ...prev, data: newDate ? newDate.toISOString() : "" } : null
+      prev
+        ? { ...prev, data: newDate ? newDate.format("YYYY-MM-DD") : "" }
+        : null
     );
   };
 
@@ -275,7 +282,8 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
             <>
-              {selectedDate ? (
+              {selectedDate &&
+              !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
                 ""
               ) : (
                 <Box
@@ -286,11 +294,15 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     color="primary"
                     onClick={handleMarkAsNeverDone}
                   >
-                    {neverDone ? "Adicionar Data" : "Nunca foi realizada"}
+                    {neverDone ||
+                    (editedActivity?.neverDone && editedActivity?.nao_feito)
+                      ? "Adicionar Data"
+                      : "Nunca foi realizada"}
                   </Button>
                 </Box>
               )}
-              {!neverDone ? (
+              {!neverDone &&
+              !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
                 <DatePicker
                   label="Data"
                   value={selectedDate}

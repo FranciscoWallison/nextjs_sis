@@ -21,7 +21,21 @@ const groupByMonthAndStatus = async (activities: Activity[]) => {
 
   for (const activity of activities) {
     const date = new Date(activity.data || Date.now());
+
+    // Validação para verificar se a data é válida
+    if (isNaN(date.getTime())) {
+      console.warn(`Data inválida encontrada: ${activity.data}`);
+      continue; // Ignorar atividades com datas inválidas
+    }
+
     const monthIndex = date.getMonth();
+
+    // Validar o índice do mês
+    if (monthIndex < 0 || monthIndex > 11) {
+      console.warn(`Índice do mês inválido: ${monthIndex}`);
+      continue; // Ignorar se o índice do mês não for válido
+    }
+
     const monthData = dataByMonth[monthIndex];
 
     const statusInfo = await getStatus(activity);
