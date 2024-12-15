@@ -2,8 +2,10 @@ import React from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Button } from "@mui/material";
-import { Activity } from "@/services/firebaseService";
 import dayjs from "dayjs";
+
+// Importando o logotipo PNG
+import logoPng from "@/public/logo.png"; // Ajuste o caminho para o arquivo PNG
 
 interface Block {
   id: string;
@@ -13,6 +15,15 @@ interface Block {
 interface Supplier {
   id: string;
   nome: string;
+}
+
+interface Activity {
+  titulo: string;
+  responsavel: string;
+  data?: string;
+  dueDate?: string;
+  blocos?: Block[];
+  suppliers?: Supplier[];
 }
 
 interface ExportPdfButtonProps {
@@ -28,33 +39,20 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
 }) => {
   const generatePdf = async () => {
     const doc = new jsPDF();
-    doc.setFillColor(244, 244, 244); // Cor RGB (244, 244, 244) equivalente ao var(--scrollbar-bg-color)
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), doc.internal.pageSize.getHeight(), "F"); // "F" para preenchimento
-
-    // Carregar a imagem local
-    const imagePath = "./logo.png"; // Caminho da imagem local
-    const loadImageToBase64 = (url: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/png"));
-        };
-        img.onerror = () => reject(new Error("Erro ao carregar a imagem."));
-        img.src = url;
-      });
-    };
+    doc.setFillColor(244, 244, 244);
+    doc.rect(
+      0,
+      0,
+      doc.internal.pageSize.getWidth(),
+      doc.internal.pageSize.getHeight(),
+      "F"
+    );
 
     try {
-      const logoBase64 = await loadImageToBase64(imagePath);
-      doc.addImage(logoBase64, "PNG", 10, 10, 50, 15); // Adiciona a logo no PDF
+      // Adiciona o logotipo PNG diretamente ao PDF
+      doc.addImage("/logo.png", "PNG", 10, 10, 50, 15);
     } catch (error) {
-      console.error("Erro ao carregar a imagem da logo:", error);
+      console.error("Erro ao adicionar o logotipo PNG:", error);
     }
 
     // Título do documento
@@ -81,26 +79,16 @@ const ExportPdfButton: React.FC<ExportPdfButtonProps> = ({
       activity.responsavel,
       activity.data ? dayjs(activity.data).format("DD/MM/YYYY") : "-",
       activity.dueDate || "-",
-      activity?.blocos
-        ?.map((block: Block) => block?.name || "Bloco Indisponível")
-        .join(", ") || "-",
-      activity?.suppliers
-        ?.map(
-          (supplierId: string | number) =>
-            suppliers.find((supplier) => supplier.id === supplierId)?.nome ||
-            "Fornecedor Indisponível"
-        )
-        .join(", ") || "-",
+      activity?.blocos?.map((block: Block) => block.name).join(", ") || "-",
+      activity?.suppliers?.map((supplier: Supplier) => supplier.nome).join(", ") || "-",
     ]);
 
-    // Configuração da tabela usando autoTable
     autoTable(doc, {
-      startY: 50, // Ajusta a posição da tabela para não sobrescrever a logo
+      startY: 50,
       head: [tableColumnHeaders],
       body: tableRows,
     });
 
-    // Baixar o PDF
     doc.save("Relatorio_Manutencao.pdf");
   };
 

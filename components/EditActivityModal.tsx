@@ -53,13 +53,16 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const { fetchNotifications } = useNotification();
   const [editedActivity, setEditedActivity] = useState<Activity | null>(null);
   const [blocks, setBlocks] = useState<{ id: string; name: string }[]>([]);
-  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>(
+    []
+  );
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
   const [periodicityOptions, setPeriodicityOptions] = useState<string[]>([]);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [activityRegular, setActivityRegular] = useState<boolean>(false);
+  const [neverDone, setNeverDone] = useState<boolean>(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -70,7 +73,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
       const response = await fetch("/periodicidades/periodicidade.json");
       const result = await response.json();
-      const options = result.map((item: { descricao: string }) => item.descricao);
+      const options = result.map(
+        (item: { descricao: string }) => item.descricao
+      );
       if (showNotApplicable && !options.includes("Não aplicável")) {
         options.unshift("Não aplicável");
       }
@@ -88,6 +93,21 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
     loadInitialData();
   }, [activity, showNotApplicable]);
 
+  const handleMarkAsNeverDone = () => {
+    setSelectedDate(null);
+    setNeverDone(!neverDone);
+    setEditedActivity((prev) =>
+      prev
+        ? {
+            ...prev,
+            neverDone: !neverDone,
+            nao_feito: !neverDone,
+            data: "0000-00-00",
+          }
+        : null
+    );
+  };
+
   const handleSelectChange = (event: SelectChangeEvent<string[]>) => {
     setSelectedBlocks(event.target.value as string[]);
   };
@@ -96,7 +116,9 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
     setSelectedSuppliers(event.target.value as string[]);
   };
 
-  const handleSelectChangePeriodicidade = (event: SelectChangeEvent<string>) => {
+  const handleSelectChangePeriodicidade = (
+    event: SelectChangeEvent<string>
+  ) => {
     setEditedActivity((prev) =>
       prev ? { ...prev, Periodicidade: event.target.value } : null
     );
@@ -104,15 +126,15 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditedActivity((prev) =>
-      prev ? { ...prev, [name]: value } : null
-    );
+    setEditedActivity((prev) => (prev ? { ...prev, [name]: value } : null));
   };
 
   const handleDateChange = (newDate: Dayjs | null) => {
     setSelectedDate(newDate);
     setEditedActivity((prev) =>
-      prev ? { ...prev, data: newDate?.format("YYYY-MM-DD") || "" } : null
+      prev
+        ? { ...prev, data: newDate ? newDate.format("YYYY-MM-DD") : "" }
+        : null
     );
   };
 
@@ -121,9 +143,13 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
     const finalActivity = {
       ...editedActivity,
-      blocoIDs: selectedBlocks.length ? selectedBlocks : blocks.map((b) => b.id),
+      blocoIDs: selectedBlocks.length
+        ? selectedBlocks
+        : blocks.map((b) => b.id),
       suppliers: selectedSuppliers,
       activityRegular,
+      neverDone: editedActivity?.neverDone || false,
+      nao_feito: editedActivity?.neverDone || false,
     };
 
     try {
@@ -239,7 +265,10 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
               onChange={handleSupplierChange}
               renderValue={(selected) =>
                 selected
-                  .map((id) => suppliers.find((supplier) => supplier.id === id)?.nome)
+                  .map(
+                    (id) =>
+                      suppliers.find((supplier) => supplier.id === id)?.nome
+                  )
                   .join(", ")
               }
             >
@@ -251,19 +280,55 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             </Select>
           </FormControl>
 
-          {editedActivity?.Periodicidade !== "Não aplicável" && (
-            <DatePicker
-              label="Data"
-              value={selectedDate}
-              onChange={handleDateChange}
-              format="DD/MM/YYYY"
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  margin: "normal",
-                },
-              }}
-            />
+          {editedActivity?.Periodicidade !== "Não aplicável" ? (
+            <>
+              {selectedDate &&
+              !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
+                ""
+              ) : (
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}
+                >
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleMarkAsNeverDone}
+                  >
+                    {neverDone ||
+                    (editedActivity?.neverDone && editedActivity?.nao_feito)
+                      ? "Adicionar Data"
+                      : "Nunca foi realizada"}
+                  </Button>
+                </Box>
+              )}
+              {!neverDone &&
+              !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
+                <DatePicker
+                  label="Data"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  format="DD/MM/YYYY"
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      margin: "normal",
+                    },
+                  }}
+                />
+              ) : (
+                ""
+              )}
+            </>
+          ) : (
+            <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 2 }}>
+              <Button
+                variant="contained"
+                color={activityRegular ? "success" : "primary"}
+                onClick={handleMarkAsDone}
+              >
+                {activityRegular ? "Feito" : "Marcar como Feito"}
+              </Button>
+            </Box>
           )}
 
           <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
