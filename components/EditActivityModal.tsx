@@ -220,19 +220,40 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
           />
 
           <FormControl fullWidth margin="normal">
+            {console.log("editedActivity?.Periodicidade", editedActivity?.Periodicidade, editedActivity?.id_name)}
+            
             <InputLabel>Periodicidade</InputLabel>
-            <Select
-              label="Periodicidade"
-              name="Periodicidade"
-              value={editedActivity?.Periodicidade || ""}
-              onChange={handleSelectChangePeriodicidade}
-            >
-              {periodicityOptions.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </Select>
+            {editedActivity?.id_name !== undefined ? (
+              <Select
+                label="Periodicidade"
+                name="Periodicidade"
+                value={editedActivity?.Periodicidade || ""}
+                onChange={handleSelectChangePeriodicidade}
+                disabled={true}
+              >
+                {periodicityOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+              ) : 
+              (
+                <Select
+                  label="Periodicidade"
+                  name="Periodicidade"
+                  value={editedActivity?.Periodicidade || ""}
+                  onChange={handleSelectChangePeriodicidade}
+                  
+                >
+                  {periodicityOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+                )
+              }
           </FormControl>
 
           <FormControl fullWidth margin="normal">
