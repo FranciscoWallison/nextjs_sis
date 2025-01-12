@@ -56,6 +56,7 @@ const MaintenanceActivity: React.FC<MaintenanceActivityProps> = ({
   const handleOpenModal = (activity: Activity) => {
     setSelectedActivity(activity);
     setModalOpen(true);
+    
   };
 
   const handleCloseModal = () => {

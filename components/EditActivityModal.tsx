@@ -220,8 +220,6 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
           />
 
           <FormControl fullWidth margin="normal">
-            {console.log("editedActivity?.Periodicidade", editedActivity?.Periodicidade, editedActivity?.id_name)}
-            
             <InputLabel>Periodicidade</InputLabel>
             {editedActivity?.id_name !== undefined ? (
               <Select
