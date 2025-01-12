@@ -20,7 +20,6 @@ import {
   pegarUsuarioPeriodicidades,
   Activity,
   fetchBlockById,
-  Activity,
 } from "@/services/firebaseService";
 import { getStatus } from "@/utils/statusHelper";
 import EditActivityModal from "@/components/EditActivityModal"; // Importa o novo modal
@@ -69,18 +68,6 @@ const CalendarioManutencoes: React.FC = () => {
   };
   const onActivityUpdated = () => {
     fetchData(); // Recarrega os dados após uma atualização
-  };
-
-  const printObjectTypes = (obj) => {
-    if (typeof obj !== "object" || obj === null) {
-      console.error("Por favor, forneça um objeto válido.");
-      return;
-    }
-
-    console.log("Tipos das propriedades do objeto:");
-    for (const [key, value] of Object.entries(obj)) {
-      console.log(`${key}: ${typeof value}`);
-    }
   };
 
   const fetchData = useCallback(async () => {
@@ -200,7 +187,6 @@ const CalendarioManutencoes: React.FC = () => {
   };
 
   const handleEventClick = (event: any) => {
-
     // Mapear o evento para a interface Activity
     const mappedActivity: Activity = {
       titulo: event.title || "Título não definido",
@@ -289,14 +275,20 @@ const CalendarioManutencoes: React.FC = () => {
                 style={{ height: "100%", margin: "50px 0" }}
                 onSelectEvent={handleEventClick} // Abre o modal ao clicar
                 eventPropGetter={(event) => {
-                  const backgroundColors = {
+                  const backgroundColors: Record<string, string> = {
                     Regular: "green",
                     "A vencer": "orange",
                     Vencido: "red",
                   };
+
+                  const backgroundColor =
+                    backgroundColors[
+                      event.status as keyof typeof backgroundColors
+                    ] || "gray";
+
                   return {
                     style: {
-                      backgroundColor: backgroundColors[event.status] || "gray",
+                      backgroundColor,
                       color: "white",
                       borderRadius: "5px",
                       padding: "5px",
