@@ -81,28 +81,28 @@ const calculateNextDate = (
   switch (periodicity) {
     case "A cada semana":
       return add(date, { weeks: 1 });
-    case "A cada duas semanas":
+    case "A cada 2 semanas":
       return add(date, { weeks: 2 });
     case "A cada 15 dias":
       return add(date, { days: 15 });
-    case "A cada mês":
+    case "A cada 1 mês":
       return add(date, { months: 1 });
-    case "A cada dois meses":
+    case "A cada 2 meses":
       return add(date, { months: 2 });
-    case "A cada três meses":
+    case "A cada 3 meses":
       return add(date, { months: 3 });
-    case "A cada seis meses":
+    case "A cada 6 meses":
       return add(date, { months: 6 });
-    case "A cada ano":
+    case "A cada 1 ano":
       return add(date, { years: 1 });
-    case "A cada dois anos":
+    case "A cada 2 anos":
       return add(date, { years: 2 });
-    case "A cada três anos":
+    case "A cada 3 anos":
       return add(date, { years: 3 });
-    case "A cada cinco anos":
+    case "A cada 5 anos":
       return add(date, { years: 5 });
     default:
-      return null;
+      return null; // Valor não aplicável
   }
 };
 
@@ -190,7 +190,7 @@ export const getStatus = async (
     activity?.neverDone &&
     activity?.data === "0000-00-00"
   ) {
-    return { status: "Vencido", dueDate: null }
+    return { status: "Vencido", dueDate: null };
   }
 
   if (activity.activityRegular && activity.Periodicidade === "Não aplicável") {

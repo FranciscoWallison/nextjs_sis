@@ -104,6 +104,7 @@ const AlertsPage: React.FC = () => {
 
             {selectedActivity && (
               <EditActivityModal
+                isEdit={true}
                 open={!!selectedActivity}
                 activity={selectedActivity}
                 onClose={handleCloseEditActivity}

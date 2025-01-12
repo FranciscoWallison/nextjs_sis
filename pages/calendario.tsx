@@ -1,8 +1,19 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Container, CircularProgress, Box, Grid, Button } from "@mui/material";
+import {
+  Container,
+  CircularProgress,
+  Box,
+  Grid,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+} from "@mui/material";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import "moment/locale/pt-br"; // Importa a localização para Português (Brasil)
+import "moment/locale/pt-br";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import MainLayout from "../components/layout/MainLayout";
 import {
@@ -11,11 +22,10 @@ import {
   fetchBlockById,
 } from "@/services/firebaseService";
 import { getStatus } from "@/utils/statusHelper";
+import EditActivityModal from "@/components/EditActivityModal"; // Importa o novo modal
 
-// Configuração do Localizer para moment no react-big-calendar
 const localizer = momentLocalizer(moment);
 
-// Mensagens traduzidas para o calendário
 const messages = {
   allDay: "Dia todo",
   previous: "Anterior",
@@ -32,11 +42,10 @@ const messages = {
   showMore: (total: number) => `+ Ver mais (${total})`,
 };
 
-// Formatos de exibição para dias e meses usando moment.js
 const formats = {
-  agendaDateFormat: "DD/MM ddd", // Formato de data na agenda
-  weekdayFormat: "dddd", // Dias da semana completos
-  monthHeaderFormat: "MMMM YYYY", // Título do mês e ano
+  agendaDateFormat: "DD/MM ddd",
+  weekdayFormat: "dddd",
+  monthHeaderFormat: "MMMM YYYY",
 };
 
 const CalendarioManutencoes: React.FC = () => {
@@ -47,7 +56,19 @@ const CalendarioManutencoes: React.FC = () => {
     aVencer: false,
     vencido: false,
   });
-  const [events, setEvents] = useState<any[]>([]); // Estado para eventos do calendário
+  const [events, setEvents] = useState<any[]>([]);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+    null
+  );
+  const [modalOpen, setModalOpen] = useState<boolean>(false); // Controle do modal
+
+  const handleCloseEditActivity = () => {
+    setModalOpen(false);
+    setSelectedActivity(null);
+  };
+  const onActivityUpdated = () => {
+    fetchData(); // Recarrega os dados após uma atualização
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -73,7 +94,7 @@ const CalendarioManutencoes: React.FC = () => {
               return {
                 ...activity,
                 blocos: blocos.map((bloco, index) => ({
-                  id: `generated-id-${index}`, // Gera um id se não existir
+                  id: `generated-id-${index}`,
                   name: bloco.name,
                 })),
               };
@@ -98,35 +119,36 @@ const CalendarioManutencoes: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
   useEffect(() => {
     if (data.length > 0) {
       const fetchEvents = async () => {
         const calendarEvents = await Promise.all(
           data
-            .filter((activity) => activity.data) // Filtra atividades com a última data cadastrada
+            .filter((activity) => activity.data)
             .map(async (activity) => {
-              const statusInfo = await getStatus(activity); // Obtém o status da atividade
+              const statusInfo = await getStatus(activity);
               const nextMaintenanceDate = moment(activity.dueDate).add(
                 activity.Periodicidade || 0,
                 "days"
-              ); // Calcula a próxima data de manutenção
+              );
 
               return {
-                title: `${activity.titulo} - ${statusInfo.status} - Próx.: ${nextMaintenanceDate.format("DD/MM/YYYY")}`,
-                start: activity.data ? new Date(activity.data) : new Date(), // Última data cadastrada ou data atual como fallback
-                end: activity.data ? new Date(activity.data) : new Date(),                
+                title: `${activity.titulo} - ${statusInfo.status}`,
+                start: activity.data ? new Date(activity.data) : new Date(),
+                end: activity.data ? new Date(activity.data) : new Date(),
                 allDay: true,
                 status: statusInfo.status,
+                details: activity, // Adiciona o objeto completo para o modal
               };
             })
         );
         setEvents(calendarEvents);
       };
 
-      fetchEvents(); // Chama a função para buscar eventos
+      fetchEvents();
     }
   }, [data]);
-
 
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
@@ -164,6 +186,44 @@ const CalendarioManutencoes: React.FC = () => {
     });
   };
 
+  const handleEventClick = (event: any) => {
+    // Mapear o evento para a interface Activity
+    const mappedActivity: Activity = {
+      titulo: event.title || "Título não definido",
+      atividade: event.details?.atividade || "",
+      responsavel: event.details?.responsavel || "",
+      Periodicidade: event.details?.Periodicidade || "",
+      obrigatorio: event.details?.obrigatorio || "",
+      responsavel_info: event.details?.responsavel_info || {
+        name: "",
+        email: "",
+      },
+      data: event.start ? moment(event.start).format("YYYY-MM-DD") : undefined,
+      nao_feito: event.details?.nao_feito || false,
+      nao_lembro: event.details?.nao_lembro || false,
+      id_name: event.details?.id_name || "",
+      id: event.details?.id || 0,
+      category_id: event.details?.category_id,
+      blocoIDs: event.details?.blocoIDs || [],
+      activityRegular: event.details?.activityRegular || false,
+      status: event.status || "",
+      dueDate: event.details?.dueDate || "",
+      updatedFields: event.details?.updatedFields || null,
+      blocos: event.details?.blocos || [],
+      suppliers: event.details?.suppliers || [],
+      blocks: event.details?.blocks || [],
+      neverDone: event.details?.neverDone || false,
+    };
+
+    setSelectedActivity(mappedActivity); // Passa o objeto no formato esperado
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setSelectedActivity(null);
+  };
+
   return (
     <MainLayout title="Calendário">
       <Container>
@@ -171,7 +231,6 @@ const CalendarioManutencoes: React.FC = () => {
           <CircularProgress />
         ) : (
           <>
-            {/* Cabeçalho do calendário */}
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <Grid item xs={12} sm={4}>
                 <Button
@@ -205,44 +264,49 @@ const CalendarioManutencoes: React.FC = () => {
               </Grid>
             </Grid>
 
-            {/* Calendário */}
             <Box sx={{ height: 600 }}>
               <Calendar
                 localizer={localizer}
-                messages={messages} // Passa as mensagens traduzidas
-                formats={formats} // Define a formatação para dias e meses
-                events={applyFilters(events)} // Aplicar filtros nos eventos
+                messages={messages}
+                formats={formats}
+                events={applyFilters(events)}
                 startAccessor="start"
                 endAccessor="end"
                 style={{ height: "100%", margin: "50px 0" }}
+                onSelectEvent={handleEventClick} // Abre o modal ao clicar
                 eventPropGetter={(event) => {
-                  let backgroundColor = "";
-                  switch (event.status) {
-                    case "Regular":
-                      backgroundColor = "green";
-                      break;
-                    case "A vencer":
-                      backgroundColor = "orange";
-                      break;
-                    case "Vencido":
-                      backgroundColor = "red";
-                      break;
-                    default:
-                      backgroundColor = "gray"; // Cor padrão para outros tipos
-                      break;
-                  }
+                  const backgroundColors: Record<string, string> = {
+                    Regular: "green",
+                    "A vencer": "orange",
+                    Vencido: "red",
+                  };
+
+                  const backgroundColor =
+                    backgroundColors[
+                      event.status as keyof typeof backgroundColors
+                    ] || "gray";
+
                   return {
                     style: {
                       backgroundColor,
-                      color: "white", // Define a cor do texto para contraste
+                      color: "white",
                       borderRadius: "5px",
-                      border: "none",
                       padding: "5px",
                     },
                   };
                 }}
               />
             </Box>
+
+            {modalOpen && selectedActivity && (
+              <EditActivityModal
+                isEdit={true}
+                open={modalOpen}
+                activity={selectedActivity}
+                onClose={handleCloseEditActivity}
+                onActivityUpdated={onActivityUpdated}
+              />
+            )}
           </>
         )}
       </Container>
