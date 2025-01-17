@@ -12,6 +12,8 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/router";
+import { getStatus } from "@/utils/statusHelper";
+
 import {
   getActivityHistory,
   Activity,
@@ -23,7 +25,13 @@ import MainLayout from "@/components/layout/MainLayout";
 import EditActivityModal from "@/components/EditActivityModal"; // Importando o modal de atividades
 import HelpActivity from "@/utils/HelpActivity"; // Importando o utilitário para formatação de datas
 import ExportPdfButton from "@/components/ExportPdfButtonHistorico"; // Importa o botão de exportação de PDF
-
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString("pt-BR", {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
 interface ActivityItem {
   titulo: string;
   atividade: string;
@@ -60,6 +68,8 @@ const ActivityPage: React.FC = () => {
   const [suppliers, setSuppliers] = useState<{ id: string; nome: string }[]>(
     []
   );
+  const [statusData, setStatusData] = useState<{ [key: number]: any }>({});
+
   useEffect(() => {
     if (id) {
       fetchPageTitle(Number(id));
@@ -78,20 +88,27 @@ const ActivityPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const formatActivityDates = async () => {
-      const formattedDates: { [key: number]: string } = {};
+
+    const fetchStatus = async () => {
+      const statuses: { [key: number]: any } = {};
 
       for (const activity of activities) {
-        const formattedDate = await HelpActivity.formatDate(activity.data); // Aqui acessamos diretamente "data" em "activity"
-        formattedDates[activity.id] = formattedDate; // Acessa o "id" diretamente em "activity"
+        const dataStatus = await getStatus(activity.updatedFields);
+
+        if (dataStatus.dueDate instanceof Date) {
+          statuses[activity.id] = {
+            ...activity,
+            dueDate: formatDate(dataStatus.dueDate),
+          };
+        } else {
+          statuses[activity.id] = activity;
+        }
       }
 
-      setFormattedActivityDates(formattedDates);
+      setStatusData(statuses);
     };
 
-    if (activities.length > 0) {
-      formatActivityDates();
-    }
+    fetchStatus();
   }, [activities]);
 
   // Função para buscar o título da página com base no id
@@ -239,9 +256,13 @@ const ActivityPage: React.FC = () => {
             Adicionar Atividade
           </Button>
 
-          <ExportPdfButton activities={activities} blocks={blocks} suppliers={suppliers} />
+          <ExportPdfButton
+            statusData={statusData}
+            activities={activities}
+            blocks={blocks}
+            suppliers={suppliers}
+          />
         </Box>
-
 
         {activities.map((activity, index) => (
           <Accordion
@@ -258,11 +279,11 @@ const ActivityPage: React.FC = () => {
               id={`panel${activity.updatedFields.id}-${index}-header`}
             >
               <Typography>
-                {activity.updatedFields.titulo} -  {" "}
+                {activity.updatedFields.titulo} -{" "}
                 {activity.updatedFields.data
                   ? new Date(activity.updatedFields.data).toLocaleDateString(
-                    "pt-BR"
-                  )
+                      "pt-BR"
+                    )
                   : "Carregando..."}
               </Typography>
             </AccordionSummary>
@@ -293,7 +314,8 @@ const ActivityPage: React.FC = () => {
                 {activity.updatedFields.suppliers
                   ?.map(
                     (supplierId: string | number) =>
-                      suppliers.find((supplier) => supplier.id === supplierId)?.nome || ""
+                      suppliers.find((supplier) => supplier.id === supplierId)
+                        ?.nome || ""
                   )
                   .join(", ")}
               </Typography>
