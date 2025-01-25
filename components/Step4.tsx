@@ -56,8 +56,8 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         }}
       >
         <Button
-          fullWidth  // Define fullWidth como true para comportamento padrão
-          sx={{ width: { xs: "100%", sm: "auto" } }}  // Controla a largura responsivamente
+          fullWidth
+          sx={{ width: { xs: "100%", sm: "auto" } }}
           variant="contained"
           onClick={handleBack}
         >
@@ -66,18 +66,18 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
 
         <Button
           fullWidth
-          sx={{ width: { xs: "100%", sm: "auto" } }}  // Controla a largura responsivamente
-          variant="contained"
-          onClick={handleRedirect}
           sx={{
+            width: { xs: "100%", sm: "auto" },
             backgroundColor: "green",
             ":hover": { backgroundColor: "darkgreen" },
           }}
+          variant="contained"
+          onClick={handleRedirect}
         >
           Seguir para o Painel Principal
         </Button>
-
       </Box>
+
 
     </Box>
 
