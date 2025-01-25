@@ -48,18 +48,25 @@ const Sidebar: React.FC<SidebarProps> = ({
     const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Detecta se a tela é mobile
 
     return {
-      width: isMobile && open ? "100%" : "auto", 
+      display: isMobile && !open ? "none" : "block",  // Esconde no mobile quando fechado
+      width: isMobile && open ? "100%" : "auto",
       "& .MuiDrawer-paper": {
         position: "relative",
         whiteSpace: "nowrap",
-        width: isMobile ? (open ? "100% !important" : theme.spacing(7)) : open ? `${drawerWidth}px` : theme.spacing(7),
+        width: isMobile
+          ? open
+            ? "100% !important"  // Abre em tela cheia no mobile
+            : "0px"              // Esconde quando fechado
+          : open
+            ? `${drawerWidth}px`
+            : theme.spacing(7),
         transition: theme.transitions.create("width", {
           easing: theme.transitions.easing.sharp,
           duration: theme.transitions.duration.enteringScreen,
         }),
         boxSizing: "border-box",
         ...(isMobile && open && {
-          width: "100% !important", // Define largura total para mobile quando o menu está aberto
+          width: "100% !important", // Largura total para mobile quando expandido
         }),
         ...(!open && {
           overflowX: "hidden",
@@ -67,7 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
-          width: theme.spacing(7),
+          width: isMobile ? "0px" : theme.spacing(7), // Esconde no mobile, mantém no desktop
           [theme.breakpoints.up("sm")]: {
             width: theme.spacing(9),
           },
@@ -75,6 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       },
     };
   });
+
 
 
   return (

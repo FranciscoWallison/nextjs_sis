@@ -99,11 +99,11 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
     setEditedActivity((prev) =>
       prev
         ? {
-            ...prev,
-            neverDone: !neverDone,
-            nao_feito: !neverDone,
-            data: "0000-00-00",
-          }
+          ...prev,
+          neverDone: !neverDone,
+          nao_feito: !neverDone,
+          data: "0000-00-00",
+        }
         : null
     );
   };
@@ -200,6 +200,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             name="titulo"
             value={editedActivity?.titulo || ""}
             onChange={handleChange}
+            disabled={ isEdit && editedActivity?.id_name !== "hasCriado"}
           />
           <TextField
             fullWidth
@@ -208,6 +209,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
             name="atividade"
             value={editedActivity?.atividade || ""}
             onChange={handleChange}
+            disabled={ isEdit && editedActivity?.id_name !== "hasCriado"}
           />
           <TextField
             fullWidth
@@ -221,7 +223,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
           <FormControl fullWidth margin="normal">
             <InputLabel>Periodicidade</InputLabel>
-            {editedActivity?.id_name !== undefined ? (
+            {editedActivity?.id_name !== undefined && isEdit && editedActivity?.id_name !== "hasCriado"? (
               <Select
                 label="Periodicidade"
                 name="Periodicidade"
@@ -235,23 +237,23 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
                   </MenuItem>
                 ))}
               </Select>
-              ) : 
-              (
-                <Select
-                  label="Periodicidade"
-                  name="Periodicidade"
-                  value={editedActivity?.Periodicidade || ""}
-                  onChange={handleSelectChangePeriodicidade}
-                  
-                >
-                  {periodicityOptions.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </Select>
-                )
-              }
+            ) : ""}
+            {editedActivity?.id_name === "hasCriado" || isEdit === false ? (
+              <Select
+                label="Periodicidade"
+                name="Periodicidade"
+                value={editedActivity?.Periodicidade || ""}
+                onChange={handleSelectChangePeriodicidade}
+
+              >
+                {periodicityOptions.map((option) => (
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : ""
+            }
           </FormControl>
 
           <FormControl fullWidth margin="normal">
@@ -302,7 +304,7 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
           {editedActivity?.Periodicidade !== "Não aplicável" ? (
             <>
               {selectedDate &&
-              !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
+                !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
                 ""
               ) : (
                 <Box
@@ -314,14 +316,14 @@ const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     onClick={handleMarkAsNeverDone}
                   >
                     {neverDone ||
-                    (editedActivity?.neverDone && editedActivity?.nao_feito)
+                      (editedActivity?.neverDone && editedActivity?.nao_feito)
                       ? "Adicionar Data"
                       : "Nunca foi realizada"}
                   </Button>
                 </Box>
               )}
               {!neverDone &&
-              !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
+                !(editedActivity?.neverDone && editedActivity?.nao_feito) ? (
                 <DatePicker
                   label="Data"
                   value={selectedDate}

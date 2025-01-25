@@ -171,6 +171,7 @@ const Header: React.FC<HeaderProps> = ({
       {/* Modal de Edição de Atividade */}
       {selectedActivity && (
         <EditActivityModal
+          isEdit={true}
           open={!!selectedActivity}
           activity={selectedActivity}
           onClose={() => setSelectedActivity(null)}
