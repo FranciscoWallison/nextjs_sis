@@ -45,18 +45,40 @@ const Step4: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
         🎉 Parabéns! Você cadastrou o seu condomínio, e todas as manutenções selecionadas já estão cadastradas.
       </Typography>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
-        <Button variant="contained" onClick={handleBack}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mt: 4,
+          gap: 2, // Adiciona espaçamento entre os botões
+          flexDirection: { xs: "column", sm: "row" }, // Empilha no mobile e alinha horizontalmente no desktop
+        }}
+      >
+        <Button
+          fullWidth  // Define fullWidth como true para comportamento padrão
+          sx={{ width: { xs: "100%", sm: "auto" } }}  // Controla a largura responsivamente
+          variant="contained"
+          onClick={handleBack}
+        >
           Voltar
         </Button>
+
         <Button
+          fullWidth
+          sx={{ width: { xs: "100%", sm: "auto" } }}  // Controla a largura responsivamente
           variant="contained"
           onClick={handleRedirect}
-          sx={{ backgroundColor: "green", ":hover": { backgroundColor: "darkgreen" } }}
+          sx={{
+            backgroundColor: "green",
+            ":hover": { backgroundColor: "darkgreen" },
+          }}
         >
           Seguir para o Painel Principal
         </Button>
+
       </Box>
+
     </Box>
 
   );
