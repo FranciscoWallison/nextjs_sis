@@ -76,10 +76,6 @@ const MaintenanceCategory: React.FC<MaintenanceCategoryProps> = ({
 
   return (
     <>
-      <Typography variant="h4" component="div" gutterBottom>
-        {category}
-      </Typography>
-
       {activities
         ?.map((activity) => statusData[activity.id] || activity)
         .sort((a, b) => a.titulo.localeCompare(b.titulo)) // Ordena as atividades por 'titulo'

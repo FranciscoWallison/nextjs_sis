@@ -121,7 +121,7 @@ const Step2: React.FC<{ handleNext: () => void; handleBack: () => void }> = ({
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ padding: { xs: 2, sm: 4 }, maxWidth: "800px", margin: "0 auto" }}>
         <Typography component="h1" sx={{ mt: 2, mb: 4 }} variant="h6" textAlign="center">
-          Olá, {formData.lastName}! Precisamos que você preencha as informações
+          Olá, {formData.firstName}! Precisamos que você preencha as informações
           iniciais referentes ao condomínio.
         </Typography>
 
