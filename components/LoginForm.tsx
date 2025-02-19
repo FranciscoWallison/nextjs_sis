@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { TextField, Button, Box, Typography } from "@mui/material";
-import Grid from "@mui/material/Grid";
-import Link from "@mui/material/Link";
+import { TextField, Button, Box, Typography, Grid, Link } from "@mui/material";
+import NextLink from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import NextLink from 'next/link';
 
 const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -12,36 +10,33 @@ const LoginForm: React.FC = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMounted, setIsMounted] = useState(false); // Controle de hidratação
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Garante que o componente só renderize no cliente
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   if (!isMounted) {
-    return null; // Evita problemas de hidratação
+    return null;
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setIsSubmitting(true);
     try {
       const response = await login({ email, password });
-      mensagem(response);
+      if (response) {
+        setEmail("");
+        setPassword("");
+        setError("");
+        setSuccess("Login realizado com sucesso!");
+      } else {
+        setError("Login ou senha inválidos!");
+      }
     } catch (err) {
-      setError("Login ou senha inválidos!");
+      setError("Erro ao fazer login. Tente novamente.");
     }
-  };
-
-  const mensagem = (response: boolean) => {
-    if (response) {
-      setEmail("");
-      setPassword("");
-      setError("");
-    } else {
-      setError("Login ou senha inválidos!");
-      setSuccess("");
-    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -90,7 +85,13 @@ const LoginForm: React.FC = () => {
       >
         {isSubmitting ? "Aguarde..." : "ENTRAR"}
       </Button>
-      <Grid container justifyContent="flex-end">
+
+      <Grid container justifyContent="space-between">
+        <Grid item>
+          <NextLink href="/recuperarSenha" passHref>
+            <Link variant="body2">Esqueceu a senha?</Link>
+          </NextLink>
+        </Grid>
         <Grid item>
           <NextLink href="/signup" passHref>
             <Link variant="body2">Cadastrar</Link>
