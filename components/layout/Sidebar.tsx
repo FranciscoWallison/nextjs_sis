@@ -12,7 +12,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Ícone para o botão de sair
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import { MainListItems, secondaryListItems } from "./listItems";
 import { styled, Theme } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
@@ -32,58 +32,54 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { pages } = usePageContext();
   const router = useRouter();
-  const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm")); // Detecta se é mobile
+  const isMobile = useMediaQuery((theme: Theme) =>
+    theme.breakpoints.down("sm")
+  );
 
   const handleLogoff = () => {
-    // Limpa o localStorage
     localStorage.clear();
-
-    // Redireciona para a página de login
     router.push("/login");
   };
 
   const Drawer = styled(MuiDrawer, {
     shouldForwardProp: (prop) => prop !== "open",
-  })(({ theme, open }) => {
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Detecta se a tela é mobile
-
-    return {
-      display: isMobile && !open ? "none" : "block",  // Esconde no mobile quando fechado
-      width: isMobile && open ? "100%" : "auto",
-      "& .MuiDrawer-paper": {
-        position: "relative",
-        whiteSpace: "nowrap",
-        width: isMobile
-          ? open
-            ? "100% !important"  // Abre em tela cheia no mobile
-            : "0px"              // Esconde quando fechado
-          : open
-            ? `${drawerWidth}px`
-            : theme.spacing(7),
+  })(({ theme, open }) => ({
+    display: isMobile && !open ? "none" : "block",
+    width: isMobile && open ? "100%" : "auto",
+    "& .MuiDrawer-paper": {
+      position: "relative",
+      whiteSpace: "nowrap",
+      width: isMobile
+        ? open
+          ? "100% !important"
+          : "0px"
+        : open
+        ? `${drawerWidth}px`
+        : theme.spacing(7),
+      transition: theme.transitions.create("width", {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.enteringScreen,
+      }),
+      boxSizing: "border-box",
+      ...(isMobile &&
+        open && {
+          width: "100% !important",
+        }),
+      ...(!open && {
+        overflowX: "hidden",
         transition: theme.transitions.create("width", {
           easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.enteringScreen,
+          duration: theme.transitions.duration.leavingScreen,
         }),
-        boxSizing: "border-box",
-        ...(isMobile && open && {
-          width: "100% !important", // Largura total para mobile quando expandido
-        }),
-        ...(!open && {
-          overflowX: "hidden",
-          transition: theme.transitions.create("width", {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          width: isMobile ? "0px" : theme.spacing(7), // Esconde no mobile, mantém no desktop
-          [theme.breakpoints.up("sm")]: {
-            width: theme.spacing(9),
-          },
-        }),
-      },
-    };
-  });
+        width: isMobile ? "0px" : theme.spacing(7),
+        [theme.breakpoints.up("sm")]: {
+          width: theme.spacing(9),
+        },
+      }),
+    },
+  }));
 
-
+  const isActivePage = (path: string) => router.pathname === path;
 
   return (
     <Drawer variant={"permanent"} open={open}>
@@ -101,12 +97,34 @@ const Sidebar: React.FC<SidebarProps> = ({
       </Toolbar>
       <Divider />
       <List component="nav" sx={{ flexGrow: 1 }}>
-        <MainListItems pages={pages} />
-        <Divider sx={{ my: 1 }} />
-        {secondaryListItems}
+        {pages.map((page) => (
+          <ListItemButton
+            key={page.url} // Key exclusiva
+            selected={isActivePage(page.url)} // Marca como selecionado
+            sx={{
+              backgroundColor: isActivePage(page.url)
+                ? "primary.main"
+                : "inherit",
+              "&.Mui-selected": {
+                backgroundColor: "primary.main",
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "primary.dark",
+                },
+              },
+            }}
+            onClick={() => router.push(page.url)}
+          >
+            <ListItemIcon
+              sx={{ color: isActivePage(page.url) ? "white" : "inherit" }}
+            >
+              <page.icon /> {/* Renderiza o ícone corretamente */}
+            </ListItemIcon>
+            <ListItemText primary={page.title} />
+          </ListItemButton>
+        ))}
       </List>
 
-      {/* Botão de Logoff no rodapé do menu lateral */}
       <Box sx={{ mt: "auto", p: 2 }}>
         {open ? (
           <Button
