@@ -247,14 +247,14 @@ const ActivityPage: React.FC = () => {
             mb: 2,
           }}
         >
-          <Button
+          {/* <Button
             variant="contained"
             color="primary"
             onClick={handleAddActivity}
             sx={{ width: { xs: "100%", sm: "auto" } }} // Largura total em telas pequenas
           >
             Adicionar Atividade
-          </Button>
+          </Button> */}
 
           <ExportPdfButton
             statusData={statusData}
@@ -328,13 +328,13 @@ const ActivityPage: React.FC = () => {
                 >
                   Editar
                 </Button>
-                <Button
+                {/* <Button
                   variant="contained"
                   color="secondary"
                   onClick={() => handleDelete(activity.updatedFields.id)} // Usando "id" diretamente
                 >
                   Remover
-                </Button>
+                </Button> */}
               </Box>
             </AccordionDetails>
           </Accordion>
