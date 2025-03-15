@@ -24,6 +24,7 @@ import {
 import { getStatus } from "@/utils/statusHelper";
 import EditActivityModal from "@/components/EditActivityModal"; // Importa o novo modal
 import HelpActivity from "@/utils/HelpActivity";
+import { log } from "console";
 
 const localizer = momentLocalizer(moment);
 
@@ -126,30 +127,32 @@ const CalendarioManutencoes: React.FC = () => {
       const fetchEvents = async () => {
         const calendarEvents = await Promise.all(
           data
-            .filter((activity) => activity.data) // Filtra atividades com data válida
+            .filter((activity) => activity.data) // Filtra apenas atividades com data válida
             .map(async (activity) => {
               const dueDateFormatted = await HelpActivity.formatDateToDDMMYYYY(activity);
               const statusInfo = await getStatus(activity);
-
-              // 🔹 Converte dueDate de string "DD/MM/YYYY" para objeto Date
+  
+              // 🔹 Converte dueDate de string "DD/MM/YYYY" para objeto Date corretamente
               let dueDateObj: Date | null = null;
               if (dueDateFormatted) {
                 const [day, month, year] = dueDateFormatted.split("/").map(Number);
-                dueDateObj = new Date(year, month - 1, day);
+                dueDateObj = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)); // 🔹 Define UTC corretamente
               }
-
-              // 🔹 Garante que a data de início esteja correta sem alterar o fuso horário
-              const startDate = moment(activity.data, "YYYY-MM-DD").utcOffset(0, true).toDate();
-
-              // 🔹 Caso dueDateObj seja inválido, assume a próxima manutenção como fallback
+  
+              // 🔹 Corrige a conversão da data de início
+              const startDate = moment(activity.data, "YYYY-MM-DD").toDate(); // Garante que a conversão seja precisa
+  
+              // 🔹 Caso `dueDateObj` seja inválido, assume a próxima manutenção como fallback
               const nextMaintenanceDate = moment(activity.dueDate || new Date())
                 .add(activity.Periodicidade || 0, "days")
                 .toDate();
-
+  
+              console.log("Final:", { startDate, dueDateObj, activityData: activity.data });
+  
               return {
                 title: `${activity.titulo} - ${statusInfo.status}`,
-                start: startDate, // 🔹 Garante que a data não sofra alteração de fuso horário
-                end: dueDateObj ?? nextMaintenanceDate, // 🔹 Usa dueDate se existir, senão nextMaintenanceDate
+                start: startDate, // 🔹 Agora a data está correta!
+                end: dueDateObj ?? nextMaintenanceDate,
                 allDay: true,
                 status: statusInfo.status,
                 details: activity, // Adiciona a atividade completa ao evento
@@ -158,11 +161,11 @@ const CalendarioManutencoes: React.FC = () => {
         );
         setEvents(calendarEvents);
       };
-
+  
       fetchEvents();
     }
   }, [data]);
-
+  
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
       return [];
