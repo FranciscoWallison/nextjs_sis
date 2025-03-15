@@ -130,25 +130,25 @@ const CalendarioManutencoes: React.FC = () => {
             .map(async (activity) => {
               const dueDateFormatted = await HelpActivity.formatDateToDDMMYYYY(activity);
               const statusInfo = await getStatus(activity);
-  
+
               // 🔹 Converte dueDate de string "DD/MM/YYYY" para objeto Date
               let dueDateObj: Date | null = null;
               if (dueDateFormatted) {
                 const [day, month, year] = dueDateFormatted.split("/").map(Number);
                 dueDateObj = new Date(year, month - 1, day);
               }
-  
+
+              // 🔹 Garante que a data de início esteja correta sem alterar o fuso horário
+              const startDate = moment(activity.data, "YYYY-MM-DD").utcOffset(0, true).toDate();
+
               // 🔹 Caso dueDateObj seja inválido, assume a próxima manutenção como fallback
               const nextMaintenanceDate = moment(activity.dueDate || new Date())
                 .add(activity.Periodicidade || 0, "days")
                 .toDate();
-  
-              // 🔹 Garante que activity.data seja um objeto Date válido
-              const startDate = activity.data ? new Date(activity.data) : new Date();
-  
+
               return {
                 title: `${activity.titulo} - ${statusInfo.status}`,
-                start: startDate, // 🔹 Garante que seja um objeto Date válido
+                start: startDate, // 🔹 Garante que a data não sofra alteração de fuso horário
                 end: dueDateObj ?? nextMaintenanceDate, // 🔹 Usa dueDate se existir, senão nextMaintenanceDate
                 allDay: true,
                 status: statusInfo.status,
@@ -158,12 +158,10 @@ const CalendarioManutencoes: React.FC = () => {
         );
         setEvents(calendarEvents);
       };
-  
+
       fetchEvents();
     }
   }, [data]);
-  
-
 
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
