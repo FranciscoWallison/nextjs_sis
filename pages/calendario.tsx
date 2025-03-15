@@ -23,6 +23,7 @@ import {
 } from "@/services/firebaseService";
 import { getStatus } from "@/utils/statusHelper";
 import EditActivityModal from "@/components/EditActivityModal"; // Importa o novo modal
+import HelpActivity from "@/utils/HelpActivity";
 
 const localizer = momentLocalizer(moment);
 
@@ -125,30 +126,44 @@ const CalendarioManutencoes: React.FC = () => {
       const fetchEvents = async () => {
         const calendarEvents = await Promise.all(
           data
-            .filter((activity) => activity.data)
+            .filter((activity) => activity.data) // Filtra atividades com data válida
             .map(async (activity) => {
+              const dueDateFormatted = await HelpActivity.formatDateToDDMMYYYY(activity);
               const statusInfo = await getStatus(activity);
-              const nextMaintenanceDate = moment(activity.dueDate).add(
-                activity.Periodicidade || 0,
-                "days"
-              );
-
+  
+              // 🔹 Converte dueDate de string "DD/MM/YYYY" para objeto Date
+              let dueDateObj: Date | null = null;
+              if (dueDateFormatted) {
+                const [day, month, year] = dueDateFormatted.split("/").map(Number);
+                dueDateObj = new Date(year, month - 1, day);
+              }
+  
+              // 🔹 Caso dueDateObj seja inválido, assume a próxima manutenção como fallback
+              const nextMaintenanceDate = moment(activity.dueDate || new Date())
+                .add(activity.Periodicidade || 0, "days")
+                .toDate();
+  
+              // 🔹 Garante que activity.data seja um objeto Date válido
+              const startDate = activity.data ? new Date(activity.data) : new Date();
+  
               return {
                 title: `${activity.titulo} - ${statusInfo.status}`,
-                start: activity.data ? new Date(activity.data) : new Date(),
-                end: activity.data ? new Date(activity.data) : new Date(),
+                start: startDate, // 🔹 Garante que seja um objeto Date válido
+                end: dueDateObj ?? nextMaintenanceDate, // 🔹 Usa dueDate se existir, senão nextMaintenanceDate
                 allDay: true,
                 status: statusInfo.status,
-                details: activity, // Adiciona o objeto completo para o modal
+                details: activity, // Adiciona a atividade completa ao evento
               };
             })
         );
         setEvents(calendarEvents);
       };
-
+  
       fetchEvents();
     }
   }, [data]);
+  
+
 
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
@@ -283,7 +298,7 @@ const CalendarioManutencoes: React.FC = () => {
 
                   const backgroundColor =
                     backgroundColors[
-                      event.status as keyof typeof backgroundColors
+                    event.status as keyof typeof backgroundColors
                     ] || "gray";
 
                   return {
