@@ -128,44 +128,54 @@ const CalendarioManutencoes: React.FC = () => {
         const calendarEvents = await Promise.all(
           data
             .filter((activity) => activity.data) // Filtra apenas atividades com data válida
-            .map(async (activity) => {
+            .flatMap(async (activity) => {
               const dueDateFormatted = await HelpActivity.formatDateToDDMMYYYY(activity);
               const statusInfo = await getStatus(activity);
-  
-              // 🔹 Converte dueDate de string "DD/MM/YYYY" para objeto Date corretamente
-              let dueDateObj: Date | null = null;
+
+              const events = [];
+
+              // 🔹 Start date (data da manutenção)
+              if (activity.data) {
+                const startDate = moment(activity.data, "YYYY-MM-DD").toDate();
+
+                events.push({
+                  title: `${activity.titulo} - Início (${statusInfo.status})`,
+                  start: startDate,
+                  end: new Date(startDate.getTime() + 60 * 60 * 1000), // 1h depois
+                  allDay: false,
+                  status: statusInfo.status,
+                  details: activity,
+                });
+              }
+
+              // 🔹 End date (dueDate formatada)
               if (dueDateFormatted) {
                 const [day, month, year] = dueDateFormatted.split("/").map(Number);
-                dueDateObj = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)); // 🔹 Define UTC corretamente
+                const dueDateObj = new Date(year, month - 1, day, 12, 0, 0);
+
+                events.push({
+                  title: `${activity.titulo} - Fim (${statusInfo.status})`,
+                  start: dueDateObj,
+                  end: new Date(dueDateObj.getTime() + 60 * 60 * 1000), // 1h depois
+                  allDay: false,
+                  status: statusInfo.status,
+                  details: activity,
+                });
               }
-  
-              // 🔹 Corrige a conversão da data de início
-              const startDate = moment(activity.data, "YYYY-MM-DD").toDate(); // Garante que a conversão seja precisa
-  
-              // 🔹 Caso `dueDateObj` seja inválido, assume a próxima manutenção como fallback
-              const nextMaintenanceDate = moment(activity.dueDate || new Date())
-                .add(activity.Periodicidade || 0, "days")
-                .toDate();
-  
-              console.log("Final:", { startDate, dueDateObj, activityData: activity.data });
-  
-              return {
-                title: `${activity.titulo} - ${statusInfo.status}`,
-                start: startDate, // 🔹 Agora a data está correta!
-                end: dueDateObj ?? nextMaintenanceDate,
-                allDay: true,
-                status: statusInfo.status,
-                details: activity, // Adiciona a atividade completa ao evento
-              };
+
+              return events;
             })
         );
-        setEvents(calendarEvents);
+
+        // flatMap dentro do map → precisamos de um `flat`
+        setEvents(calendarEvents.flat());
       };
-  
+
       fetchEvents();
     }
   }, [data]);
-  
+
+
   const sortActivities = (activities: Activity[]): Activity[] => {
     if (!activities) {
       return [];
